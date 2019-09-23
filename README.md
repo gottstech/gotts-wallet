@@ -22,6 +22,9 @@ https://github.com/gottstech/gotts-wallet/wiki
 
 https://github.com/gottstech/gotts-wallet/wiki
 
+## Credits
+
+The initial code is based on the [Grin-Wallet](https://github.com/mimblewimble/grin-wallet). The related code taken with thanks and respect, with license details in all derived source files.
 
 # License
 
