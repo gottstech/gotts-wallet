@@ -1,0 +1,373 @@
+name: GrinWallet+
+version: "2.0.1-beta.3"
+about: Grin Wallet with Embedded Relay Address Service.
+author: The Grin & Gotts Team.
+
+args:
+  - floonet:
+      help: Run grin against the Floonet (as opposed to mainnet)
+      long: floonet
+      takes_value: false
+  - usernet:
+      help: Run grin as a local-only network. Doesn't block peer connections but will not connect to any peer or seed
+      long: usernet
+      takes_value: false
+  - pass:
+      help: Wallet passphrase used to encrypt wallet seed
+      short: p
+      long: pass
+      takes_value: true
+  - account:
+      help: Wallet account to use for this operation
+      short: a
+      long: account
+      takes_value: true
+      default_value: default
+  - data_dir:
+      help: Directory in which to store wallet files
+      short: dd
+      long: data_dir
+      takes_value: true
+  - external:
+      help: Listen on 0.0.0.0 interface to allow external connections (default is 127.0.0.1)
+      short: e
+      long: external
+      takes_value: false
+  - show_spent:
+      help: Show spent outputs on wallet output commands
+      short: s
+      long: show_spent
+      takes_value: false
+  - api_server_address:
+      help: Api address of running node on which to check inputs and post transactions
+      short: r
+      long: api_server_address
+      takes_value: true
+subcommands:
+  - account:
+      about: List wallet accounts or create a new account
+      args:
+        - create:
+            help: Create a new wallet account with provided name
+            short: c
+            long: create
+            takes_value: true
+  - listen:
+      about: Runs the wallet in listening mode waiting for transactions
+      args:
+        - port:
+            help: Port on which to run the wallet listener
+            short: l
+            long: port
+            takes_value: true
+        - method:
+            help: Which method to use for communication
+            short: m
+            long: method
+            possible_values:
+              - http
+              - keybase
+            default_value: http
+            takes_value: true
+  - owner_api:
+      about: Runs the wallet's local web API
+  - send:
+      about: Builds a transaction to send coins and sends to the specified listener directly
+      args:
+        - amount:
+            help: Number of coins to send with optional fraction, e.g. 12.423
+            index: 1
+        - minimum_confirmations:
+            help: Minimum number of confirmations required for an output to be spendable
+            short: c
+            long: min_conf
+            default_value: "0"
+            takes_value: true
+        - selection_strategy:
+            help: Coin/Output selection strategy.
+            short: s
+            long: selection
+            possible_values:
+              - all
+              - smallest
+              - biggest
+            default_value: all
+            takes_value: true
+        - estimate_selection_strategies:
+            help: Estimates all possible Coin/Output selection strategies.
+            short: e
+            long: estimate-selection
+        - change_outputs:
+            help: Number of change outputs to generate (mainly for testing)
+            short: o
+            long: change_outputs
+            default_value: "1"
+            takes_value: true
+        - method:
+            help: Method for sending this transaction
+            short: m
+            long: method
+            possible_values:
+              - http
+              - file
+              - self
+              - keybase
+            default_value: http
+            takes_value: true
+        - dest:
+            help: Send the transaction to the provided server (start with http://) or save as file.
+            short: d
+            long: dest
+            takes_value: true
+        - fluff:
+            help: Fluff the transaction (ignore Dandelion relay protocol)
+            short: f
+            long: fluff
+        - message:
+            help: Optional participant message to include
+            short: g
+            long: message
+            takes_value: true
+        - stored_tx:
+            help: If present, use the previously stored Unconfirmed transaction with given id
+            short: t
+            long: stored_tx
+            takes_value: true
+        - slate_version:
+            help: Target slate version to output/send to receiver
+            short: v
+            long: slate_version
+            takes_value: true
+  - receive:
+      about: Processes a transaction file to accept a transfer from a sender
+      args:
+        - message:
+            help: Optional participant message to include
+            short: g
+            long: message
+            takes_value: true
+        - input:
+            help: Partial transaction to process, expects the sender's transaction file.
+            short: i
+            long: input
+            takes_value: true
+  - finalize:
+      about: Processes a receiver's transaction file to finalize a transfer.
+      args:
+        - input:
+            help: Partial transaction to process, expects the receiver's transaction file.
+            short: i
+            long: input
+            takes_value: true
+        - fluff:
+            help: Fluff the transaction (ignore Dandelion relay protocol)
+            short: f
+            long: fluff
+  - invoice:
+      about: Initialize an invoice transction.
+      args:
+        - amount:
+            help: Number of coins to invoice  with optional fraction, e.g. 12.423
+            index: 1
+        - message:
+            help: Optional participant message to include
+            short: g
+            long: message
+            takes_value: true
+        - slate_version:
+            help: Target slate version to output/send to receiver
+            short: v
+            long: slate_version
+            takes_value: true
+        - dest:
+            help: Name of destination slate output file
+            short: d
+            long: dest
+            takes_value: true
+  - pay:
+      about: Spend coins to pay the provided invoice transaction
+      args:
+        - minimum_confirmations:
+            help: Minimum number of confirmations required for an output to be spendable
+            short: c
+            long: min_conf
+            default_value: "10"
+            takes_value: true
+        - selection_strategy:
+            help: Coin/Output selection strategy.
+            short: s
+            long: selection
+            possible_values:
+              - all
+              - smallest
+            default_value: all
+            takes_value: true
+        - estimate_selection_strategies:
+            help: Estimates all possible Coin/Output selection strategies.
+            short: e
+            long: estimate-selection
+        - method:
+            help: Method for sending the processed invoice back to the invoice creator
+            short: m
+            long: method
+            possible_values:
+              - file
+              - http
+              - self
+            default_value: file
+            takes_value: true
+        - dest:
+            help: Send the transaction to the provided server (start with http://) or save as file.
+            short: d
+            long: dest
+            takes_value: true
+        - message:
+            help: Optional participant message to include
+            short: g
+            long: message
+            takes_value: true
+        - input:
+            help: Partial transaction to process, expects the invoicer's transaction file.
+            short: i
+            long: input
+            takes_value: true
+  - outputs:
+      about: Raw wallet self owned output info (list of outputs)
+      args:
+        - minvalue:
+            help: Filter outputs by minimum value
+            short: m
+            long: minvalue
+            takes_value: true
+        - status:
+            help: Filter outputs by status (unconfirmed/unspent/locked/spent)
+            short: s
+            long: status
+            takes_value: true
+        - limit:
+            help: Limit the maximum display lines (show the latest ones)
+            short: l
+            long: limit
+            takes_value: true
+  - payments:
+      about: Raw wallet payment output info (list of outputs)
+      args:
+        - status:
+            help: Filter payments by status (unconfirmed/confirmed)
+            short: s
+            long: status
+            takes_value: true
+        - limit:
+            help: Limit the maximum display lines (show the latest ones)
+            short: l
+            long: limit
+            takes_value: true
+  - txs:
+      about: Display transaction information
+      args:
+        - id:
+            help: If specified, display transaction with given Id and all associated Inputs/Outputs
+            short: i
+            long: id
+            takes_value: true
+        - raw:
+            help: Show the raw transaction data (if have) in json format if tx id is specified.
+            short: r
+            long: raw
+        - type:
+            help: Filter txs by tx type (coinbase/rx/tx/rxc/txc, means Coinbase/Received/Sent/ReceivedCanceled/SentCanceled)
+            short: t
+            long: type
+            takes_value: true
+        - startdate:
+            help: Filter txs by creation date from 'startdate' to 'enddate', with format '1970-01-01 00:00:00'
+            short: s
+            long: startdate
+            takes_value: true
+        - enddate:
+            help: Filter txs by creation date from 'startdate' to 'enddate', with format '1970-01-01 00:00:00'
+            short: e
+            long: enddate
+            takes_value: true
+        - limit:
+            help: Limit the maximum display lines (show the latest ones)
+            short: l
+            long: limit
+            takes_value: true
+  - repost:
+      about: Reposts a stored, completed but unconfirmed transaction to the chain, or dumps it to a file
+      args:
+        - id:
+            help: Transaction ID containing the stored completed transaction
+            short: i
+            long: id
+            takes_value: true
+        - dumpfile:
+            help: File name to duMp the transaction to instead of posting
+            short: m
+            long: dumpfile
+            takes_value: true
+        - fluff:
+            help: Fluff the transaction (ignore Dandelion relay protocol)
+            short: f
+            long: fluff
+  - cancel:
+      about: Cancels an previously created transaction, freeing previously locked outputs for use again
+      args:
+        - id:
+            help: The ID of the transaction to cancel
+            short: i
+            long: id
+            takes_value: true
+        - txid:
+            help: The TxID UUID of the transaction to cancel
+            short: t
+            long: txid
+            takes_value: true
+  - info:
+      about: Basic wallet contents summary
+      args:
+        - minimum_confirmations:
+            help: Minimum number of confirmations required for an output to be spendable
+            short: c
+            long: min_conf
+            default_value: "10"
+            takes_value: true
+  - init:
+      about: Initialize a new wallet seed file and database
+      args:
+        - here:
+            help: Create wallet files in the current directory instead of the default ~/.grin directory
+            short: h
+            long: here
+            takes_value: false
+        - short_wordlist:
+            help: Generate a 12-word recovery phrase/seed instead of default 24
+            short: s
+            long: short_wordlist
+            takes_value: false
+        - recover:
+            help: Initialize new wallet using a recovery phrase
+            short: r
+            long: recover
+            takes_value: false
+  - recover:
+      about: Recover a wallet.seed file from a recovery phrase (default) or displays a recovery phrase for an existing seed file
+      args:
+        - display:
+            help: Display wallet recovery phrase
+            short: d
+            long: display
+            takes_value: false
+  - restore:
+      about: Restores a wallet contents from a seed file
+  - check:
+      about: Checks a wallet's outputs against a live node, repairing and restoring missing outputs if required
+      args:
+        - delete_unconfirmed:
+            help: Delete any unconfirmed outputsm unlock any locked outputs and delete associated transactions while doing the check.
+            short: d
+            long: delete_unconfirmed
+            takes_value: false
+  - passwd:
+      about: Changing password for wallet.

@@ -1,0 +1,56 @@
+[package]
+name = "gotts_wallet_util"
+version = "0.0.2"
+authors = ["Gotts Developers <gotts.tech@lists.launchpad.net>"]
+description = "Util, for generic utilities and to re-export gotts crates"
+license = "Apache-2.0"
+repository = "https://github.com/gottstech/gotts-wallet"
+keywords = [ "crypto", "gotts", "mimblewimble" ]
+workspace = ".."
+edition = "2018"
+
+[dependencies]
+backtrace = "0.3"
+lazy_static = "1"
+log4rs = { version = "0.8.1", features = ["rolling_file_appender", "compound_policy", "size_trigger", "fixed_window_roller"] }
+log = "0.4"
+rand = "0.5"
+serde = "1"
+serde_derive = "1"
+toml = "0.4"
+dirs = "1.0.3"
+
+# For Release
+#gotts_core = { git = "https://github.com/gottstech/gotts", tag = "v0.0.2" }
+#gotts_keychain = { git = "https://github.com/gottstech/gotts", tag = "v0.0.2" }
+#gotts_chain = { git = "https://github.com/gottstech/gotts", tag = "v0.0.2" }
+#gotts_util = { git = "https://github.com/gottstech/gotts", tag = "v0.0.2" }
+#gotts_api = { git = "https://github.com/gottstech/gotts", tag = "v0.0.2" }
+#gotts_store = { git = "https://github.com/gottstech/gotts", tag = "v0.0.2" }
+
+# For beta release
+#gotts_core = { git = "https://github.com/gottstech/gotts", tag = "v0.0.2-beta.1" }
+#gotts_keychain = { git = "https://github.com/gottstech/gotts", tag = "v0.0.2-beta.1" }
+#gotts_chain = { git = "https://github.com/gottstech/gotts", tag = "v0.0.2-beta.1" }
+#gotts_util = { git = "https://github.com/gottstech/gotts", tag = "v0.0.2-beta.1" }
+#gotts_api = { git = "https://github.com/gottstech/gotts", tag = "v0.0.2-beta.1" }
+#gotts_store = { git = "https://github.com/gottstech/gotts", tag = "v0.0.2-beta.1" }
+
+# For bleeding edge
+gotts_core = { git = "https://github.com/gottstech/gotts", rev = "c7563a8" }
+gotts_keychain = { git = "https://github.com/gottstech/gotts", rev = "c7563a8" }
+gotts_chain = { git = "https://github.com/gottstech/gotts", rev = "c7563a8" }
+gotts_util = { git = "https://github.com/gottstech/gotts", rev = "c7563a8" }
+gotts_api = { git = "https://github.com/gottstech/gotts", rev = "c7563a8" }
+gotts_store = { git = "https://github.com/gottstech/gotts", rev = "c7563a8" }
+
+# For local testing
+#gotts_core = { path = "../../gotts/core"}
+#gotts_keychain = { path = "../../gotts/keychain"}
+#gotts_chain = { path = "../../gotts/chain"}
+#gotts_util = { path = "../../gotts/util"}
+#gotts_api = { path = "../../gotts/api"}
+#gotts_store = { path = "../../gotts/store"}
+
+[dev-dependencies]
+pretty_assertions = "0.5.1"

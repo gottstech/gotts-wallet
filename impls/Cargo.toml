@@ -1,0 +1,32 @@
+[package]
+name = "gotts_wallet_impls"
+version = "0.0.2"
+authors = ["Gotts Developers <gotts.tech@lists.launchpad.net>"]
+description = "Concrete types derived from libwallet traits"
+license = "Apache-2.0"
+repository = "https://github.com/gottstech/gotts-wallet"
+keywords = [ "crypto", "gotts", "mimblewimble" ]
+exclude = ["**/*.gotts", "**/*.gotts2"]
+edition = "2018"
+
+[dependencies]
+blake2-rfc = "0.2"
+failure = "0.1"
+futures = "0.1"
+lmdb-zero = "0.4.4"
+rand = "0.5"
+serde = "1"
+serde_derive = "1"
+serde_json = "1"
+log = "0.4"
+ring = "0.13"
+tokio = "= 0.1.11"
+tokio-core = "0.1"
+tokio-retry = "0.1"
+uuid = { version = "0.7", features = ["serde", "v4"] }
+chrono = { version = "0.4.4", features = ["serde"] }
+
+gotts_wallet_util = { path = "../util", version = "0.0.2" }
+
+gotts_wallet_libwallet = { path = "../libwallet", version = "0.0.2" }
+gotts_wallet_config = { path = "../config", version = "0.0.2" }
