@@ -420,6 +420,7 @@ where
 mod test {
 	use crate::gotts_core::libtx::{build, ProofBuilder};
 	use crate::gotts_keychain::{ExtKeychain, ExtKeychainPath, Keychain};
+	use rand::{thread_rng, Rng};
 
 	#[test]
 	// demonstrate that input.commitment == referenced output.commitment
@@ -428,21 +429,22 @@ mod test {
 		let keychain = ExtKeychain::from_random_seed(false).unwrap();
 		let builder = ProofBuilder::new(&keychain);
 		let key_id1 = ExtKeychainPath::new(1, 1, 0, 0, 0).to_identifier();
+		let w: i64 = thread_rng().gen();
 
 		let tx1 = build::transaction(
-			vec![build::output(105, key_id1.clone())],
+			vec![build::output(105, Some(w), key_id1.clone())],
 			&keychain,
 			&builder,
 		)
 		.unwrap();
 		let tx2 = build::transaction(
-			vec![build::input(105, key_id1.clone())],
+			vec![build::input(105, w, key_id1.clone())],
 			&keychain,
 			&builder,
 		)
 		.unwrap();
 
-		assert_eq!(tx1.outputs()[0].features, tx2.inputs()[0].features);
+		assert_eq!(tx1.outputs()[0].features.as_flag(), tx2.inputs()[0].features);
 		assert_eq!(tx1.outputs()[0].commitment(), tx2.inputs()[0].commitment());
 	}
 }

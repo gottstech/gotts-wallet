@@ -18,7 +18,7 @@
 
 use futures::{stream, Stream};
 
-use crate::core::core::TxKernelApiEntry;
+use crate::core::core::{Output, OutputEx, TxKernelApiEntry};
 use crate::libwallet::{NodeClient, NodeVersionInfo, TxWrapper};
 use std::collections::HashMap;
 use tokio::runtime::Runtime;
@@ -148,7 +148,7 @@ impl NodeClient for HTTPNodeClient {
 
 		for query_chunk in query_params.chunks(200) {
 			let url = format!("{}/v1/chain/outputs/byids?{}", addr, query_chunk.join("&"),);
-			tasks.push(api::client::get_async::<Vec<api::Output>>(
+			tasks.push(api::client::get_async::<Vec<OutputEx>>(
 				url.as_str(),
 				self.node_api_secret(),
 			));
@@ -169,8 +169,8 @@ impl NodeClient for HTTPNodeClient {
 		for res in results {
 			for out in res {
 				api_outputs.insert(
-					out.commit.commit(),
-					(util::to_hex(out.commit.to_vec()), out.height, out.mmr_index),
+					out.output.commitment(),
+					(util::to_hex(out.output.commitment().as_ref().to_vec()), out.height, out.mmr_index),
 				);
 			}
 		}
@@ -230,7 +230,7 @@ impl NodeClient for HTTPNodeClient {
 		(
 			u64,
 			u64,
-			Vec<(pedersen::Commitment, pedersen::RangeProof, bool, u64, u64)>,
+			Vec<(pedersen::Commitment, Output, bool, u64, u64)>,
 		),
 		libwallet::Error,
 	> {
@@ -239,7 +239,7 @@ impl NodeClient for HTTPNodeClient {
 
 		let url = format!("{}/v1/txhashset/outputs?{}", addr, query_param,);
 
-		let mut api_outputs: Vec<(pedersen::Commitment, pedersen::RangeProof, bool, u64, u64)> =
+		let mut api_outputs: Vec<(pedersen::Commitment, Output, bool, u64, u64)> =
 			Vec::new();
 
 		match api::client::get::<api::OutputListing>(url.as_str(), self.node_api_secret()) {
@@ -250,8 +250,8 @@ impl NodeClient for HTTPNodeClient {
 						api::OutputType::Transaction => false,
 					};
 					api_outputs.push((
-						out.commit,
-						out.range_proof().unwrap(),
+						out.output.commit,
+						out.output,
 						is_coinbase,
 						out.block_height.unwrap(),
 						out.mmr_index,

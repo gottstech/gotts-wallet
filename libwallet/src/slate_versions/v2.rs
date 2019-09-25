@@ -36,12 +36,12 @@
 //!    orig_version: u16,
 //!    block_header_version: u16,
 
-use crate::gotts_core::core::transaction::OutputFeatures;
+use crate::gotts_core::core::transaction::{OutputFeatures, OutputFeaturesEx};
 use crate::gotts_core::libtx::secp_ser;
 use crate::gotts_keychain::BlindingFactor;
 use crate::gotts_util::secp;
 use crate::gotts_util::secp::key::PublicKey;
-use crate::gotts_util::secp::pedersen::{Commitment, RangeProof};
+use crate::gotts_util::secp::pedersen::Commitment;
 use crate::gotts_util::secp::Signature;
 use crate::slate::CompatKernelFeatures;
 use uuid::Uuid;
@@ -60,6 +60,9 @@ pub struct SlateV2 {
 	/// base amount (excluding fee)
 	#[serde(with = "secp_ser::string_or_u64")]
 	pub amount: u64,
+	/// `w` of the new Pedersen Commitment form: `r*G + w*H`.
+	#[serde(with = "secp_ser::string_or_i64")]
+	pub w: i64,
 	/// fee amount
 	#[serde(with = "secp_ser::string_or_u64")]
 	pub fee: u64,
@@ -142,11 +145,11 @@ pub struct InputV2 {
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct OutputV2 {
 	/// Options for an output's structure or use
-	pub features: OutputFeatures,
+	pub features: OutputFeaturesEx,
 	/// The homomorphic commitment representing the output amount
 	pub commit: Commitment,
-	/// A proof that the commitment is in the right range
-	pub proof: RangeProof,
+	/// The explicit amount
+	pub value: u64,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
