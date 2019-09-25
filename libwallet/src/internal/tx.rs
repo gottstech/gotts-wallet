@@ -444,7 +444,10 @@ mod test {
 		)
 		.unwrap();
 
-		assert_eq!(tx1.outputs()[0].features.as_flag(), tx2.inputs()[0].features);
+		assert_eq!(
+			tx1.outputs()[0].features.as_flag(),
+			tx2.inputs()[0].features
+		);
 		assert_eq!(tx1.outputs()[0].commitment(), tx2.inputs()[0].commitment());
 	}
 }

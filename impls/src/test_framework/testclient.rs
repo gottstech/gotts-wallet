@@ -509,7 +509,11 @@ impl NodeClient for LocalWalletClient {
 		for out in outputs {
 			api_outputs.insert(
 				out.output.commitment(),
-				(util::to_hex(out.output.commitment().as_ref().to_vec()), out.height, out.mmr_index),
+				(
+					util::to_hex(out.output.commitment().as_ref().to_vec()),
+					out.height,
+					out.mmr_index,
+				),
 			);
 		}
 		Ok(api_outputs)
@@ -576,8 +580,7 @@ impl NodeClient for LocalWalletClient {
 		let m = r.recv().unwrap();
 		let o: api::OutputListing = serde_json::from_str(&m.body).unwrap();
 
-		let mut api_outputs: Vec<(pedersen::Commitment, Output, bool, u64, u64)> =
-			Vec::new();
+		let mut api_outputs: Vec<(pedersen::Commitment, Output, bool, u64, u64)> = Vec::new();
 
 		for out in o.outputs {
 			let is_coinbase = match out.output_type {

@@ -170,7 +170,11 @@ impl NodeClient for HTTPNodeClient {
 			for out in res {
 				api_outputs.insert(
 					out.output.commitment(),
-					(util::to_hex(out.output.commitment().as_ref().to_vec()), out.height, out.mmr_index),
+					(
+						util::to_hex(out.output.commitment().as_ref().to_vec()),
+						out.height,
+						out.mmr_index,
+					),
 				);
 			}
 		}
@@ -239,8 +243,7 @@ impl NodeClient for HTTPNodeClient {
 
 		let url = format!("{}/v1/txhashset/outputs?{}", addr, query_param,);
 
-		let mut api_outputs: Vec<(pedersen::Commitment, Output, bool, u64, u64)> =
-			Vec::new();
+		let mut api_outputs: Vec<(pedersen::Commitment, Output, bool, u64, u64)> = Vec::new();
 
 		match api::client::get::<api::OutputListing>(url.as_str(), self.node_api_secret()) {
 			Ok(o) => {

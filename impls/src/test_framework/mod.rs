@@ -50,13 +50,14 @@ fn get_output_local(chain: &chain::Chain, commit: &pedersen::Commitment) -> Opti
 		if let Ok(_) = chain.is_unspent(&x) {
 			let block_height = chain.get_header_for_output(&x).unwrap().height;
 			let output_pos_height = chain.get_output_pos_height(&x.commit).unwrap_or((0, 0));
-			let output = chain.unspent_output_by_position(output_pos_height.0).unwrap();
-			return Some(
-				OutputEx {
-					output,
-					height: block_height,
-					mmr_index: output_pos_height.0
-				});
+			let output = chain
+				.unspent_output_by_position(output_pos_height.0)
+				.unwrap();
+			return Some(OutputEx {
+				output,
+				height: block_height,
+				mmr_index: output_pos_height.0,
+			});
 		}
 	}
 	None
@@ -77,9 +78,7 @@ fn get_outputs_by_pmmr_index_local(
 		outputs: outputs
 			.2
 			.iter()
-			.map(|x| {
-				api::OutputPrintable::from_output(x, chain.clone(), None, true).unwrap()
-			})
+			.map(|x| api::OutputPrintable::from_output(x, chain.clone(), None, true).unwrap())
 			.collect(),
 	}
 }

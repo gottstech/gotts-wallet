@@ -27,9 +27,9 @@ use crate::gotts_keychain::{Identifier, Keychain};
 use crate::internal::keys;
 use crate::slate::Slate;
 use crate::types::*;
+use rand::{thread_rng, Rng};
 use std::cmp::Reverse;
 use std::collections::HashMap;
-use rand::{thread_rng, Rng};
 
 /// Initialize a transaction on the sender side, returns a corresponding
 /// libwallet transaction slate with the appropriate inputs selected,
@@ -108,11 +108,7 @@ where
 	for (id, _, change_amount, w) in &context.get_outputs() {
 		output_commits.insert(
 			id.clone(),
-			(
-				wallet.calc_commit_for_cache(*w, &id)?,
-				*change_amount,
-				*w,
-			),
+			(wallet.calc_commit_for_cache(*w, &id)?, *change_amount, *w),
 		);
 	}
 
@@ -260,8 +256,8 @@ pub fn select_send_tx<T: ?Sized, C, K, B>(
 	(
 		Vec<Box<build::Append<K, B>>>,
 		Vec<OutputData>,
-		Vec<(u64, Identifier, Option<u64>, i64)>, 	// change amounts, derivations, mmr_index and w
-		u64,                                 		// fee
+		Vec<(u64, Identifier, Option<u64>, i64)>, // change amounts, derivations, mmr_index and w
+		u64,                                      // fee
 	),
 	Error,
 >
@@ -427,7 +423,7 @@ pub fn inputs_and_change<T: ?Sized, C, K, B>(
 ) -> Result<
 	(
 		Vec<Box<build::Append<K, B>>>,
-		Vec<(u64, Identifier, Option<u64>, i64)>,	// change amounts, derivations, mmr_index and w
+		Vec<(u64, Identifier, Option<u64>, i64)>, // change amounts, derivations, mmr_index and w
 	),
 	Error,
 >

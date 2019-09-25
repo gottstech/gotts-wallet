@@ -85,9 +85,7 @@ where
 		.map(|output| {
 			let commit = match output.commit.clone() {
 				Some(c) => pedersen::Commitment::from_vec(util::from_hex(c).unwrap()),
-				None => keychain
-					.commit(output.w, &output.key_id)
-					.unwrap(),
+				None => keychain.commit(output.w, &output.key_id).unwrap(),
 			};
 			OutputCommitMapping { output, commit }
 		})
@@ -229,9 +227,7 @@ where
 	for out in unspents {
 		let commit = match out.commit.clone() {
 			Some(c) => pedersen::Commitment::from_vec(util::from_hex(c).unwrap()),
-			None => keychain
-				.commit(out.w, &out.key_id)
-				.unwrap(),
+			None => keychain.commit(out.w, &out.key_id).unwrap(),
 		};
 		wallet_outputs.insert(commit, (out.key_id.clone(), out.mmr_index));
 	}
