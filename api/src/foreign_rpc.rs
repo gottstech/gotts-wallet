@@ -92,11 +92,11 @@ pub trait ForeignRpc {
 		"jsonrpc": "2.0",
 		"result": {
 			"Ok": {
-			    "kernel": {
+				"kernel": {
 					"excess": "08453117c78d6d9f2885602a843856b4737b3e0838b28b3f861c5082fbfa428c36",
 					"excess_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841bc0ee8ca4fb15df5dfed54a8350fa0b30014f1eb55dc076e156a79c4caa16b286",
 					"features": "Coinbase"
-			    },
+				},
 				"key_id": "0300000000000000000000000400000000",
 				"output": {
 					"commit": "08453117c78d6d9f2885602a843856b4737b3e0838b28b3f861c5082fbfa428c36",
@@ -129,11 +129,11 @@ pub trait ForeignRpc {
 		"method": "verify_slate_messages",
 		"id": 1,
 		"params": [ {
-			    "amount": "60000000000",
-			    "w": "-130160296693033216",
-			    "fee": "7000000",
-			    "height": "5",
-			    "lock_height": "0",
+				"amount": "60000000000",
+				"w": "-130160296693033216",
+				"fee": "7000000",
+				"height": "5",
+				"lock_height": "0",
 				"id": "0436430c-2b02-624c-2032-570501212b00",
 				"num_participants": 2,
 				"participant_data": [
@@ -442,11 +442,11 @@ pub trait ForeignRpc {
 					]
 				}
 			},
-		    "amount": "60000000000",
-		    "w": "64",
-		    "fee": "7000000",
-		    "height": "5",
-		    "lock_height": "0",
+			"amount": "60000000000",
+			"w": "64",
+			"fee": "7000000",
+			"height": "5",
+			"lock_height": "0",
 			"participant_data": [
 				{
 				  "id": "1",

@@ -29,8 +29,8 @@ use crate::slate::Slate;
 use crate::types::*;
 use rand::{thread_rng, Rng};
 use std::cmp::Reverse;
-use std::i64;
 use std::collections::HashMap;
+use std::i64;
 
 /// Initialize a transaction on the sender side, returns a corresponding
 /// libwallet transaction slate with the appropriate inputs selected,
@@ -71,7 +71,9 @@ where
 
 	slate.fee = fee;
 	let mut sum_of_w: i64 = inputs.iter().fold(0i64, |acc, x| acc.saturating_add(x.w));
-	sum_of_w = change_amounts_derivations.iter().fold(sum_of_w, |acc, x| acc.saturating_sub(x.3));
+	sum_of_w = change_amounts_derivations
+		.iter()
+		.fold(sum_of_w, |acc, x| acc.saturating_sub(x.3));
 	if sum_of_w == i64::MAX || sum_of_w == i64::MIN {
 		error!("build_send_tx: w overflow, please try again");
 		return Err(ErrorKind::GenericError("w overflow".to_string()))?;
@@ -315,8 +317,15 @@ where
 	}
 
 	// build transaction skeleton with inputs and change
-	let (mut parts, change_amounts_derivations) =
-		inputs_and_change(&coins, wallet, amount, fee, change_outputs, slate_w, use_test_rng)?;
+	let (mut parts, change_amounts_derivations) = inputs_and_change(
+		&coins,
+		wallet,
+		amount,
+		fee,
+		change_outputs,
+		slate_w,
+		use_test_rng,
+	)?;
 
 	// Build a "Plain" kernel unless lock_height>0 explicitly specified.
 	if lock_height > 0 {
@@ -489,7 +498,11 @@ where
 		let mut sum_of_w: i64 = coins.iter().fold(0i64, |acc, x| acc.saturating_add(x.w));
 
 		for x in 0..num_change_outputs {
-			let mut w: i64 = if use_test_rng { 4096 } else { thread_rng().gen() };
+			let mut w: i64 = if use_test_rng {
+				4096
+			} else {
+				thread_rng().gen()
+			};
 			//todo: how to avoid overflow here? a temporary solution is to limit the w range.
 			w = w / 64;
 			{

@@ -685,11 +685,11 @@ pub trait OwnerRpc {
 		"method": "tx_lock_outputs",
 		"id": 1,
 		"params": [ {
-			    "amount": "60000000000",
-			    "w": "-64",
-			    "fee": "7000000",
-			    "height": "5",
-			    "lock_height": "0",
+				"amount": "60000000000",
+				"w": "-64",
+				"fee": "7000000",
+				"height": "5",
+				"lock_height": "0",
 				"id": "0436430c-2b02-624c-2032-570501212b00",
 				"num_participants": 2,
 				"participant_data": [
@@ -830,11 +830,11 @@ pub trait OwnerRpc {
 					]
 				}
 			},
-		    "amount": "60000000000",
-		    "w": "-64",
-		    "fee": "7000000",
-		    "height": "5",
-		    "lock_height": "0",
+			"amount": "60000000000",
+			"w": "-64",
+			"fee": "7000000",
+			"height": "5",
+			"lock_height": "0",
 			"participant_data": [
 				{
 				  "id": "0",
@@ -1171,11 +1171,11 @@ pub trait OwnerRpc {
 		"method": "verify_slate_messages",
 		"id": 1,
 		"params": [ {
-			    "amount": "60000000000",
-			    "w": "-130160296693033216",
-			    "fee": "7000000",
-			    "height": "5",
-			    "lock_height": "0",
+				"amount": "60000000000",
+				"w": "-130160296693033216",
+				"fee": "7000000",
+				"height": "5",
+				"lock_height": "0",
 				"id": "0436430c-2b02-624c-2032-570501212b00",
 				"num_participants": 2,
 				"participant_data": [

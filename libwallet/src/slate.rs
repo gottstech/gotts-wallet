@@ -615,7 +615,12 @@ impl Slate {
 		// Calculate the final public key (for our own sanity check)
 
 		// Check our final sig verifies
-		println!("verify_completed_sig:\npubkey:\t{:?}\nmsg:\t{:?}\nsig:\t{:?}", final_pubkey, self.msg_to_sign()?, final_sig);
+		println!(
+			"verify_completed_sig:\npubkey:\t{:?}\nmsg:\t{:?}\nsig:\t{:?}",
+			final_pubkey,
+			self.msg_to_sign()?,
+			final_sig
+		);
 		aggsig::verify_completed_sig(
 			&keychain.secp(),
 			&final_sig,

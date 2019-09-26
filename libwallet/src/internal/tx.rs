@@ -242,15 +242,25 @@ where
 		participant_id,
 	)?;
 
-    // Check the public value balance and w balance
-    if participant_id == 0 && context.is_zero_sum_of_value(slate.amount) == false {
-        error!("complete_tx: public value balance validation failed. context={}", serde_json::to_string_pretty(context).unwrap());
-        return Err(ErrorKind::GenericError("inputs outputs value not balance".to_string()))?;
-    }
-    if participant_id == 0 && context.is_zero_sum_of_w(slate.w) == false {
-        error!("complete_tx: w balance validation failed. context={}", serde_json::to_string_pretty(context).unwrap());
-        return Err(ErrorKind::GenericError("inputs outputs w not balance".to_string()))?;
-    }
+	// Check the public value balance and w balance
+	if participant_id == 0 && context.is_zero_sum_of_value(slate.amount) == false {
+		error!(
+			"complete_tx: public value balance validation failed. context={}",
+			serde_json::to_string_pretty(context).unwrap()
+		);
+		return Err(ErrorKind::GenericError(
+			"inputs outputs value not balance".to_string(),
+		))?;
+	}
+	if participant_id == 0 && context.is_zero_sum_of_w(slate.w) == false {
+		error!(
+			"complete_tx: w balance validation failed. context={}",
+			serde_json::to_string_pretty(context).unwrap()
+		);
+		return Err(ErrorKind::GenericError(
+			"inputs outputs w not balance".to_string(),
+		))?;
+	}
 
 	// Final transaction can be built by anyone at this stage
 	slate.finalize(wallet.keychain())?;
