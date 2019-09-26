@@ -124,7 +124,7 @@ mod wallet_tests {
 		passphrase: &str,
 		account: &str,
 	) -> Result<
-		Arc<Mutex<WalletInst<LocalWalletClient, ExtKeychain>>>,
+		Arc<Mutex<dyn WalletInst<LocalWalletClient, ExtKeychain>>>,
 		gotts_wallet_controller::Error,
 	> {
 		wallet_config.chain_type = None;
@@ -294,7 +294,7 @@ mod wallet_tests {
 			"-i",
 			&file_name,
 			"-g",
-			"Thanks, Yeast!",
+			"Thanks, Gotts!",
 		];
 		execute_command(&app, test_dir, "wallet2", &client2, arg_vec.clone())?;
 
@@ -356,7 +356,7 @@ mod wallet_tests {
 			"-d",
 			&file_name,
 			"-g",
-			"Love, Yeast, Smallest",
+			"Love, Gotts, Smallest",
 			"-s",
 			"smallest",
 			"10",
@@ -373,7 +373,7 @@ mod wallet_tests {
 			"-i",
 			&file_name,
 			"-g",
-			"Thanks, Yeast!",
+			"Thanks, Gotts!",
 		];
 		execute_command(&app, test_dir, "wallet1", &client1, arg_vec.clone())?;
 
@@ -494,7 +494,7 @@ mod wallet_tests {
 			"-d",
 			&file_name,
 			"-g",
-			"Please give me your precious gottss. Love, Yeast",
+			"Please give me your precious gotts. Love, Gotts",
 			"65",
 		];
 		execute_command(&app, test_dir, "wallet2", &client2, arg_vec)?;

@@ -15,7 +15,7 @@
 
 //! core::libtx specific tests
 use gotts_wallet_libwallet::Context;
-use gotts_wallet_util::gotts_core::core::transaction::{self, KernelFeatures};
+use gotts_wallet_util::gotts_core::core::transaction::{self};
 use gotts_wallet_util::gotts_core::libtx::{aggsig, proof};
 use gotts_wallet_util::gotts_keychain::{
 	BlindSum, BlindingFactor, ExtKeychain, ExtKeychainPath, Keychain,
@@ -459,9 +459,7 @@ fn test_rewind_securedpath() {
 	let key_id2 = ExtKeychain::derive_key_id(1, 2, 0, 0, 0);
 	let w: i64 = thread_rng().gen();
 
-	let value = 5u64;
 	let commit = keychain.commit(w, &key_id).unwrap();
-	let extra_data = [99u8; 64];
 
 	let proof = proof::create_secured_path(&keychain, &builder, w, &key_id, commit);
 	let proof_info = proof::rewind(keychain.secp(), &builder, &commit, &proof).unwrap();

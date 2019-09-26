@@ -16,6 +16,7 @@
 //! Generic implementation of owner API functions
 
 use uuid::Uuid;
+use rand::{thread_rng, Rng};
 
 use crate::gotts_core::core::hash::Hashed;
 use crate::gotts_core::{self, core::Transaction};
@@ -268,6 +269,9 @@ where
 	};
 
 	let mut slate = tx::new_tx_slate(&mut *w, args.amount, 2, use_test_rng)?;
+	let wr: i64 = if use_test_rng { 4096 } else { thread_rng().gen() };
+	//todo: how to avoid overflow here? a temporary solution is to limit the 'w' range.
+	slate.w = wr / 64;
 	let context = tx::add_output_to_slate(
 		&mut *w,
 		&mut slate,

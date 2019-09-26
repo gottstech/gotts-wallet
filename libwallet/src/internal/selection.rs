@@ -29,6 +29,7 @@ use crate::slate::Slate;
 use crate::types::*;
 use rand::{thread_rng, Rng};
 use std::cmp::Reverse;
+use std::i64;
 use std::collections::HashMap;
 
 /// Initialize a transaction on the sender side, returns a corresponding
@@ -44,7 +45,8 @@ pub fn build_send_tx<T: ?Sized, C, K>(
 	change_outputs: usize,
 	selection_strategy: String,
 	parent_key_id: Identifier,
-	use_test_nonce: bool,
+	is_initator: bool,
+	use_test_rng: bool,
 ) -> Result<Context, Error>
 where
 	T: WalletBackend<C, K>,
@@ -61,18 +63,32 @@ where
 		change_outputs,
 		selection_strategy,
 		&parent_key_id,
+		if !is_initator { Some(slate.w) } else { None },
+		use_test_rng,
 	)?;
 	let keychain = wallet.keychain();
 	let blinding = slate.add_transaction_elements(keychain, &ProofBuilder::new(keychain), elems)?;
 
 	slate.fee = fee;
+	let mut sum_of_w: i64 = inputs.iter().fold(0i64, |acc, x| acc.saturating_add(x.w));
+	sum_of_w = change_amounts_derivations.iter().fold(sum_of_w, |acc, x| acc.saturating_sub(x.3));
+	if sum_of_w == i64::MAX || sum_of_w == i64::MIN {
+		error!("build_send_tx: w overflow, please try again");
+		return Err(ErrorKind::GenericError("w overflow".to_string()))?;
+	}
+	if is_initator {
+		slate.w = sum_of_w;
+	} else if sum_of_w != slate.w {
+		error!("build_send_tx: w not balanced, a wrong buiding");
+		return Err(ErrorKind::GenericError("w not balanced".to_string()))?;
+	}
 
 	// Create our own private context
 	let mut context = Context::new(
 		keychain.secp(),
 		blinding.secret_key(&keychain.secp()).unwrap(),
 		&parent_key_id,
-		use_test_nonce,
+		use_test_rng,
 		0,
 	);
 
@@ -252,6 +268,8 @@ pub fn select_send_tx<T: ?Sized, C, K, B>(
 	change_outputs: usize,
 	selection_strategy: String,
 	parent_key_id: &Identifier,
+	slate_w: Option<i64>,
+	use_test_rng: bool,
 ) -> Result<
 	(
 		Vec<Box<build::Append<K, B>>>,
@@ -298,7 +316,7 @@ where
 
 	// build transaction skeleton with inputs and change
 	let (mut parts, change_amounts_derivations) =
-		inputs_and_change(&coins, wallet, amount, fee, change_outputs)?;
+		inputs_and_change(&coins, wallet, amount, fee, change_outputs, slate_w, use_test_rng)?;
 
 	// Build a "Plain" kernel unless lock_height>0 explicitly specified.
 	if lock_height > 0 {
@@ -420,6 +438,8 @@ pub fn inputs_and_change<T: ?Sized, C, K, B>(
 	amount: u64,
 	fee: u64,
 	num_change_outputs: usize,
+	slate_w: Option<i64>,
+	use_test_rng: bool,
 ) -> Result<
 	(
 		Vec<Box<build::Append<K, B>>>,
@@ -466,16 +486,28 @@ where
 
 		let part_change = change / num_change_outputs as u64;
 		let remainder_change = change % part_change;
-		let mut sum_of_w = 0i64;
+		let mut sum_of_w: i64 = coins.iter().fold(0i64, |acc, x| acc.saturating_add(x.w));
 
 		for x in 0..num_change_outputs {
-			let mut w: i64 = thread_rng().gen();
+			let mut w: i64 = if use_test_rng { 4096 } else { thread_rng().gen() };
+			//todo: how to avoid overflow here? a temporary solution is to limit the w range.
+			w = w / 64;
 			{
-				let test = sum_of_w.saturating_add(w);
-				if test == i64::max_value() || test == i64::min_value() {
-					w = -w;
+				// for invoice feature, the final change accounting for the 'w' balance
+				if slate_w.is_some() && x == (num_change_outputs - 1) {
+					w = sum_of_w.saturating_sub(slate_w.unwrap());
+					sum_of_w = sum_of_w.saturating_sub(w);
+					if sum_of_w != 0 {
+						error!("inputs_and_change: w not balanced");
+					}
+				} else {
+					let test = sum_of_w.saturating_sub(w);
+					if test == i64::max_value() || test == i64::min_value() {
+						//revert the 'w' to try avoiding overflow
+						w = -w;
+					}
+					sum_of_w = sum_of_w.saturating_sub(w);
 				}
-				sum_of_w = sum_of_w.saturating_add(w);
 			}
 			// n-1 equal change_outputs and a final one accounting for any remainder
 			let change_amount = if x == (num_change_outputs - 1) {

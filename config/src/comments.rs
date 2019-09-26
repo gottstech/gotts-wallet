@@ -33,7 +33,7 @@ fn comments() -> HashMap<String, String> {
 	retval.insert(
 		"api_listen_interface".to_string(),
 		"
-#host IP for wallet listener, change to \"0.0.0.0\" to receive gottss
+#host IP for wallet listener, change to \"0.0.0.0\" to receive gotts
 "
 		.to_string(),
 	);

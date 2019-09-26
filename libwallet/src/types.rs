@@ -624,6 +624,20 @@ impl Context {
 			PublicKey::from_secret_key(secp, &self.sec_nonce).unwrap(),
 		)
 	}
+
+	/// Check the public value balance
+	pub fn is_zero_sum_of_value(&self, amount: u64) -> bool {
+		let inputs: u64 = self.input_ids.iter().fold(0u64, |acc, x| acc + x.2);
+		let outputs: u64 = self.output_ids.iter().fold(0u64, |acc, x| acc + x.2);
+		inputs == outputs + self.fee + amount
+	}
+
+	/// Check the w balance
+	pub fn is_zero_sum_of_w(&self, w: i64) -> bool {
+		let inputs: i64 = self.input_ids.iter().fold(0i64, |acc, x| acc + x.3);
+		let outputs: i64 = self.output_ids.iter().fold(0i64, |acc, x| acc + x.3);
+		inputs == outputs + w
+	}
 }
 
 impl ser::Writeable for Context {

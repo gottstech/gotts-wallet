@@ -14,7 +14,7 @@
 // limitations under the License.
 //! Functions to restore a wallet's outputs from just the master seed
 
-use crate::gotts_core::core::{HeaderVersion, Output};
+use crate::gotts_core::core::Output;
 use crate::gotts_core::global;
 use crate::gotts_core::libtx::proof;
 use crate::gotts_keychain::{ExtKeychain, Identifier, Keychain};
@@ -81,13 +81,16 @@ where
 
 	for output in outputs.iter() {
 		let (commit, ot, is_coinbase, height, mmr_index) = output;
-		// attempt to unwind message from the RP and get a value
+		// attempt to unwind message from the SecuredPath and get a 'w'
 		// will fail if it's not ours
 		let spath = match ot.features.get_spath() {
 			Ok(s) => s,
 			Err(_) => continue,
 		};
-		let info = proof::rewind(keychain.secp(), &builder, commit, spath)?;
+		let info = match proof::rewind(keychain.secp(), &builder, commit, spath) {
+			Ok(i) => i,
+			Err(_) => continue,
+		};
 
 		let (amount, w, key_id) = (ot.value, info.w, info.key_id);
 
