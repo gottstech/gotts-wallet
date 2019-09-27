@@ -615,12 +615,6 @@ impl Slate {
 		// Calculate the final public key (for our own sanity check)
 
 		// Check our final sig verifies
-		println!(
-			"verify_completed_sig:\npubkey:\t{:?}\nmsg:\t{:?}\nsig:\t{:?}",
-			final_pubkey,
-			self.msg_to_sign()?,
-			final_sig
-		);
 		aggsig::verify_completed_sig(
 			&keychain.secp(),
 			&final_sig,
@@ -650,8 +644,8 @@ impl Slate {
 		// build the final excess based on final tx and offset
 		let final_excess = {
 			// sum the input/output commitments on the final tx
-			let overage = final_tx.fee() as i64;
-			let tx_excess = final_tx.sum_commitments(overage)?;
+			let _overage = final_tx.fee() as i64;
+			let tx_excess = final_tx.sum_commitments()?;
 
 			// subtract the kernel_excess (built from kernel_offset)
 			let offset_excess = keychain
