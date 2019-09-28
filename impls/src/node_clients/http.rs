@@ -256,7 +256,7 @@ impl NodeClient for HTTPNodeClient {
 						out.output.commit,
 						out.output,
 						is_coinbase,
-						out.block_height.unwrap(),
+						out.block_height.unwrap_or(0),
 						out.mmr_index,
 					));
 				}
