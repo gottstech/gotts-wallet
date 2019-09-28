@@ -14,11 +14,10 @@
 // limitations under the License.
 //! Functions to restore a wallet's outputs from just the master seed
 
-use crate::gotts_core::consensus::{valid_header_version, WEEK_HEIGHT};
-use crate::gotts_core::core::HeaderVersion;
+use crate::gotts_core::core::Output;
 use crate::gotts_core::global;
 use crate::gotts_core::libtx::proof;
-use crate::gotts_keychain::{ExtKeychain, Identifier, Keychain, SwitchCommitmentType};
+use crate::gotts_keychain::{ExtKeychain, Identifier, Keychain};
 use crate::gotts_util::secp::pedersen;
 use crate::internal::{keys, updater};
 use crate::types::*;
@@ -39,6 +38,8 @@ struct OutputResult {
 	pub mmr_index: u64,
 	///
 	pub value: u64,
+	///
+	pub w: i64,
 	///
 	pub height: u64,
 	///
@@ -61,7 +62,7 @@ struct RestoredTxStats {
 
 fn identify_utxo_outputs<T, C, K>(
 	wallet: &mut T,
-	outputs: Vec<(pedersen::Commitment, pedersen::RangeProof, bool, u64, u64)>,
+	outputs: Vec<(pedersen::Commitment, Output, bool, u64, u64)>,
 ) -> Result<Vec<OutputResult>, Error>
 where
 	T: WalletBackend<C, K>,
@@ -76,37 +77,22 @@ where
 	);
 
 	let keychain = wallet.keychain();
-	let legacy_builder = proof::LegacyProofBuilder::new(keychain);
 	let builder = proof::ProofBuilder::new(keychain);
-	let legacy_version = HeaderVersion(1);
 
 	for output in outputs.iter() {
-		let (commit, proof, is_coinbase, height, mmr_index) = output;
-		// attempt to unwind message from the RP and get a value
+		let (commit, ot, is_coinbase, height, mmr_index) = output;
+		// attempt to unwind message from the SecuredPath and get a 'w'
 		// will fail if it's not ours
-		let info = {
-			// Before HF+2wk, try legacy rewind first
-			let info_legacy =
-				if valid_header_version(height.saturating_sub(2 * WEEK_HEIGHT), legacy_version) {
-					proof::rewind(keychain.secp(), &legacy_builder, *commit, None, *proof)?
-				} else {
-					None
-				};
-
-			// If legacy didn't work, try new rewind
-			if info_legacy.is_none() {
-				proof::rewind(keychain.secp(), &builder, *commit, None, *proof)?
-			} else {
-				info_legacy
-			}
+		let spath = match ot.features.get_spath() {
+			Ok(s) => s,
+			Err(_) => continue,
+		};
+		let info = match proof::rewind(keychain.secp(), &builder, commit, spath) {
+			Ok(i) => i,
+			Err(_) => continue,
 		};
 
-		let (amount, key_id, switch) = match info {
-			Some(i) => i,
-			None => {
-				continue;
-			}
-		};
+		let (amount, w, key_id) = (ot.value, info.w, info.key_id);
 
 		let lock_height = if *is_coinbase {
 			*height + global::coinbase_maturity()
@@ -118,18 +104,14 @@ where
 			"Output found: {:?}, amount: {:?}, key_id: {:?}, mmr_index: {},",
 			commit, amount, key_id, mmr_index,
 		);
-
-		if switch != SwitchCommitmentType::Regular {
-			warn!("Unexpected switch commitment type {:?}", switch);
-		}
-
 		wallet_outputs.push(OutputResult {
 			commit: *commit,
 			key_id: key_id.clone(),
 			n_child: key_id.to_path().last_path_index(),
 			value: amount,
+			w,
 			height: *height,
-			lock_height: lock_height,
+			lock_height,
 			is_coinbase: *is_coinbase,
 			mmr_index: *mmr_index,
 		});
@@ -157,7 +139,7 @@ where
 			last_retrieved_index,
 		);
 
-		result_vec.append(&mut identify_utxo_outputs(wallet, outputs.clone())?);
+		result_vec.append(&mut identify_utxo_outputs(wallet, outputs)?);
 
 		if highest_index == last_retrieved_index {
 			break;
@@ -179,7 +161,7 @@ where
 	C: NodeClient,
 	K: Keychain,
 {
-	let commit = wallet.calc_commit_for_cache(output.value, &output.key_id)?;
+	let commit = wallet.calc_commit_for_cache(output.w, &output.key_id)?;
 	let mut batch = wallet.batch()?;
 
 	let parent_key_id = output.key_id.parent_path();
@@ -232,8 +214,9 @@ where
 		key_id: output.key_id,
 		n_child: output.n_child,
 		mmr_index: Some(output.mmr_index),
-		commit: commit,
+		commit,
 		value: output.value,
+		w: output.w,
 		status: OutputStatus::Unspent,
 		height: output.height,
 		lock_height: output.lock_height,

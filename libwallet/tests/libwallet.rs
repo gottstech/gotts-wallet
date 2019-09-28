@@ -15,14 +15,14 @@
 
 //! core::libtx specific tests
 use gotts_wallet_libwallet::Context;
-use gotts_wallet_util::gotts_core::core::transaction::{self, KernelFeatures};
+use gotts_wallet_util::gotts_core::core::transaction::{self};
 use gotts_wallet_util::gotts_core::libtx::{aggsig, proof};
 use gotts_wallet_util::gotts_keychain::{
-	BlindSum, BlindingFactor, ExtKeychain, ExtKeychainPath, Keychain, SwitchCommitmentType,
+	BlindSum, BlindingFactor, ExtKeychain, ExtKeychainPath, Keychain,
 };
 use gotts_wallet_util::gotts_util::secp;
 use gotts_wallet_util::gotts_util::secp::key::{PublicKey, SecretKey};
-use rand::thread_rng;
+use rand::{thread_rng, Rng};
 
 fn kernel_sig_msg() -> secp::Message {
 	transaction::KernelFeatures::Plain { fee: 0 }
@@ -33,7 +33,6 @@ fn kernel_sig_msg() -> secp::Message {
 #[test]
 fn aggsig_sender_receiver_interaction() {
 	let parent = ExtKeychainPath::new(1, 1, 0, 0, 0).to_identifier();
-	let switch = &SwitchCommitmentType::Regular;
 	let sender_keychain = ExtKeychain::from_random_seed(true).unwrap();
 	let receiver_keychain = ExtKeychain::from_random_seed(true).unwrap();
 
@@ -41,8 +40,8 @@ fn aggsig_sender_receiver_interaction() {
 	// Normally this would happen during transaction building.
 	let kernel_excess = {
 		let id1 = ExtKeychain::derive_key_id(1, 1, 0, 0, 0);
-		let skey1 = sender_keychain.derive_key(0, &id1, switch).unwrap();
-		let skey2 = receiver_keychain.derive_key(0, &id1, switch).unwrap();
+		let skey1 = sender_keychain.derive_key(&id1).unwrap();
+		let skey2 = receiver_keychain.derive_key(&id1).unwrap();
 
 		let keychain = ExtKeychain::from_random_seed(true).unwrap();
 		let blinding_factor = keychain
@@ -65,7 +64,7 @@ fn aggsig_sender_receiver_interaction() {
 	let (sender_pub_excess, _sender_pub_nonce) = {
 		let keychain = sender_keychain.clone();
 		let id1 = ExtKeychain::derive_key_id(1, 1, 0, 0, 0);
-		let skey = keychain.derive_key(0, &id1, switch).unwrap();
+		let skey = keychain.derive_key(&id1).unwrap();
 
 		// dealing with an input here so we need to negate the blinding_factor
 		// rather than use it as is
@@ -88,11 +87,11 @@ fn aggsig_sender_receiver_interaction() {
 		let key_id = ExtKeychain::derive_key_id(1, 1, 0, 0, 0);
 
 		// let blind = blind_sum.secret_key(&keychain.secp())?;
-		let blind = keychain.derive_key(0, &key_id, switch).unwrap();
+		let blind = keychain.derive_key(&key_id).unwrap();
 
 		rx_cx = Context::new(&keychain.secp(), blind, &parent, false, 1);
 		let (pub_excess, pub_nonce) = rx_cx.get_public_keys(&keychain.secp());
-		rx_cx.add_output(&key_id, &None, 0);
+		rx_cx.add_output(&key_id, &None, 0, 0);
 
 		pub_nonce_sum = PublicKey::from_combination(
 			keychain.secp(),
@@ -239,7 +238,6 @@ fn aggsig_sender_receiver_interaction() {
 #[test]
 fn aggsig_sender_receiver_interaction_offset() {
 	let parent = ExtKeychainPath::new(1, 1, 0, 0, 0).to_identifier();
-	let switch = &SwitchCommitmentType::Regular;
 	let sender_keychain = ExtKeychain::from_random_seed(true).unwrap();
 	let receiver_keychain = ExtKeychain::from_random_seed(true).unwrap();
 
@@ -252,8 +250,8 @@ fn aggsig_sender_receiver_interaction_offset() {
 	// Normally this would happen during transaction building.
 	let kernel_excess = {
 		let id1 = ExtKeychain::derive_key_id(1, 1, 0, 0, 0);
-		let skey1 = sender_keychain.derive_key(0, &id1, switch).unwrap();
-		let skey2 = receiver_keychain.derive_key(0, &id1, switch).unwrap();
+		let skey1 = sender_keychain.derive_key(&id1).unwrap();
+		let skey2 = receiver_keychain.derive_key(&id1).unwrap();
 
 		let keychain = ExtKeychain::from_random_seed(true).unwrap();
 		let blinding_factor = keychain
@@ -279,7 +277,7 @@ fn aggsig_sender_receiver_interaction_offset() {
 	let (sender_pub_excess, _sender_pub_nonce) = {
 		let keychain = sender_keychain.clone();
 		let id1 = ExtKeychain::derive_key_id(1, 1, 0, 0, 0);
-		let skey = keychain.derive_key(0, &id1, switch).unwrap();
+		let skey = keychain.derive_key(&id1).unwrap();
 
 		// dealing with an input here so we need to negate the blinding_factor
 		// rather than use it as is
@@ -306,11 +304,11 @@ fn aggsig_sender_receiver_interaction_offset() {
 		let keychain = receiver_keychain.clone();
 		let key_id = ExtKeychain::derive_key_id(1, 1, 0, 0, 0);
 
-		let blind = keychain.derive_key(0, &key_id, switch).unwrap();
+		let blind = keychain.derive_key(&key_id).unwrap();
 
 		rx_cx = Context::new(&keychain.secp(), blind, &parent, false, 1);
 		let (pub_excess, pub_nonce) = rx_cx.get_public_keys(&keychain.secp());
-		rx_cx.add_output(&key_id, &None, 0);
+		rx_cx.add_output(&key_id, &None, 0, 0);
 
 		pub_nonce_sum = PublicKey::from_combination(
 			keychain.secp(),
@@ -454,73 +452,29 @@ fn aggsig_sender_receiver_interaction_offset() {
 }
 
 #[test]
-fn test_rewind_range_proof() {
+fn test_rewind_securedpath() {
 	let keychain = ExtKeychain::from_random_seed(true).unwrap();
 	let builder = proof::ProofBuilder::new(&keychain);
 	let key_id = ExtKeychain::derive_key_id(1, 1, 0, 0, 0);
 	let key_id2 = ExtKeychain::derive_key_id(1, 2, 0, 0, 0);
-	let switch = &SwitchCommitmentType::Regular;
-	let commit = keychain.commit(5, &key_id, switch).unwrap();
-	let extra_data = [99u8; 64];
+	let w: i64 = thread_rng().gen();
 
-	let proof = proof::create(
-		&keychain,
-		&builder,
-		5,
-		&key_id,
-		switch,
-		commit,
-		Some(extra_data.to_vec().clone()),
-	)
-	.unwrap();
-	let proof_info = proof::rewind(
-		keychain.secp(),
-		&builder,
-		commit,
-		Some(extra_data.to_vec().clone()),
-		proof,
-	)
-	.unwrap();
+	let commit = keychain.commit(w, &key_id).unwrap();
 
-	assert!(proof_info.is_some());
-	let (r_amount, r_key_id, r_switch) = proof_info.unwrap();
-	assert_eq!(r_amount, 5);
+	let proof = proof::create_secured_path(&keychain, &builder, w, &key_id, commit);
+	let proof_info = proof::rewind(keychain.secp(), &builder, &commit, &proof).unwrap();
+
+	let (r_w, r_key_id) = (proof_info.w, proof_info.key_id);
+	assert_eq!(r_w, w);
 	assert_eq!(r_key_id, key_id);
-	assert_eq!(&r_switch, switch);
 
 	// cannot rewind with a different commit
-	let commit2 = keychain.commit(5, &key_id2, switch).unwrap();
-	let proof_info = proof::rewind(
-		keychain.secp(),
-		&builder,
-		commit2,
-		Some(extra_data.to_vec().clone()),
-		proof,
-	)
-	.unwrap();
-	assert!(proof_info.is_none());
+	let commit2 = keychain.commit(w, &key_id2).unwrap();
+	let proof_info = proof::rewind(keychain.secp(), &builder, &commit2, &proof);
+	assert!(proof_info.is_err());
 
-	// cannot rewind with a commitment to a different value
-	let commit3 = keychain.commit(4, &key_id, switch).unwrap();
-	let proof_info = proof::rewind(
-		keychain.secp(),
-		&builder,
-		commit3,
-		Some(extra_data.to_vec().clone()),
-		proof,
-	)
-	.unwrap();
-	assert!(proof_info.is_none());
-
-	// cannot rewind with wrong extra committed data
-	let wrong_extra_data = [98u8; 64];
-	let proof_info = proof::rewind(
-		keychain.secp(),
-		&builder,
-		commit,
-		Some(wrong_extra_data.to_vec().clone()),
-		proof,
-	)
-	.unwrap();
-	assert!(proof_info.is_none());
+	// cannot rewind with a commitment to a different w
+	let commit3 = keychain.commit(1234i64, &key_id).unwrap();
+	let proof_info = proof::rewind(keychain.secp(), &builder, &commit3, &proof);
+	assert!(proof_info.is_err());
 }

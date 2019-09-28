@@ -18,7 +18,7 @@
 
 use crate::error::{Error, ErrorKind};
 use crate::gotts_core::core::hash::Hash;
-use crate::gotts_core::core::{Transaction, TxKernelApiEntry};
+use crate::gotts_core::core::{Output, Transaction, TxKernelApiEntry};
 use crate::gotts_core::libtx::{aggsig, secp_ser};
 use crate::gotts_keychain::{Identifier, Keychain};
 use crate::gotts_util::secp::key::{PublicKey, SecretKey};
@@ -76,11 +76,7 @@ where
 	fn update_passphrase(&mut self, new_password: &str);
 
 	/// return the commit for caching if allowed, none otherwise
-	fn calc_commit_for_cache(
-		&mut self,
-		amount: u64,
-		id: &Identifier,
-	) -> Result<Option<String>, Error>;
+	fn calc_commit_for_cache(&mut self, w: i64, id: &Identifier) -> Result<Option<String>, Error>;
 
 	/// Set parent key id by stored account name
 	fn set_parent_key_id_by_name(&mut self, label: &str) -> Result<(), Error>;
@@ -294,7 +290,7 @@ pub trait NodeClient: Sync + Send + Clone {
 		(
 			u64,
 			u64,
-			Vec<(pedersen::Commitment, pedersen::RangeProof, bool, u64, u64)>,
+			Vec<(pedersen::Commitment, Output, bool, u64, u64)>,
 		),
 		Error,
 	>;
@@ -329,9 +325,12 @@ pub struct OutputData {
 	/// key_id (2 wallets using same seed, for instance
 	#[serde(with = "secp_ser::opt_string_or_u64")]
 	pub mmr_index: Option<u64>,
-	/// Value of the output, necessary to rebuild the commitment
+	/// Value of the output
 	#[serde(with = "secp_ser::string_or_u64")]
 	pub value: u64,
+	/// `w` of the output, necessary to rebuild the commitment
+	#[serde(with = "secp_ser::string_or_i64")]
+	pub w: i64,
 	/// Current status of the output
 	pub status: OutputStatus,
 	/// Height of the output
@@ -540,11 +539,11 @@ pub struct Context {
 	/// (basically a SecretKey)
 	pub sec_nonce: SecretKey,
 	/// store my outputs + amounts between invocations
-	/// Id, mmr_index (if known), amount
-	pub output_ids: Vec<(Identifier, Option<u64>, u64)>,
+	/// Id, mmr_index (if known), amount, w
+	pub output_ids: Vec<(Identifier, Option<u64>, u64, i64)>,
 	/// store my inputs
-	/// Id, mmr_index (if known), amount
-	pub input_ids: Vec<(Identifier, Option<u64>, u64)>,
+	/// Id, mmr_index (if known), amount, w
+	pub input_ids: Vec<(Identifier, Option<u64>, u64, i64)>,
 	/// store the calculated fee
 	pub fee: u64,
 	/// keep track of the participant id
@@ -579,25 +578,37 @@ impl Context {
 impl Context {
 	/// Tracks an output contributing to my excess value (if it needs to
 	/// be kept between invocations
-	pub fn add_output(&mut self, output_id: &Identifier, mmr_index: &Option<u64>, amount: u64) {
+	pub fn add_output(
+		&mut self,
+		output_id: &Identifier,
+		mmr_index: &Option<u64>,
+		amount: u64,
+		w: i64,
+	) {
 		self.output_ids
-			.push((output_id.clone(), mmr_index.clone(), amount));
+			.push((output_id.clone(), mmr_index.clone(), amount, w));
 	}
 
 	/// Returns all stored outputs
-	pub fn get_outputs(&self) -> Vec<(Identifier, Option<u64>, u64)> {
+	pub fn get_outputs(&self) -> Vec<(Identifier, Option<u64>, u64, i64)> {
 		self.output_ids.clone()
 	}
 
 	/// Tracks IDs of my inputs into the transaction
 	/// be kept between invocations
-	pub fn add_input(&mut self, input_id: &Identifier, mmr_index: &Option<u64>, amount: u64) {
+	pub fn add_input(
+		&mut self,
+		input_id: &Identifier,
+		mmr_index: &Option<u64>,
+		amount: u64,
+		w: i64,
+	) {
 		self.input_ids
-			.push((input_id.clone(), mmr_index.clone(), amount));
+			.push((input_id.clone(), mmr_index.clone(), amount, w));
 	}
 
 	/// Returns all stored input identifiers
-	pub fn get_inputs(&self) -> Vec<(Identifier, Option<u64>, u64)> {
+	pub fn get_inputs(&self) -> Vec<(Identifier, Option<u64>, u64, i64)> {
 		self.input_ids.clone()
 	}
 
@@ -612,6 +623,20 @@ impl Context {
 			PublicKey::from_secret_key(secp, &self.sec_key).unwrap(),
 			PublicKey::from_secret_key(secp, &self.sec_nonce).unwrap(),
 		)
+	}
+
+	/// Check the public value balance
+	pub fn is_zero_sum_of_value(&self, amount: u64) -> bool {
+		let inputs: u64 = self.input_ids.iter().fold(0u64, |acc, x| acc + x.2);
+		let outputs: u64 = self.output_ids.iter().fold(0u64, |acc, x| acc + x.2);
+		inputs == outputs + self.fee + amount
+	}
+
+	/// Check the w balance
+	pub fn is_zero_sum_of_w(&self, w: i64) -> bool {
+		let inputs: i64 = self.input_ids.iter().fold(0i64, |acc, x| acc + x.3);
+		let outputs: i64 = self.output_ids.iter().fold(0i64, |acc, x| acc + x.3);
+		inputs == outputs + w
 	}
 }
 

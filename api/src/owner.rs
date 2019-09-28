@@ -114,7 +114,7 @@ where
 	/// // the wallet and the node.
 	///
 	/// let node_client = HTTPNodeClient::new(&wallet_config.check_node_api_http_addr, None);
-	/// let mut wallet:Arc<Mutex<WalletBackend<HTTPNodeClient, ExtKeychain>>> =
+	/// let mut wallet:Arc<Mutex<dyn WalletBackend<HTTPNodeClient, ExtKeychain>>> =
 	///		Arc::new(Mutex::new(
 	///			LMDBBackend::new(wallet_config.clone(), "", node_client).unwrap()
 	///		));
@@ -927,7 +927,7 @@ where
 	///		//
 	///		// Retrieve slate back from recipient
 	///		//
-	///		let res = api_owner.finalize_tx(&slate, None, None);
+	///		let res = api_owner.finalize_tx(&slate);
 	///		let res = api_owner.repost_last_txs(true, true);
 	/// }
 	/// ```

@@ -27,7 +27,7 @@ use uuid::Uuid;
 use crate::blake2::blake2b::Blake2b;
 
 use super::wallet_store::{self, option_to_not_found};
-use crate::keychain::{ChildNumber, ExtKeychain, Identifier, Keychain, SwitchCommitmentType};
+use crate::keychain::{ChildNumber, ExtKeychain, Identifier, Keychain};
 use crate::store::{to_key, to_key_u64};
 
 use crate::core::core::Transaction;
@@ -71,7 +71,7 @@ fn private_ctx_xor_keys<K>(
 where
 	K: Keychain,
 {
-	let root_key = keychain.derive_key(0, &K::root_key_id(), &SwitchCommitmentType::Regular)?;
+	let root_key = keychain.derive_key(&K::root_key_id())?;
 
 	// derive XOR values for storing secret values in DB
 	// h(root_key|slate_id|"blind")
@@ -208,19 +208,12 @@ where
 	}
 
 	/// return the version of the commit for caching
-	fn calc_commit_for_cache(
-		&mut self,
-		amount: u64,
-		id: &Identifier,
-	) -> Result<Option<String>, Error> {
+	fn calc_commit_for_cache(&mut self, w: i64, id: &Identifier) -> Result<Option<String>, Error> {
 		if self.config.no_commit_cache == Some(true) {
 			Ok(None)
 		} else {
 			Ok(Some(util::to_hex(
-				self.keychain()
-					.commit(amount, &id, &SwitchCommitmentType::Regular)?
-					.0
-					.to_vec(), // TODO: proper support for different switch commitment schemes
+				self.keychain().commit(w, &id)?.0.to_vec(),
 			)))
 		}
 	}

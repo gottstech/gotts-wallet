@@ -161,6 +161,9 @@ pub struct Slate {
 	/// base amount (excluding fee)
 	#[serde(with = "secp_ser::string_or_u64")]
 	pub amount: u64,
+	/// `w` of the new Pedersen Commitment form: `r*G + w*H`.
+	#[serde(with = "secp_ser::string_or_i64")]
+	pub w: i64,
 	/// fee amount
 	#[serde(with = "secp_ser::string_or_u64")]
 	pub fee: u64,
@@ -222,10 +225,11 @@ impl Slate {
 	/// Create a new slate
 	pub fn blank(num_participants: usize) -> Slate {
 		Slate {
-			num_participants: num_participants,
+			num_participants,
 			id: Uuid::new_v4(),
 			tx: Transaction::empty(),
 			amount: 0,
+			w: 0,
 			fee: 0,
 			height: 0,
 			lock_height: 0,
@@ -640,8 +644,8 @@ impl Slate {
 		// build the final excess based on final tx and offset
 		let final_excess = {
 			// sum the input/output commitments on the final tx
-			let overage = final_tx.fee() as i64;
-			let tx_excess = final_tx.sum_commitments(overage)?;
+			let _overage = final_tx.fee() as i64;
+			let tx_excess = final_tx.sum_commitments()?;
 
 			// subtract the kernel_excess (built from kernel_offset)
 			let offset_excess = keychain
@@ -726,6 +730,7 @@ impl From<Slate> for SlateV2 {
 			id,
 			tx,
 			amount,
+			w,
 			fee,
 			height,
 			lock_height,
@@ -740,6 +745,7 @@ impl From<Slate> for SlateV2 {
 			id,
 			tx,
 			amount,
+			w,
 			fee,
 			height,
 			lock_height,
@@ -756,6 +762,7 @@ impl From<&Slate> for SlateV2 {
 			id,
 			tx,
 			amount,
+			w,
 			fee,
 			height,
 			lock_height,
@@ -766,6 +773,7 @@ impl From<&Slate> for SlateV2 {
 		let id = *id;
 		let tx = TransactionV2::from(tx);
 		let amount = *amount;
+		let w = *w;
 		let fee = *fee;
 		let height = *height;
 		let lock_height = *lock_height;
@@ -776,6 +784,7 @@ impl From<&Slate> for SlateV2 {
 			id,
 			tx,
 			amount,
+			w,
 			fee,
 			height,
 			lock_height,
@@ -878,12 +887,12 @@ impl From<&Output> for OutputV2 {
 		let Output {
 			features,
 			commit,
-			proof,
+			value,
 		} = *output;
 		OutputV2 {
 			features,
 			commit,
-			proof,
+			value,
 		}
 	}
 }
@@ -915,6 +924,7 @@ impl From<SlateV2> for Slate {
 			id,
 			tx,
 			amount,
+			w,
 			fee,
 			height,
 			lock_height,
@@ -929,6 +939,7 @@ impl From<SlateV2> for Slate {
 			id,
 			tx,
 			amount,
+			w,
 			fee,
 			height,
 			lock_height,
@@ -945,6 +956,7 @@ impl From<&SlateV2> for Slate {
 			id,
 			tx,
 			amount,
+			w,
 			fee,
 			height,
 			lock_height,
@@ -955,6 +967,7 @@ impl From<&SlateV2> for Slate {
 		let id = id.clone();
 		let tx = Transaction::from(tx);
 		let amount = *amount;
+		let w = *w;
 		let fee = *fee;
 		let height = *height;
 		let lock_height = *lock_height;
@@ -966,6 +979,7 @@ impl From<&SlateV2> for Slate {
 			id,
 			tx,
 			amount,
+			w,
 			fee,
 			height,
 			lock_height,
@@ -1068,12 +1082,12 @@ impl From<&OutputV2> for Output {
 		let OutputV2 {
 			features,
 			commit,
-			proof,
+			value,
 		} = *output;
 		Output {
 			features,
 			commit,
-			proof,
+			value,
 		}
 	}
 }

@@ -101,6 +101,8 @@ where
 		None => None,
 	};
 
+	//todo: validate the slate info, including inputs/outputs balance, w balance, etc.
+
 	tx::add_output_to_slate(
 		&mut *w,
 		&mut ret_slate,

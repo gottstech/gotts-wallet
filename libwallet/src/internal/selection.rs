@@ -27,8 +27,10 @@ use crate::gotts_keychain::{Identifier, Keychain};
 use crate::internal::keys;
 use crate::slate::Slate;
 use crate::types::*;
+use rand::{thread_rng, Rng};
 use std::cmp::Reverse;
 use std::collections::HashMap;
+use std::i64;
 
 /// Initialize a transaction on the sender side, returns a corresponding
 /// libwallet transaction slate with the appropriate inputs selected,
@@ -43,7 +45,8 @@ pub fn build_send_tx<T: ?Sized, C, K>(
 	change_outputs: usize,
 	selection_strategy: String,
 	parent_key_id: Identifier,
-	use_test_nonce: bool,
+	is_initator: bool,
+	use_test_rng: bool,
 ) -> Result<Context, Error>
 where
 	T: WalletBackend<C, K>,
@@ -60,18 +63,34 @@ where
 		change_outputs,
 		selection_strategy,
 		&parent_key_id,
+		if !is_initator { Some(slate.w) } else { None },
+		use_test_rng,
 	)?;
 	let keychain = wallet.keychain();
 	let blinding = slate.add_transaction_elements(keychain, &ProofBuilder::new(keychain), elems)?;
 
 	slate.fee = fee;
+	let mut sum_of_w: i64 = inputs.iter().fold(0i64, |acc, x| acc.saturating_add(x.w));
+	sum_of_w = change_amounts_derivations
+		.iter()
+		.fold(sum_of_w, |acc, x| acc.saturating_sub(x.3));
+	if sum_of_w == i64::MAX || sum_of_w == i64::MIN {
+		error!("build_send_tx: w overflow, please try again");
+		return Err(ErrorKind::GenericError("w overflow".to_string()))?;
+	}
+	if is_initator {
+		slate.w = sum_of_w;
+	} else if sum_of_w != slate.w {
+		error!("build_send_tx: w not balanced, a wrong buiding");
+		return Err(ErrorKind::GenericError("w not balanced".to_string()))?;
+	}
 
 	// Create our own private context
 	let mut context = Context::new(
 		keychain.secp(),
 		blinding.secret_key(&keychain.secp()).unwrap(),
 		&parent_key_id,
-		use_test_nonce,
+		use_test_rng,
 		0,
 	);
 
@@ -79,18 +98,12 @@ where
 
 	// Store our private identifiers for each input
 	for input in inputs {
-		context.add_input(&input.key_id, &input.mmr_index, input.value);
+		context.add_input(&input.key_id, &input.mmr_index, input.value, input.w);
 	}
 
-	let mut commits: HashMap<Identifier, Option<String>> = HashMap::new();
-
 	// Store change output(s) and cached commits
-	for (change_amount, id, mmr_index) in &change_amounts_derivations {
-		context.add_output(&id, &mmr_index, *change_amount);
-		commits.insert(
-			id.clone(),
-			wallet.calc_commit_for_cache(*change_amount, &id)?,
-		);
+	for (change_amount, id, mmr_index, w) in &change_amounts_derivations {
+		context.add_output(&id, &mmr_index, *change_amount, *w);
 	}
 
 	Ok(context)
@@ -108,15 +121,12 @@ where
 	C: NodeClient,
 	K: Keychain,
 {
-	let mut output_commits: HashMap<Identifier, (Option<String>, u64)> = HashMap::new();
+	let mut output_commits: HashMap<Identifier, (Option<String>, u64, i64)> = HashMap::new();
 	// Store cached commits before locking wallet
-	for (id, _, change_amount) in &context.get_outputs() {
+	for (id, _, change_amount, w) in &context.get_outputs() {
 		output_commits.insert(
 			id.clone(),
-			(
-				wallet.calc_commit_for_cache(*change_amount, &id)?,
-				*change_amount,
-			),
+			(wallet.calc_commit_for_cache(*w, &id)?, *change_amount, *w),
 		);
 	}
 
@@ -146,19 +156,20 @@ where
 		t.messages = messages;
 
 		// write the output representing our change
-		for (id, _, _) in &context.get_outputs() {
+		for (id, _, _, _) in &context.get_outputs() {
 			t.num_outputs += 1;
-			let (commit, change_amount) = output_commits.get(&id).unwrap().clone();
-			t.amount_credited += change_amount;
+			let (commit, change_amount, w) = output_commits.get_mut(&id).unwrap();
+			t.amount_credited += change_amount.clone();
 			batch.save(OutputData {
 				root_key_id: parent_key_id.clone(),
 				key_id: id.clone(),
 				n_child: id.to_path().last_path_index(),
-				commit: commit,
+				commit: commit.clone(),
 				mmr_index: None,
 				value: change_amount.clone(),
+				w: *w,
 				status: OutputStatus::Unconfirmed,
-				height: height,
+				height,
 				lock_height: 0,
 				is_coinbase: false,
 				tx_log_entry: Some(log_id),
@@ -193,13 +204,14 @@ where
 	let keychain = wallet.keychain().clone();
 	let key_id_inner = key_id.clone();
 	let amount = slate.amount;
+	let w = slate.w;
 	let height = slate.height;
 
 	let slate_id = slate.id.clone();
 	let blinding = slate.add_transaction_elements(
 		&keychain,
 		&ProofBuilder::new(&keychain),
-		vec![build::output(amount, key_id.clone())],
+		vec![build::output(amount, Some(w), key_id.clone())],
 	)?;
 
 	// Add blinding sum to our context
@@ -213,9 +225,9 @@ where
 		1,
 	);
 
-	context.add_output(&key_id, &None, amount);
+	context.add_output(&key_id, &None, amount, w);
 	let messages = Some(slate.participant_messages());
-	let commit = wallet.calc_commit_for_cache(amount, &key_id_inner)?;
+	let commit = wallet.calc_commit_for_cache(slate.w, &key_id_inner)?;
 	let mut batch = wallet.batch()?;
 	let log_id = batch.next_tx_log_id(&parent_key_id)?;
 	let mut t = TxLogEntry::new(parent_key_id.clone(), TxLogEntryType::TxReceived, log_id);
@@ -228,10 +240,11 @@ where
 		key_id: key_id_inner.clone(),
 		mmr_index: None,
 		n_child: key_id_inner.to_path().last_path_index(),
-		commit: commit,
+		commit,
 		value: amount,
+		w: slate.w,
 		status: OutputStatus::Unconfirmed,
-		height: height,
+		height,
 		lock_height: 0,
 		is_coinbase: false,
 		tx_log_entry: Some(log_id),
@@ -257,12 +270,14 @@ pub fn select_send_tx<T: ?Sized, C, K, B>(
 	change_outputs: usize,
 	selection_strategy: String,
 	parent_key_id: &Identifier,
+	slate_w: Option<i64>,
+	use_test_rng: bool,
 ) -> Result<
 	(
 		Vec<Box<build::Append<K, B>>>,
 		Vec<OutputData>,
-		Vec<(u64, Identifier, Option<u64>)>, // change amounts and derivations
-		u64,                                 // fee
+		Vec<(u64, Identifier, Option<u64>, i64)>, // change amounts, derivations, mmr_index and w
+		u64,                                      // fee
 	),
 	Error,
 >
@@ -302,8 +317,15 @@ where
 	}
 
 	// build transaction skeleton with inputs and change
-	let (mut parts, change_amounts_derivations) =
-		inputs_and_change(&coins, wallet, amount, fee, change_outputs)?;
+	let (mut parts, change_amounts_derivations) = inputs_and_change(
+		&coins,
+		wallet,
+		amount,
+		fee,
+		change_outputs,
+		slate_w,
+		use_test_rng,
+	)?;
 
 	// Build a "Plain" kernel unless lock_height>0 explicitly specified.
 	if lock_height > 0 {
@@ -425,10 +447,12 @@ pub fn inputs_and_change<T: ?Sized, C, K, B>(
 	amount: u64,
 	fee: u64,
 	num_change_outputs: usize,
+	slate_w: Option<i64>,
+	use_test_rng: bool,
 ) -> Result<
 	(
 		Vec<Box<build::Append<K, B>>>,
-		Vec<(u64, Identifier, Option<u64>)>,
+		Vec<(u64, Identifier, Option<u64>, i64)>, // change amounts, derivations, mmr_index and w
 	),
 	Error,
 >
@@ -455,7 +479,7 @@ where
 		if coin.is_coinbase {
 			parts.push(build::coinbase_input(coin.value, coin.key_id.clone()));
 		} else {
-			parts.push(build::input(coin.value, coin.key_id.clone()));
+			parts.push(build::input(coin.value, coin.w, coin.key_id.clone()));
 		}
 	}
 
@@ -471,8 +495,33 @@ where
 
 		let part_change = change / num_change_outputs as u64;
 		let remainder_change = change % part_change;
+		let mut sum_of_w: i64 = coins.iter().fold(0i64, |acc, x| acc.saturating_add(x.w));
 
 		for x in 0..num_change_outputs {
+			let mut w: i64 = if use_test_rng {
+				4096
+			} else {
+				thread_rng().gen()
+			};
+			//todo: how to avoid overflow here? a temporary solution is to limit the w range.
+			w = w / 64;
+			{
+				// for invoice feature, the final change accounting for the 'w' balance
+				if slate_w.is_some() && x == (num_change_outputs - 1) {
+					w = sum_of_w.saturating_sub(slate_w.unwrap());
+					sum_of_w = sum_of_w.saturating_sub(w);
+					if sum_of_w != 0 {
+						error!("inputs_and_change: w not balanced");
+					}
+				} else {
+					let test = sum_of_w.saturating_sub(w);
+					if test == i64::max_value() || test == i64::min_value() {
+						//revert the 'w' to try avoiding overflow
+						w = -w;
+					}
+					sum_of_w = sum_of_w.saturating_sub(w);
+				}
+			}
 			// n-1 equal change_outputs and a final one accounting for any remainder
 			let change_amount = if x == (num_change_outputs - 1) {
 				part_change + remainder_change
@@ -482,8 +531,8 @@ where
 
 			let change_key = wallet.next_child().unwrap();
 
-			change_amounts_derivations.push((change_amount, change_key.clone(), None));
-			parts.push(build::output(change_amount, change_key));
+			change_amounts_derivations.push((change_amount, change_key.clone(), None, w));
+			parts.push(build::output(change_amount, Some(w), change_key));
 		}
 	}
 

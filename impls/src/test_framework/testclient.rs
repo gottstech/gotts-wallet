@@ -22,7 +22,7 @@ use crate::chain::types::NoopAdapter;
 use crate::chain::Chain;
 use crate::config::WalletConfig;
 use crate::core::core::verifier_cache::LruVerifierCache;
-use crate::core::core::{Transaction, TxKernelApiEntry};
+use crate::core::core::{Output, OutputEx, Transaction, TxKernelApiEntry};
 use crate::core::global::{set_mining_mode, ChainTypes};
 use crate::core::{self, pow};
 use crate::keychain::Keychain;
@@ -251,7 +251,7 @@ where
 	) -> Result<WalletProxyMessage, libwallet::Error> {
 		let split = m.body.split(",");
 		//let mut api_outputs: HashMap<pedersen::Commitment, String> = HashMap::new();
-		let mut outputs: Vec<api::Output> = vec![];
+		let mut outputs: Vec<OutputEx> = vec![];
 		for o in split {
 			let o_str = String::from(o);
 			if o_str.len() == 0 {
@@ -504,12 +504,16 @@ impl NodeClient for LocalWalletClient {
 		}
 		let r = self.rx.lock();
 		let m = r.recv().unwrap();
-		let outputs: Vec<api::Output> = serde_json::from_str(&m.body).unwrap();
+		let outputs: Vec<OutputEx> = serde_json::from_str(&m.body).unwrap();
 		let mut api_outputs: HashMap<pedersen::Commitment, (String, u64, u64)> = HashMap::new();
 		for out in outputs {
 			api_outputs.insert(
-				out.commit.commit(),
-				(util::to_hex(out.commit.to_vec()), out.height, out.mmr_index),
+				out.output.commitment(),
+				(
+					util::to_hex(out.output.commitment().as_ref().to_vec()),
+					out.height,
+					out.mmr_index,
+				),
 			);
 		}
 		Ok(api_outputs)
@@ -553,7 +557,7 @@ impl NodeClient for LocalWalletClient {
 		(
 			u64,
 			u64,
-			Vec<(pedersen::Commitment, pedersen::RangeProof, bool, u64, u64)>,
+			Vec<(pedersen::Commitment, Output, bool, u64, u64)>,
 		),
 		libwallet::Error,
 	> {
@@ -576,8 +580,7 @@ impl NodeClient for LocalWalletClient {
 		let m = r.recv().unwrap();
 		let o: api::OutputListing = serde_json::from_str(&m.body).unwrap();
 
-		let mut api_outputs: Vec<(pedersen::Commitment, pedersen::RangeProof, bool, u64, u64)> =
-			Vec::new();
+		let mut api_outputs: Vec<(pedersen::Commitment, Output, bool, u64, u64)> = Vec::new();
 
 		for out in o.outputs {
 			let is_coinbase = match out.output_type {
@@ -585,8 +588,8 @@ impl NodeClient for LocalWalletClient {
 				api::OutputType::Transaction => false,
 			};
 			api_outputs.push((
-				out.commit,
-				out.range_proof().unwrap(),
+				out.commit(),
+				out.output,
 				is_coinbase,
 				out.block_height.unwrap(),
 				out.mmr_index,

@@ -18,7 +18,7 @@ use crate::chain;
 use crate::chain::Chain;
 use crate::config::WalletConfig;
 use crate::core;
-use crate::core::core::{OutputFeatures, OutputIdentifier, Transaction};
+use crate::core::core::{OutputEx, OutputFeatures, OutputIdentifier, Transaction};
 use crate::core::{consensus, global, pow};
 use crate::keychain;
 use crate::libwallet;
@@ -40,7 +40,7 @@ mod testclient;
 pub use self::{testclient::LocalWalletClient, testclient::WalletProxy};
 
 /// Get an output from the chain locally and present it back as an API output
-fn get_output_local(chain: &chain::Chain, commit: &pedersen::Commitment) -> Option<api::Output> {
+fn get_output_local(chain: &chain::Chain, commit: &pedersen::Commitment) -> Option<OutputEx> {
 	let outputs = [
 		OutputIdentifier::new(OutputFeatures::Plain, commit),
 		OutputIdentifier::new(OutputFeatures::Coinbase, commit),
@@ -50,7 +50,14 @@ fn get_output_local(chain: &chain::Chain, commit: &pedersen::Commitment) -> Opti
 		if let Ok(_) = chain.is_unspent(&x) {
 			let block_height = chain.get_header_for_output(&x).unwrap().height;
 			let output_pos_height = chain.get_output_pos_height(&x.commit).unwrap_or((0, 0));
-			return Some(api::Output::new(&commit, block_height, output_pos_height.0));
+			let output = chain
+				.unspent_output_by_position(output_pos_height.0)
+				.unwrap();
+			return Some(OutputEx {
+				output,
+				height: block_height,
+				mmr_index: output_pos_height.0,
+			});
 		}
 	}
 	None
@@ -71,9 +78,7 @@ fn get_outputs_by_pmmr_index_local(
 		outputs: outputs
 			.2
 			.iter()
-			.map(|x| {
-				api::OutputPrintable::from_output(x, chain.clone(), None, true, false).unwrap()
-			})
+			.map(|x| api::OutputPrintable::from_output(x, chain.clone(), None, true).unwrap())
 			.collect(),
 	}
 }

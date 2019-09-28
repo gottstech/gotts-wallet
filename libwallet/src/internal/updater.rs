@@ -25,7 +25,7 @@ use crate::gotts_core::core::{Output, TxKernel, TxKernelApiEntry};
 use crate::gotts_core::global;
 use crate::gotts_core::libtx::proof::ProofBuilder;
 use crate::gotts_core::libtx::reward;
-use crate::gotts_keychain::{Identifier, Keychain, SwitchCommitmentType};
+use crate::gotts_keychain::{Identifier, Keychain};
 use crate::gotts_util as util;
 use crate::gotts_util::secp::pedersen;
 use crate::internal::keys;
@@ -85,9 +85,7 @@ where
 		.map(|output| {
 			let commit = match output.commit.clone() {
 				Some(c) => pedersen::Commitment::from_vec(util::from_hex(c).unwrap()),
-				None => keychain
-					.commit(output.value, &output.key_id, &SwitchCommitmentType::Regular)
-					.unwrap(), // TODO: proper support for different switch commitment schemes
+				None => keychain.commit(output.w, &output.key_id).unwrap(),
 			};
 			OutputCommitMapping { output, commit }
 		})
@@ -229,9 +227,7 @@ where
 	for out in unspents {
 		let commit = match out.commit.clone() {
 			Some(c) => pedersen::Commitment::from_vec(util::from_hex(c).unwrap()),
-			None => keychain
-				.commit(out.value, &out.key_id, &SwitchCommitmentType::Regular)
-				.unwrap(), // TODO: proper support for different switch commitment schemes
+			None => keychain.commit(out.w, &out.key_id).unwrap(),
 		};
 		wallet_outputs.insert(commit, (out.key_id.clone(), out.mmr_index));
 	}
@@ -697,18 +693,19 @@ where
 	{
 		// Now acquire the wallet lock and write the new output.
 		let amount = reward(block_fees.fees);
-		let commit = wallet.calc_commit_for_cache(amount, &key_id)?;
+		let commit = wallet.calc_commit_for_cache(0i64, &key_id)?;
 		let mut batch = wallet.batch()?;
 		batch.save(OutputData {
 			root_key_id: parent_key_id,
 			key_id: key_id.clone(),
 			n_child: key_id.to_path().last_path_index(),
 			mmr_index: None,
-			commit: commit,
+			commit,
 			value: amount,
+			w: 0i64,
 			status: OutputStatus::Unconfirmed,
-			height: height,
-			lock_height: lock_height,
+			height,
+			lock_height,
 			is_coinbase: true,
 			tx_log_entry: None,
 			slate_id: None,

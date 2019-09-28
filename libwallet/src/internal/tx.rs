@@ -152,6 +152,7 @@ where
 		num_change_outputs,
 		selection_strategy,
 		parent_key_id.clone(),
+		is_initator,
 		use_test_rng,
 	)?;
 
@@ -240,6 +241,26 @@ where
 		&context.sec_nonce,
 		participant_id,
 	)?;
+
+	// Check the public value balance and w balance
+	if participant_id == 0 && context.is_zero_sum_of_value(slate.amount) == false {
+		error!(
+			"complete_tx: public value balance validation failed. context={}",
+			serde_json::to_string_pretty(context).unwrap()
+		);
+		return Err(ErrorKind::GenericError(
+			"inputs outputs value not balance".to_string(),
+		))?;
+	}
+	if participant_id == 0 && context.is_zero_sum_of_w(slate.w) == false {
+		error!(
+			"complete_tx: w balance validation failed. context={}",
+			serde_json::to_string_pretty(context).unwrap()
+		);
+		return Err(ErrorKind::GenericError(
+			"inputs outputs w not balance".to_string(),
+		))?;
+	}
 
 	// Final transaction can be built by anyone at this stage
 	slate.finalize(wallet.keychain())?;
@@ -420,6 +441,7 @@ where
 mod test {
 	use crate::gotts_core::libtx::{build, ProofBuilder};
 	use crate::gotts_keychain::{ExtKeychain, ExtKeychainPath, Keychain};
+	use rand::{thread_rng, Rng};
 
 	#[test]
 	// demonstrate that input.commitment == referenced output.commitment
@@ -428,21 +450,25 @@ mod test {
 		let keychain = ExtKeychain::from_random_seed(false).unwrap();
 		let builder = ProofBuilder::new(&keychain);
 		let key_id1 = ExtKeychainPath::new(1, 1, 0, 0, 0).to_identifier();
+		let w: i64 = thread_rng().gen();
 
 		let tx1 = build::transaction(
-			vec![build::output(105, key_id1.clone())],
+			vec![build::output(105, Some(w), key_id1.clone())],
 			&keychain,
 			&builder,
 		)
 		.unwrap();
 		let tx2 = build::transaction(
-			vec![build::input(105, key_id1.clone())],
+			vec![build::input(105, w, key_id1.clone())],
 			&keychain,
 			&builder,
 		)
 		.unwrap();
 
-		assert_eq!(tx1.outputs()[0].features, tx2.inputs()[0].features);
+		assert_eq!(
+			tx1.outputs()[0].features.as_flag(),
+			tx2.inputs()[0].features
+		);
 		assert_eq!(tx1.outputs()[0].commitment(), tx2.inputs()[0].commitment());
 	}
 }
