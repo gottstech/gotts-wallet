@@ -565,12 +565,12 @@ impl Context {
 		};
 		Context {
 			parent_key_id: parent_key_id.clone(),
-			sec_key: sec_key,
+			sec_key,
 			sec_nonce,
 			input_ids: vec![],
 			output_ids: vec![],
 			fee: 0,
-			participant_id: participant_id,
+			participant_id,
 		}
 	}
 }

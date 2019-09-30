@@ -178,8 +178,7 @@ pub trait ForeignRpc {
 							  "value": 59993000000
 							}
 						]
-					},
-					"offset": "d202964900000000d302964900000000d402964900000000d502964900000000"
+					}
 				},
 				"version_info": {
 					"orig_version": 2,
@@ -227,7 +226,6 @@ pub trait ForeignRpc {
 			"num_participants": 2,
 			"id": "0436430c-2b02-624c-2032-570501212b00",
 			"tx": {
-				"offset": "d202964900000000d302964900000000d402964900000000d502964900000000",
 				"body": {
 					"inputs": [
 						{
@@ -354,8 +352,7 @@ pub trait ForeignRpc {
 						  "value": 60000000000
 						}
 					]
-				},
-				"offset": "d202964900000000d302964900000000d402964900000000d502964900000000"
+				}
 				},
 				"version_info": {
 					"block_header_version": 1,
@@ -399,7 +396,6 @@ pub trait ForeignRpc {
 			"num_participants": 2,
 			"id": "0436430c-2b02-624c-2032-570501212b00",
 			"tx": {
-				"offset": "d202964900000000d302964900000000d402964900000000d502964900000000",
 				"body": {
 					"inputs": [
 						{
@@ -450,7 +446,7 @@ pub trait ForeignRpc {
 			"participant_data": [
 				{
 				  "id": "1",
-				  "public_blind_excess": "03fff66ba6a341e017fed42156cd9248b27f60df66400cb76a5c379387e9282a13",
+				  "public_blind_excess": "03900add00e609f21c5565fa95b09824973d2f8985119e59fcf26acb27b6133fd3",
 				  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f",
 				  "part_sig": null,
 				  "message": null,
@@ -460,7 +456,7 @@ pub trait ForeignRpc {
 				  "id": "0",
 				  "public_blind_excess": "020e44132261fcdc9112d1bae25ab54d9c00609353cb23143771f2dc3c3f94484e",
 				  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f",
-				  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b336ecdc7ebfad4dda0603bcbf96208aa888a463daa075de2474d7abe28ae44d2",
+				  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b267c4d03effc5d6961657de79245ffe3d90637df26cbaa5a06f2be09f8550402",
 				  "message": null,
 				  "message_sig": null
 				}
@@ -486,15 +482,15 @@ pub trait ForeignRpc {
 					  "id": "1",
 					  "message": null,
 					  "message_sig": null,
-					  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b901023635766836f2212fd76a49ff57e7a4ca572056949a7c15bf0cfe1a710c1",
-					  "public_blind_excess": "03fff66ba6a341e017fed42156cd9248b27f60df66400cb76a5c379387e9282a13",
+					  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b02f44f6e1a2b319a8cfb59afbf87e3cded9036e8eabd3cd3a66ff8145b685a0b",
+					  "public_blind_excess": "03900add00e609f21c5565fa95b09824973d2f8985119e59fcf26acb27b6133fd3",
 					  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f"
 					},
 					{
 					  "id": "0",
 					  "message": null,
 					  "message_sig": null,
-					  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b336ecdc7ebfad4dda0603bcbf96208aa888a463daa075de2474d7abe28ae44d2",
+					  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b267c4d03effc5d6961657de79245ffe3d90637df26cbaa5a06f2be09f8550402",
 					  "public_blind_excess": "020e44132261fcdc9112d1bae25ab54d9c00609353cb23143771f2dc3c3f94484e",
 					  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f"
 					}
@@ -513,8 +509,8 @@ pub trait ForeignRpc {
 						],
 						"kernels": [
 							{
-							  "excess": "094db367eacdc86f5d4dbacb24d705ed7a33359ed515ab4eff16226d9341a11aba",
-							  "excess_sig": "66074d25a751c4743342c90ad8ead9454daa00d9b9aed29bca321036d16c4b4d823dba5ab602868d87d2ef92b7254f6e04d7ebafaf70a68909a96a8e0a565593",
+							  "excess": "087e67f6adc6e5d29345d2155e190cf90822dfdd3a4fab1f3f033b44f8c1827b62",
+							  "excess_sig": "66074d25a751c4743342c90ad8ead9454daa00d9b9aed29bca321036d16c4b4d28709d7109288f03ee60d79652cde2b1c7976dc71189e72dad61b71e53be5e0d",
 							  "features": "Plain",
 							  "fee": "7000000",
 							  "lock_height": "0"
@@ -540,8 +536,7 @@ pub trait ForeignRpc {
 							  "value": 59993000000
 							}
 						]
-					},
-					"offset": "d202964900000000d302964900000000d402964900000000d502964900000000"
+					}
 				},
 				"version_info": {
 					"block_header_version": 1,

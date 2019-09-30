@@ -872,11 +872,7 @@ where
 			if tx_slate_id.is_some() {
 				let mut w = self.wallet.lock();
 				w.open_with_credentials()?;
-				let set_res = owner::set_tx_posted(&mut *w, None, tx_slate_id);
-				if set_res.is_err() {
-					error!("failed to set tx {:?} as posted", tx_slate_id);
-					// todo: handle the failure of set_tx_posted
-				}
+				owner::set_tx_posted(&mut *w, None, tx_slate_id)?;
 				w.close()?;
 			}
 		}
