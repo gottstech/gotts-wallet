@@ -38,7 +38,6 @@
 
 use crate::gotts_core::core::transaction::{OutputFeatures, OutputFeaturesEx};
 use crate::gotts_core::libtx::secp_ser;
-use crate::gotts_keychain::BlindingFactor;
 use crate::gotts_util::secp;
 use crate::gotts_util::secp::key::PublicKey;
 use crate::gotts_util::secp::pedersen::Commitment;
@@ -112,13 +111,6 @@ pub struct ParticipantDataV2 {
 /// A transaction
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TransactionV2 {
-	/// The kernel "offset" k2
-	/// excess is k1G after splitting the key k = k1 + k2
-	#[serde(
-		serialize_with = "secp_ser::as_hex",
-		deserialize_with = "secp_ser::blind_from_hex"
-	)]
-	pub offset: BlindingFactor,
 	/// The transaction body - inputs/outputs/kernels
 	pub body: TransactionBodyV2,
 }

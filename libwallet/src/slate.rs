@@ -26,13 +26,11 @@ use crate::gotts_core::core::transaction::{
 use crate::gotts_core::core::verifier_cache::LruVerifierCache;
 use crate::gotts_core::libtx::{aggsig, build, proof::ProofBuild, secp_ser, tx_fee};
 use crate::gotts_core::map_vec;
-use crate::gotts_keychain::{BlindSum, BlindingFactor, Keychain};
+use crate::gotts_keychain::{BlindingFactor, Keychain};
 use crate::gotts_util::secp::key::{PublicKey, SecretKey};
 use crate::gotts_util::secp::Signature;
 use crate::gotts_util::{self, secp, RwLock};
 use failure::ResultExt;
-use rand::rngs::mock::StepRng;
-use rand::thread_rng;
 use serde::ser::{Serialize, Serializer};
 use serde_json;
 use std::fmt;
@@ -277,10 +275,6 @@ impl Slate {
 	where
 		K: Keychain,
 	{
-		// Whoever does this first generates the offset
-		if self.tx.offset == BlindingFactor::zero() {
-			self.generate_offset(keychain, sec_key, use_test_rng)?;
-		}
 		self.add_participant_info(
 			keychain,
 			&sec_key,
@@ -457,42 +451,6 @@ impl Slate {
 		ret
 	}
 
-	/// Somebody involved needs to generate an offset with their private key
-	/// For now, we'll have the transaction initiator be responsible for it
-	/// Return offset private key for the participant to use later in the
-	/// transaction
-	fn generate_offset<K>(
-		&mut self,
-		keychain: &K,
-		sec_key: &mut SecretKey,
-		use_test_rng: bool,
-	) -> Result<(), Error>
-	where
-		K: Keychain,
-	{
-		// Generate a random kernel offset here
-		// and subtract it from the blind_sum so we create
-		// the aggsig context with the "split" key
-		self.tx.offset = match use_test_rng {
-			false => {
-				BlindingFactor::from_secret_key(SecretKey::new(&keychain.secp(), &mut thread_rng()))
-			}
-			true => {
-				// allow for consistent test results
-				let mut test_rng = StepRng::new(1234567890u64, 1);
-				BlindingFactor::from_secret_key(SecretKey::new(&keychain.secp(), &mut test_rng))
-			}
-		};
-
-		let blind_offset = keychain.blind_sum(
-			&BlindSum::new()
-				.add_blinding_factor(BlindingFactor::from_secret_key(sec_key.clone()))
-				.sub_blinding_factor(self.tx.offset.clone()),
-		)?;
-		*sec_key = blind_offset.secret_key(&keychain.secp())?;
-		Ok(())
-	}
-
 	/// Checks the fees in the transaction in the given slate are valid
 	fn check_fees(&self) -> Result<(), Error> {
 		// double check the fee amount included in the partial tx
@@ -629,14 +587,12 @@ impl Slate {
 	/// builds a final transaction after the aggregated sig exchange
 	fn finalize_transaction<K>(
 		&mut self,
-		keychain: &K,
+		_keychain: &K,
 		final_sig: &secp::Signature,
 	) -> Result<(), Error>
 	where
 		K: Keychain,
 	{
-		let kernel_offset = &self.tx.offset;
-
 		self.check_fees()?;
 
 		let mut final_tx = self.tx.clone();
@@ -645,15 +601,7 @@ impl Slate {
 		let final_excess = {
 			// sum the input/output commitments on the final tx
 			let _overage = final_tx.fee() as i64;
-			let tx_excess = final_tx.sum_commitments()?;
-
-			// subtract the kernel_excess (built from kernel_offset)
-			let offset_excess = keychain
-				.secp()
-				.commit(0, kernel_offset.secret_key(&keychain.secp())?)?;
-			keychain
-				.secp()
-				.commit_sum(vec![tx_excess], vec![offset_excess])?
+			final_tx.sum_commitments()?
 		};
 
 		// update the tx kernel to reflect the offset excess and sig
@@ -841,18 +789,17 @@ impl From<&VersionCompatInfo> for VersionCompatInfoV2 {
 
 impl From<Transaction> for TransactionV2 {
 	fn from(tx: Transaction) -> TransactionV2 {
-		let Transaction { offset, body } = tx;
+		let Transaction { body } = tx;
 		let body = TransactionBodyV2::from(&body);
-		TransactionV2 { offset, body }
+		TransactionV2 { body }
 	}
 }
 
 impl From<&Transaction> for TransactionV2 {
 	fn from(tx: &Transaction) -> TransactionV2 {
-		let Transaction { offset, body } = tx;
-		let offset = offset.clone();
+		let Transaction { body } = tx;
 		let body = TransactionBodyV2::from(body);
-		TransactionV2 { offset, body }
+		TransactionV2 { body }
 	}
 }
 
@@ -1036,18 +983,17 @@ impl From<&VersionCompatInfoV2> for VersionCompatInfo {
 
 impl From<TransactionV2> for Transaction {
 	fn from(tx: TransactionV2) -> Transaction {
-		let TransactionV2 { offset, body } = tx;
+		let TransactionV2 { body } = tx;
 		let body = TransactionBody::from(&body);
-		Transaction { offset, body }
+		Transaction { body }
 	}
 }
 
 impl From<&TransactionV2> for Transaction {
 	fn from(tx: &TransactionV2) -> Transaction {
-		let TransactionV2 { offset, body } = tx;
-		let offset = offset.clone();
+		let TransactionV2 { body } = tx;
 		let body = TransactionBody::from(body);
-		Transaction { offset, body }
+		Transaction { body }
 	}
 }
 
