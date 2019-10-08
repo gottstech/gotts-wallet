@@ -673,21 +673,18 @@ pub fn tx_messages(tx: &TxLogEntry, dark_background_color_scheme: bool) -> Resul
 		bMG->"Signature",
 	]);
 
-	let secp = util::static_secp_instance();
-	let secp_lock = secp.lock();
-
 	for m in msgs.messages {
 		let id = format!("{}", m.id);
 		let public_key = format!(
 			"{}",
-			util::to_hex(m.public_key.serialize_vec(&secp_lock, true).to_vec())
+			util::to_hex(m.public_key.serialize_vec(true).to_vec())
 		);
 		let message = match m.message {
 			Some(m) => format!("{}", m),
 			None => "None".to_owned(),
 		};
 		let message_sig = match m.message_sig {
-			Some(s) => format!("{}", util::to_hex(s.serialize_der(&secp_lock))),
+			Some(s) => format!("{}", util::to_hex(s.serialize_der())),
 			None => "None".to_owned(),
 		};
 		if dark_background_color_scheme {

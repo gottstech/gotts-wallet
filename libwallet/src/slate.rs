@@ -120,12 +120,10 @@ impl fmt::Display for ParticipantMessageData {
 			writeln!(f, "(Recipient)")?;
 		}
 		writeln!(f, "---------------------")?;
-		let static_secp = gotts_util::static_secp_instance();
-		let static_secp = static_secp.lock();
 		writeln!(
 			f,
 			"Public Key: {}",
-			&gotts_util::to_hex(self.public_key.serialize_vec(&static_secp, true).to_vec())
+			&gotts_util::to_hex(self.public_key.serialize_vec(true).to_vec())
 		)?;
 		let message = match self.message.clone() {
 			None => "None".to_owned(),
@@ -319,8 +317,8 @@ impl Slate {
 			keychain.secp(),
 			sec_key,
 			sec_nonce,
-			&self.pub_nonce_sum(keychain.secp())?,
-			Some(&self.pub_blind_sum(keychain.secp())?),
+			&self.pub_nonce_sum()?,
+			Some(&self.pub_blind_sum()?),
 			&self.msg_to_sign()?,
 		)?;
 		for i in 0..self.num_participants {
@@ -353,26 +351,26 @@ impl Slate {
 	}
 
 	/// Return the sum of public nonces
-	fn pub_nonce_sum(&self, secp: &secp::Secp256k1) -> Result<PublicKey, Error> {
+	fn pub_nonce_sum(&self) -> Result<PublicKey, Error> {
 		let pub_nonces = self
 			.participant_data
 			.iter()
 			.map(|p| &p.public_nonce)
 			.collect();
-		match PublicKey::from_combination(secp, pub_nonces) {
+		match PublicKey::from_combination(pub_nonces) {
 			Ok(k) => Ok(k),
 			Err(e) => Err(ErrorKind::Secp(e))?,
 		}
 	}
 
 	/// Return the sum of public blinding factors
-	fn pub_blind_sum(&self, secp: &secp::Secp256k1) -> Result<PublicKey, Error> {
+	fn pub_blind_sum(&self) -> Result<PublicKey, Error> {
 		let pub_blinds = self
 			.participant_data
 			.iter()
 			.map(|p| &p.public_blind_excess)
 			.collect();
-		match PublicKey::from_combination(secp, pub_blinds) {
+		match PublicKey::from_combination(pub_blinds) {
 			Ok(k) => Ok(k),
 			Err(e) => Err(ErrorKind::Secp(e))?,
 		}
@@ -407,7 +405,7 @@ impl Slate {
 		let pub_key = PublicKey::from_secret_key(keychain.secp(), &sec_key)?;
 		let pub_nonce = PublicKey::from_secret_key(keychain.secp(), &sec_nonce)?;
 
-		let test_message_nonce = SecretKey::from_slice(&keychain.secp(), &[1; 32]).unwrap();
+		let test_message_nonce = SecretKey::from_slice(&[1; 32]).unwrap();
 		let message_nonce = match use_test_rng {
 			false => None,
 			true => Some(&test_message_nonce),
@@ -489,9 +487,9 @@ impl Slate {
 				aggsig::verify_partial_sig(
 					secp,
 					p.part_sig.as_ref().unwrap(),
-					&self.pub_nonce_sum(secp)?,
+					&self.pub_nonce_sum()?,
 					&p.public_blind_excess,
-					Some(&self.pub_blind_sum(secp)?),
+					Some(&self.pub_blind_sum()?),
 					&self.msg_to_sign()?,
 				)?;
 			}
@@ -565,8 +563,8 @@ impl Slate {
 		self.verify_part_sigs(keychain.secp())?;
 
 		let part_sigs = self.part_sigs();
-		let pub_nonce_sum = self.pub_nonce_sum(keychain.secp())?;
-		let final_pubkey = self.pub_blind_sum(keychain.secp())?;
+		let pub_nonce_sum = self.pub_nonce_sum()?;
+		let final_pubkey = self.pub_blind_sum()?;
 		// get the final signature
 		let final_sig = aggsig::add_signatures(&keychain.secp(), part_sigs, &pub_nonce_sum)?;
 

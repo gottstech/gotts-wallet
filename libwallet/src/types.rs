@@ -561,7 +561,7 @@ impl Context {
 	) -> Context {
 		let sec_nonce = match use_test_rng {
 			false => aggsig::create_secnonce(secp).unwrap(),
-			true => SecretKey::from_slice(secp, &[1; 32]).unwrap(),
+			true => SecretKey::from_slice(&[1; 32]).unwrap(),
 		};
 		Context {
 			parent_key_id: parent_key_id.clone(),

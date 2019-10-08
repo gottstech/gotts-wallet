@@ -88,7 +88,7 @@ where
 	// Create our own private context
 	let mut context = Context::new(
 		keychain.secp(),
-		blinding.secret_key(&keychain.secp()).unwrap(),
+		blinding.secret_key().unwrap(),
 		&parent_key_id,
 		use_test_rng,
 		0,
@@ -218,7 +218,7 @@ where
 	let mut context = Context::new(
 		keychain.secp(),
 		blinding
-			.secret_key(wallet.keychain().clone().secp())
+			.secret_key()
 			.unwrap(),
 		&parent_key_id,
 		use_test_rng,

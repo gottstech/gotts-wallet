@@ -14,8 +14,7 @@
 // limitations under the License.
 
 use crate::api;
-use crate::chain;
-use crate::chain::Chain;
+use crate::chain::{self, Chain, types::OutputFeaturePosHeight};
 use crate::config::WalletConfig;
 use crate::core;
 use crate::core::core::{OutputEx, OutputFeatures, OutputIdentifier, Transaction};
@@ -49,14 +48,14 @@ fn get_output_local(chain: &chain::Chain, commit: &pedersen::Commitment) -> Opti
 	for x in outputs.iter() {
 		if let Ok(_) = chain.is_unspent(&x) {
 			let block_height = chain.get_header_for_output(&x).unwrap().height;
-			let output_pos_height = chain.get_output_pos_height(&x.commit).unwrap_or((0, 0));
+			let output_pos_height = chain.get_output_pos_height(&x.commit).unwrap_or(OutputFeaturePosHeight::default());
 			let output = chain
-				.unspent_output_by_position(output_pos_height.0)
+				.unspent_output_by_position(output_pos_height.position)
 				.unwrap();
 			return Some(OutputEx {
 				output,
 				height: block_height,
-				mmr_index: output_pos_height.0,
+				mmr_index: output_pos_height.position,
 			});
 		}
 	}
