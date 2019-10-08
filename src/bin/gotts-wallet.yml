@@ -1,15 +1,15 @@
-name: GrinWallet+
-version: "2.0.1-beta.3"
-about: Grin Wallet with Embedded Relay Address Service.
-author: The Grin & Gotts Team.
+name: gotts-wallet
+version: "0.0.2"
+about: Gotts Wallet.
+author: The Gotts Developers.
 
 args:
   - floonet:
-      help: Run grin against the Floonet (as opposed to mainnet)
+      help: Run gotts against the Floonet (as opposed to mainnet)
       long: floonet
       takes_value: false
   - usernet:
-      help: Run grin as a local-only network. Doesn't block peer connections but will not connect to any peer or seed
+      help: Run gotts as a local-only network. Doesn't block peer connections but will not connect to any peer or seed
       long: usernet
       takes_value: false
   - pass:
@@ -110,6 +110,7 @@ subcommands:
             possible_values:
               - http
               - file
+              - addr
               - self
               - keybase
             default_value: http
@@ -337,7 +338,7 @@ subcommands:
       about: Initialize a new wallet seed file and database
       args:
         - here:
-            help: Create wallet files in the current directory instead of the default ~/.grin directory
+            help: Create wallet files in the current directory instead of the default ~/.gotts directory
             short: h
             long: here
             takes_value: false

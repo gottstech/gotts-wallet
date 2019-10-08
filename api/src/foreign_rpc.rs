@@ -139,6 +139,7 @@ pub trait ForeignRpc {
 				"participant_data": [
 				{
 					"id": "0",
+					"recipient_pubkey": null,
 					"message": "my message",
 					"message_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b1d4c1358be398f801eb90d933774b5218fa7e769b11c4c640402253353656f75",
 					"part_sig": null,
@@ -267,6 +268,7 @@ pub trait ForeignRpc {
 			"participant_data": [
 				{
 				  "id": "0",
+				  "recipient_pubkey": null,
 				  "public_blind_excess": "02c1ec76d058ab1fe9120d2c907e42e930df2217d20b8159de9b6c985eec49dc12",
 				  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f",
 				  "part_sig": null,
@@ -296,6 +298,7 @@ pub trait ForeignRpc {
 				"participant_data": [
 					{
 					  "id": "0",
+						"recipient_pubkey": null,
 					  "message": null,
 					  "message_sig": null,
 					  "part_sig": null,
@@ -304,6 +307,7 @@ pub trait ForeignRpc {
 					},
 					{
 					  "id": "1",
+						"recipient_pubkey": null,
 					  "message": "Thanks, Gotts",
 					  "message_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841bfd0a9a7f8a0c487a008a0d20f26abad55bbae626e7ddaf985cf57452f27c44a1",
 					  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841bb05fc02172486516c4f13e5d3fb07a10128a99d93cc293373337c770be7fbf24",
@@ -446,6 +450,7 @@ pub trait ForeignRpc {
 			"participant_data": [
 				{
 				  "id": "1",
+				  "recipient_pubkey": null,
 				  "public_blind_excess": "03900add00e609f21c5565fa95b09824973d2f8985119e59fcf26acb27b6133fd3",
 				  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f",
 				  "part_sig": null,
@@ -454,6 +459,7 @@ pub trait ForeignRpc {
 				},
 				{
 				  "id": "0",
+				  "recipient_pubkey": null,
 				  "public_blind_excess": "020e44132261fcdc9112d1bae25ab54d9c00609353cb23143771f2dc3c3f94484e",
 				  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f",
 				  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b267c4d03effc5d6961657de79245ffe3d90637df26cbaa5a06f2be09f8550402",
@@ -480,6 +486,7 @@ pub trait ForeignRpc {
 				"participant_data": [
 					{
 					  "id": "1",
+						"recipient_pubkey": null,
 					  "message": null,
 					  "message_sig": null,
 					  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b02f44f6e1a2b319a8cfb59afbf87e3cded9036e8eabd3cd3a66ff8145b685a0b",
@@ -488,6 +495,7 @@ pub trait ForeignRpc {
 					},
 					{
 					  "id": "0",
+						"recipient_pubkey": null,
 					  "message": null,
 					  "message_sig": null,
 					  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b267c4d03effc5d6961657de79245ffe3d90637df26cbaa5a06f2be09f8550402",

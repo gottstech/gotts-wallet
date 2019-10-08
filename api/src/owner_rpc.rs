@@ -369,6 +369,7 @@ pub trait OwnerRpc {
 		  "participant_data": [
 				{
 				  "id": "0",
+				  "recipient_pubkey": null,
 				  "message": "my message",
 				  "message_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841bafc95c004d52a03b867c2200c36c3cab585b2926e2e747e4410dc996b9a0ff64",
 				  "part_sig": null,
@@ -458,6 +459,7 @@ pub trait OwnerRpc {
 					"participant_data": [
 						{
 						  "id": "1",
+							"recipient_pubkey": null,
 						  "message": "Please give me your gotts",
 						  "message_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b9e196e487ee7865a2901d1ad0012a7bd25ddc0759fd1cca3e02e8f402dd01dd2",
 						  "part_sig": null,
@@ -527,6 +529,7 @@ pub trait OwnerRpc {
 					"participant_data": [
 						{
 						  "id": "1",
+							"recipient_pubkey": null,
 						  "message": "Please give me your gotts",
 						  "message_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b5e2dca8b19c930f5f2db2b83163172610cf2b4038e8add5b1f471680e7db55d0",
 						  "part_sig": null,
@@ -596,6 +599,7 @@ pub trait OwnerRpc {
 				"participant_data": [
 					{
 					  "id": "1",
+						"recipient_pubkey": null,
 					  "message": "Please give me your gotts",
 					  "message_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b5e2dca8b19c930f5f2db2b83163172610cf2b4038e8add5b1f471680e7db55d0",
 					  "part_sig": null,
@@ -604,6 +608,7 @@ pub trait OwnerRpc {
 					},
 					{
 					  "id": "0",
+						"recipient_pubkey": null,
 					  "message": "Ok, here are your gotts",
 					  "message_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841bfc5a7e9c2fb684ffb21618abccff2f78f9355ab93213defa3a9566a561797dd6",
 					  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841bc0f1a8b847af95c4aae9a50ec9ef396a79bae307a17dd1c29a85fd1a0454763e",
@@ -691,6 +696,7 @@ pub trait OwnerRpc {
 				"participant_data": [
 				{
 					"id": "0",
+					"recipient_pubkey": null,
 					"message": "my message",
 					"message_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b1d4c1358be398f801eb90d933774b5218fa7e769b11c4c640402253353656f75",
 					"part_sig": null,
@@ -832,6 +838,7 @@ pub trait OwnerRpc {
 			"participant_data": [
 				{
 				  "id": "0",
+				  "recipient_pubkey": null,
 				  "public_blind_excess": "020e44132261fcdc9112d1bae25ab54d9c00609353cb23143771f2dc3c3f94484e",
 				  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f",
 				  "part_sig": null,
@@ -840,6 +847,7 @@ pub trait OwnerRpc {
 				},
 				{
 				  "id": "1",
+				  "recipient_pubkey": null,
 				  "public_blind_excess": "03900add00e609f21c5565fa95b09824973d2f8985119e59fcf26acb27b6133fd3",
 				  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f",
 				  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b02f44f6e1a2b319a8cfb59afbf87e3cded9036e8eabd3cd3a66ff8145b685a0b",
@@ -867,6 +875,7 @@ pub trait OwnerRpc {
 				"participant_data": [
 					{
 					  "id": "0",
+						"recipient_pubkey": null,
 					  "message": null,
 					  "message_sig": null,
 					  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b267c4d03effc5d6961657de79245ffe3d90637df26cbaa5a06f2be09f8550402",
@@ -875,6 +884,7 @@ pub trait OwnerRpc {
 					},
 					{
 					  "id": "1",
+						"recipient_pubkey": null,
 					  "message": null,
 					  "message_sig": null,
 					  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b02f44f6e1a2b319a8cfb59afbf87e3cded9036e8eabd3cd3a66ff8145b685a0b",
@@ -1172,6 +1182,7 @@ pub trait OwnerRpc {
 				"participant_data": [
 				{
 					"id": "0",
+					  "recipient_pubkey": null,
 					"message": "my message",
 					"message_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b1d4c1358be398f801eb90d933774b5218fa7e769b11c4c640402253353656f75",
 					"part_sig": null,

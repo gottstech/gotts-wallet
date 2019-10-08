@@ -557,17 +557,17 @@ pub fn parse_send_args(args: &ArgMatches) -> Result<command::SendArgs, ParseErro
 	};
 
 	Ok(command::SendArgs {
-		amount: amount,
-		message: message,
+		amount,
+		message,
 		minimum_confirmations: min_c,
 		selection_strategy: selection_strategy.to_owned(),
 		estimate_selection_strategies,
 		method: method.to_owned(),
 		dest: dest.to_owned(),
-		change_outputs: change_outputs,
-		fluff: fluff,
-		max_outputs: max_outputs,
-		target_slate_version: target_slate_version,
+		change_outputs,
+		fluff,
+		max_outputs,
+		target_slate_version,
 	})
 }
 

@@ -46,9 +46,12 @@ use crate::slate_versions::{CURRENT_SLATE_VERSION, GOTTS_BLOCK_HEADER_VERSION};
 /// Public data for each participant in the slate
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ParticipantData {
-	/// Id of participant in the transaction. (For now, 0=sender, 1=rec)
+	/// Id of participant in the transaction. (For now, 0=sender, 1=receiver)
 	#[serde(with = "secp_ser::string_or_u64")]
 	pub id: u64,
+	/// Public key of the recipient, when it's a non-interactive transaction
+	#[serde(with = "secp_ser::option_pubkey_serde")]
+	pub recipient_pubkey: Option<PublicKey>,
 	/// Public key corresponding to private blinding factor
 	#[serde(with = "secp_ser::pubkey_serde")]
 	pub public_blind_excess: PublicKey,
@@ -430,11 +433,12 @@ impl Slate {
 		};
 		self.participant_data.push(ParticipantData {
 			id: id as u64,
+			recipient_pubkey: None,
 			public_blind_excess: pub_key,
 			public_nonce: pub_nonce,
-			part_sig: part_sig,
-			message: message,
-			message_sig: message_sig,
+			part_sig,
+			message,
+			message_sig,
 		});
 		Ok(())
 	}
@@ -744,6 +748,7 @@ impl From<&ParticipantData> for ParticipantDataV2 {
 	fn from(data: &ParticipantData) -> ParticipantDataV2 {
 		let ParticipantData {
 			id,
+			recipient_pubkey,
 			public_blind_excess,
 			public_nonce,
 			part_sig,
@@ -751,6 +756,7 @@ impl From<&ParticipantData> for ParticipantDataV2 {
 			message_sig,
 		} = data;
 		let id = *id;
+		let recipient_pubkey = *recipient_pubkey;
 		let public_blind_excess = *public_blind_excess;
 		let public_nonce = *public_nonce;
 		let part_sig = *part_sig;
@@ -758,6 +764,7 @@ impl From<&ParticipantData> for ParticipantDataV2 {
 		let message_sig = *message_sig;
 		ParticipantDataV2 {
 			id,
+			recipient_pubkey,
 			public_blind_excess,
 			public_nonce,
 			part_sig,
@@ -938,6 +945,7 @@ impl From<&ParticipantDataV2> for ParticipantData {
 	fn from(data: &ParticipantDataV2) -> ParticipantData {
 		let ParticipantDataV2 {
 			id,
+			recipient_pubkey,
 			public_blind_excess,
 			public_nonce,
 			part_sig,
@@ -945,6 +953,7 @@ impl From<&ParticipantDataV2> for ParticipantData {
 			message_sig,
 		} = data;
 		let id = *id;
+		let recipient_pubkey = *recipient_pubkey;
 		let public_blind_excess = *public_blind_excess;
 		let public_nonce = *public_nonce;
 		let part_sig = *part_sig;
@@ -952,6 +961,7 @@ impl From<&ParticipantDataV2> for ParticipantData {
 		let message_sig = *message_sig;
 		ParticipantData {
 			id,
+			recipient_pubkey,
 			public_blind_excess,
 			public_nonce,
 			part_sig,
