@@ -217,9 +217,7 @@ where
 	// Add blinding sum to our context
 	let mut context = Context::new(
 		keychain.secp(),
-		blinding
-			.secret_key()
-			.unwrap(),
+		blinding.secret_key().unwrap(),
 		&parent_key_id,
 		use_test_rng,
 		1,

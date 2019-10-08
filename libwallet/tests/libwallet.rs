@@ -93,20 +93,16 @@ fn aggsig_sender_receiver_interaction() {
 		let (pub_excess, pub_nonce) = rx_cx.get_public_keys(&keychain.secp());
 		rx_cx.add_output(&key_id, &None, 0, 0);
 
-		pub_nonce_sum = PublicKey::from_combination(
-			vec![
-				&s_cx.get_public_keys(keychain.secp()).1,
-				&rx_cx.get_public_keys(keychain.secp()).1,
-			],
-		)
+		pub_nonce_sum = PublicKey::from_combination(vec![
+			&s_cx.get_public_keys(keychain.secp()).1,
+			&rx_cx.get_public_keys(keychain.secp()).1,
+		])
 		.unwrap();
 
-		pub_key_sum = PublicKey::from_combination(
-			vec![
-				&s_cx.get_public_keys(keychain.secp()).0,
-				&rx_cx.get_public_keys(keychain.secp()).0,
-			],
-		)
+		pub_key_sum = PublicKey::from_combination(vec![
+			&s_cx.get_public_keys(keychain.secp()).0,
+			&rx_cx.get_public_keys(keychain.secp()).0,
+		])
 		.unwrap();
 
 		let msg = kernel_sig_msg();
@@ -194,12 +190,10 @@ fn aggsig_sender_receiver_interaction() {
 		.unwrap();
 
 		// Receiver calculates the final public key (to verify sig later)
-		let final_pubkey = PublicKey::from_combination(
-			vec![
-				&s_cx.get_public_keys(keychain.secp()).0,
-				&rx_cx.get_public_keys(keychain.secp()).0,
-			],
-		)
+		let final_pubkey = PublicKey::from_combination(vec![
+			&s_cx.get_public_keys(keychain.secp()).0,
+			&rx_cx.get_public_keys(keychain.secp()).0,
+		])
 		.unwrap();
 
 		(final_sig, final_pubkey)
@@ -307,20 +301,16 @@ fn aggsig_sender_receiver_interaction_offset() {
 		let (pub_excess, pub_nonce) = rx_cx.get_public_keys(&keychain.secp());
 		rx_cx.add_output(&key_id, &None, 0, 0);
 
-		pub_nonce_sum = PublicKey::from_combination(
-			vec![
-				&s_cx.get_public_keys(keychain.secp()).1,
-				&rx_cx.get_public_keys(keychain.secp()).1,
-			],
-		)
+		pub_nonce_sum = PublicKey::from_combination(vec![
+			&s_cx.get_public_keys(keychain.secp()).1,
+			&rx_cx.get_public_keys(keychain.secp()).1,
+		])
 		.unwrap();
 
-		pub_key_sum = PublicKey::from_combination(
-			vec![
-				&s_cx.get_public_keys(keychain.secp()).0,
-				&rx_cx.get_public_keys(keychain.secp()).0,
-			],
-		)
+		pub_key_sum = PublicKey::from_combination(vec![
+			&s_cx.get_public_keys(keychain.secp()).0,
+			&rx_cx.get_public_keys(keychain.secp()).0,
+		])
 		.unwrap();
 
 		let msg = kernel_sig_msg();
@@ -407,12 +397,10 @@ fn aggsig_sender_receiver_interaction_offset() {
 		.unwrap();
 
 		// Receiver calculates the final public key (to verify sig later)
-		let final_pubkey = PublicKey::from_combination(
-			vec![
-				&s_cx.get_public_keys(keychain.secp()).0,
-				&rx_cx.get_public_keys(keychain.secp()).0,
-			],
-		)
+		let final_pubkey = PublicKey::from_combination(vec![
+			&s_cx.get_public_keys(keychain.secp()).0,
+			&rx_cx.get_public_keys(keychain.secp()).0,
+		])
 		.unwrap();
 
 		(final_sig, final_pubkey)
