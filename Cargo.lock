@@ -898,6 +898,7 @@ dependencies = [
  "gotts_wallet_impls 0.0.2",
  "gotts_wallet_libwallet 0.0.2",
  "gotts_wallet_util 0.0.2",
+ "hex 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper 0.12.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",

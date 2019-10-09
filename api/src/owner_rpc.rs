@@ -369,7 +369,6 @@ pub trait OwnerRpc {
 		  "participant_data": [
 				{
 				  "id": "0",
-				  "recipient_pubkey": null,
 				  "message": "my message",
 				  "message_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841bafc95c004d52a03b867c2200c36c3cab585b2926e2e747e4410dc996b9a0ff64",
 				  "part_sig": null,
@@ -424,6 +423,128 @@ pub trait OwnerRpc {
 	fn init_send_tx(&self, args: InitTxArgs) -> Result<VersionedSlate, ErrorKind>;
 
 	/**
+		Networked version of [Owner::non_interactive_send](struct.Owner.html#method.non_interactive_send).
+
+	```
+		# gotts_wallet_api::doctest_helper_json_rpc_owner_assert_response!(
+		# r#"
+		{
+			"jsonrpc": "2.0",
+			"method": "non_interactive_send",
+			"params": {
+				"args": {
+					"src_acct_name": null,
+					"amount": "6000000000",
+					"minimum_confirmations": 2,
+					"max_outputs": 500,
+					"num_change_outputs": 1,
+					"selection_strategy": "all",
+					"message": null,
+					"target_slate_version": null,
+					"send_args": {
+						"method": "addr",
+						"dest": "gs1qqvau3jpu2t04wy3znghhygrdjqvjxekrvs5vkrqjk6hesvjdj7lmcwlwvtd",
+						"finalize": true,
+						"post_tx": true,
+						"fluff": true
+					}
+				}
+			},
+			"id": 1
+		}
+		# "#
+		# ,
+		# r#"
+		{
+		  "id": 1,
+		  "jsonrpc": "2.0",
+		  "result": {
+			"Ok": {
+			  "amount": "6000000000",
+			  "fee": "8000000",
+			  "height": "4",
+			  "id": "0436430c-2b02-624c-2032-570501212b00",
+			  "lock_height": "0",
+			  "num_participants": 2,
+			  "participant_data": [
+				{
+				  "id": "0",
+				  "message": null,
+				  "message_sig": null,
+				  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b6af49d8670a46a2a7cb74e5cd02ece5e3bda2bff223fbaacdfdf97ee36af331b",
+				  "public_blind_excess": "0306ba3e5c535f6fc26fea5b7a37ab21c99b7b31c86ab922e0e175b6998dcd36c0",
+				  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f"
+				},
+				{
+				  "id": "1",
+				  "message": null,
+				  "message_sig": null,
+				  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b2a8a824481c6f97e7b6239d142d8962ffb1b4bf51a873c40a100a09513017e15",
+				  "public_blind_excess": "02c2f5703e71c33ab624f05c7e78db0dc97dfca228f93f69382cb297db1d30cdb1",
+				  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f"
+				}
+			  ],
+			  "tx": {
+				"body": {
+				  "inputs": [
+					{
+					  "commit": "09a75b07e6b329e5a98be34e88d7bec3062fdddc2044a1b9efe9accec9858571c4",
+					  "features": "Coinbase"
+					}
+				  ],
+				  "kernels": [
+					{
+					  "excess": "0945178d4fd63b5924302247f23a02ac0e2c6e366b2eb330c5a4ab03babb7d777e",
+					  "excess_sig": "66074d25a751c4743342c90ad8ead9454daa00d9b9aed29bca321036d16c4b4d947e20cbf16a64a9f719882d1307658e36f676f43dc6f6ec80e037844ab0b130",
+					  "features": "Plain",
+					  "fee": "8000000",
+					  "lock_height": "0"
+					}
+				  ],
+				  "outputs": [
+					{
+					  "commit": "089666c8f88c6aab115a041551f37cc5f9d03e6180f8f9d2613a7f8485dcc81df5",
+					  "features": {
+						"SigLocked": {
+						  "locker": {
+							"p2pkh": "cef5ad3c9482d1e831ceacadbd53469198f33f10b3822cfef77f33a3dc9b9dd8",
+							"pub_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f",
+							"relative_lock_height": 1,
+							"secured_w": -8917468827927417694
+						  }
+						}
+					  },
+					  "value": 6000000000
+					},
+					{
+					  "commit": "08e7af2033557d22be69fbffca0cd2181ab775b1a7ae594ba01248e410c6587a78",
+					  "features": {
+						"Plain": {
+						  "spath": "0b3fbe3083c497835386fabb3b26bce280d49567e29d36fd877af1d4"
+						}
+					  },
+					  "value": 53992000000
+					}
+				  ]
+				}
+			  },
+			  "version_info": {
+				"block_header_version": 1,
+				"orig_version": 2,
+				"version": 2
+			  },
+			  "w": "-64"
+			}
+		  }
+		}
+		# "#
+		# ,4, false, false, false);
+	```
+	*/
+
+	fn non_interactive_send(&self, args: InitTxArgs) -> Result<VersionedSlate, ErrorKind>;
+
+	/**
 		Networked version of [Owner::issue_invoice_tx](struct.Owner.html#method.issue_invoice_tx).
 
 	```
@@ -459,7 +580,6 @@ pub trait OwnerRpc {
 					"participant_data": [
 						{
 						  "id": "1",
-							"recipient_pubkey": null,
 						  "message": "Please give me your gotts",
 						  "message_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b9e196e487ee7865a2901d1ad0012a7bd25ddc0759fd1cca3e02e8f402dd01dd2",
 						  "part_sig": null,
@@ -529,7 +649,6 @@ pub trait OwnerRpc {
 					"participant_data": [
 						{
 						  "id": "1",
-							"recipient_pubkey": null,
 						  "message": "Please give me your gotts",
 						  "message_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b5e2dca8b19c930f5f2db2b83163172610cf2b4038e8add5b1f471680e7db55d0",
 						  "part_sig": null,
@@ -599,7 +718,6 @@ pub trait OwnerRpc {
 				"participant_data": [
 					{
 					  "id": "1",
-						"recipient_pubkey": null,
 					  "message": "Please give me your gotts",
 					  "message_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b5e2dca8b19c930f5f2db2b83163172610cf2b4038e8add5b1f471680e7db55d0",
 					  "part_sig": null,
@@ -608,7 +726,6 @@ pub trait OwnerRpc {
 					},
 					{
 					  "id": "0",
-						"recipient_pubkey": null,
 					  "message": "Ok, here are your gotts",
 					  "message_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841bfc5a7e9c2fb684ffb21618abccff2f78f9355ab93213defa3a9566a561797dd6",
 					  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841bc0f1a8b847af95c4aae9a50ec9ef396a79bae307a17dd1c29a85fd1a0454763e",
@@ -696,7 +813,6 @@ pub trait OwnerRpc {
 				"participant_data": [
 				{
 					"id": "0",
-					"recipient_pubkey": null,
 					"message": "my message",
 					"message_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b1d4c1358be398f801eb90d933774b5218fa7e769b11c4c640402253353656f75",
 					"part_sig": null,
@@ -838,7 +954,6 @@ pub trait OwnerRpc {
 			"participant_data": [
 				{
 				  "id": "0",
-				  "recipient_pubkey": null,
 				  "public_blind_excess": "020e44132261fcdc9112d1bae25ab54d9c00609353cb23143771f2dc3c3f94484e",
 				  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f",
 				  "part_sig": null,
@@ -847,7 +962,6 @@ pub trait OwnerRpc {
 				},
 				{
 				  "id": "1",
-				  "recipient_pubkey": null,
 				  "public_blind_excess": "03900add00e609f21c5565fa95b09824973d2f8985119e59fcf26acb27b6133fd3",
 				  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f",
 				  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b02f44f6e1a2b319a8cfb59afbf87e3cded9036e8eabd3cd3a66ff8145b685a0b",
@@ -875,7 +989,6 @@ pub trait OwnerRpc {
 				"participant_data": [
 					{
 					  "id": "0",
-						"recipient_pubkey": null,
 					  "message": null,
 					  "message_sig": null,
 					  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b267c4d03effc5d6961657de79245ffe3d90637df26cbaa5a06f2be09f8550402",
@@ -884,7 +997,6 @@ pub trait OwnerRpc {
 					},
 					{
 					  "id": "1",
-						"recipient_pubkey": null,
 					  "message": null,
 					  "message_sig": null,
 					  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b02f44f6e1a2b319a8cfb59afbf87e3cded9036e8eabd3cd3a66ff8145b685a0b",
@@ -1182,7 +1294,6 @@ pub trait OwnerRpc {
 				"participant_data": [
 				{
 					"id": "0",
-					  "recipient_pubkey": null,
 					"message": "my message",
 					"message_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b1d4c1358be398f801eb90d933774b5218fa7e769b11c4c640402253353656f75",
 					"part_sig": null,
@@ -1386,6 +1497,12 @@ where
 
 	fn init_send_tx(&self, args: InitTxArgs) -> Result<VersionedSlate, ErrorKind> {
 		let slate = Owner::init_send_tx(self, args).map_err(|e| e.kind())?;
+		let version = SlateVersion::V2;
+		Ok(VersionedSlate::into_version(slate, version))
+	}
+
+	fn non_interactive_send(&self, args: InitTxArgs) -> Result<VersionedSlate, ErrorKind> {
+		let slate = Owner::non_interactive_send(self, args).map_err(|e| e.kind())?;
 		let version = SlateVersion::V2;
 		Ok(VersionedSlate::into_version(slate, version))
 	}

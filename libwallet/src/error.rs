@@ -16,7 +16,7 @@
 //! Error types for libwallet
 
 use crate::gotts_core::core::{committed, transaction};
-use crate::gotts_core::libtx;
+use crate::gotts_core::{address, libtx};
 use crate::gotts_keychain;
 use crate::gotts_store;
 use crate::gotts_util::secp;
@@ -73,6 +73,10 @@ pub enum ErrorKind {
 	/// Secp Error
 	#[fail(display = "Secp error")]
 	Secp(secp::Error),
+
+	/// Address Error
+	#[fail(display = "Address error: {}", _0)]
+	Address(String),
 
 	/// Callback implementation error conversion
 	#[fail(display = "Trait Implementation error")]
@@ -285,6 +289,14 @@ impl From<libtx::Error> for Error {
 	fn from(error: crate::gotts_core::libtx::Error) -> Error {
 		Error {
 			inner: Context::new(ErrorKind::LibTX(error.kind())),
+		}
+	}
+}
+
+impl From<address::Error> for Error {
+	fn from(error: address::Error) -> Error {
+		Error {
+			inner: Context::new(ErrorKind::Address(error.to_string())),
 		}
 	}
 }

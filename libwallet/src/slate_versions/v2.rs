@@ -92,9 +92,6 @@ pub struct ParticipantDataV2 {
 	/// Id of participant in the transaction. (For now, 0=sender, 1=rec)
 	#[serde(with = "secp_ser::string_or_u64")]
 	pub id: u64,
-	/// Public key of the recipient, when it's a non-interactive transaction
-	#[serde(with = "secp_ser::option_pubkey_serde")]
-	pub recipient_pubkey: Option<PublicKey>,
 	/// Public key corresponding to private blinding factor
 	#[serde(with = "secp_ser::pubkey_serde")]
 	pub public_blind_excess: PublicKey,

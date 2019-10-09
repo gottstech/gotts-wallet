@@ -37,6 +37,7 @@ use crate::impls::{
 	LMDBBackend, NullWalletCommAdapter,
 };
 use crate::impls::{HTTPNodeClient, WalletSeed};
+use crate::libwallet::api_impl::types::InitTxSendArgs;
 use crate::libwallet::{
 	InitTxArgs, IssueInvoiceTxArgs, NodeClient, OutputStatus, TxLogEntryType, WalletInst,
 };
@@ -242,6 +243,8 @@ pub fn send(
 	dark_scheme: bool,
 ) -> Result<(), Error> {
 	controller::owner_single_use(wallet.clone(), |api| {
+		let is_non_interactive_tx = if args.method == "addr" { true } else { false };
+
 		if args.estimate_selection_strategies {
 			let strategies = vec!["smallest", "biggest", "all"]
 				.into_iter()
@@ -262,6 +265,17 @@ pub fn send(
 				.collect();
 			display::estimate(args.amount, strategies, dark_scheme);
 		} else {
+			let send_args = if is_non_interactive_tx {
+				Some(InitTxSendArgs {
+					method: "addr".to_string(),
+					dest: args.dest.clone(),
+					finalize: true,
+					post_tx: false,
+					fluff: args.fluff,
+				})
+			} else {
+				None
+			};
 			let init_args = InitTxArgs {
 				src_acct_name: None,
 				amount: args.amount,
@@ -271,10 +285,13 @@ pub fn send(
 				selection_strategy: args.selection_strategy.clone(),
 				message: args.message.clone(),
 				target_slate_version: args.target_slate_version,
-				send_args: None,
+				send_args,
 				..Default::default()
 			};
-			let result = api.init_send_tx(init_args);
+			let result = match is_non_interactive_tx {
+				false => api.init_send_tx(init_args),
+				true => api.non_interactive_send(init_args),
+			};
 			let mut slate = match result {
 				Ok(s) => {
 					info!(
@@ -295,9 +312,12 @@ pub fn send(
 				"file" => FileWalletCommAdapter::new(),
 				"keybase" => KeybaseWalletCommAdapter::new(),
 				"self" => NullWalletCommAdapter::new(),
+				"addr" => NullWalletCommAdapter::new(),
 				_ => NullWalletCommAdapter::new(),
 			};
-			if adapter.supports_sync() {
+			if args.method == "addr" {
+				//todo:
+			} else if adapter.supports_sync() {
 				slate = adapter.send_tx_sync(&args.dest, &slate)?;
 				api.tx_lock_outputs(&slate, 0)?;
 				if args.method == "self" {

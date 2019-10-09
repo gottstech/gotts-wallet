@@ -87,10 +87,8 @@ where
 		use_test_rng,
 		Some(TxLogEntryType::TxReceived),
 	)?;
-	for t in &tx {
-		if t.tx_type == TxLogEntryType::TxReceived {
-			return Err(ErrorKind::TransactionAlreadyReceived(ret_slate.id.to_string()).into());
-		}
+	if tx.len() > 0 {
+		return Err(ErrorKind::TransactionAlreadyReceived(ret_slate.id.to_string()).into());
 	}
 
 	let message = match message {
@@ -111,6 +109,7 @@ where
 		message,
 		false,
 		use_test_rng,
+		None,
 	)?;
 	tx::update_message(&mut *w, &mut ret_slate)?;
 	Ok(ret_slate)

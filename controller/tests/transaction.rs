@@ -19,6 +19,7 @@ extern crate log;
 extern crate gotts_wallet_controller as wallet;
 extern crate gotts_wallet_impls as impls;
 extern crate gotts_wallet_libwallet as libwallet;
+extern crate hex;
 
 use gotts_wallet_util::gotts_core as core;
 use gotts_wallet_util::gotts_keychain as keychain;
@@ -28,6 +29,7 @@ use self::core::core::transaction;
 use self::core::global;
 use self::core::global::ChainTypes;
 use self::keychain::ExtKeychain;
+use self::libwallet::api_impl::types::InitTxSendArgs;
 use self::libwallet::{InitTxArgs, OutputStatus, Slate};
 use impls::test_framework::{self, LocalWalletClient, WalletProxy};
 use std::fs;
@@ -337,6 +339,70 @@ fn basic_transaction_api(test_dir: &str) -> Result<(), libwallet::Error> {
 		let tx = tx.unwrap();
 		assert!(tx.confirmed);
 		assert!(tx.confirmation_ts.is_some());
+		Ok(())
+	})?;
+
+	// create a non-interactive transaction in wallet1
+	let amount = 10_000_000_000;
+	wallet::controller::owner_single_use(wallet1.clone(), |sender_api| {
+		// note this will increment the block count as part of the transaction "Posting"
+		let args = InitTxArgs {
+			src_acct_name: None,
+			amount,
+			minimum_confirmations: 2,
+			max_outputs: 500,
+			num_change_outputs: 1,
+			selection_strategy: "all".to_owned(),
+			send_args: Some(InitTxSendArgs {
+				method: "addr".to_string(),
+				dest: "gs1qqvau3jpu2t04wy3znghhygrdjqvjxekrvs5vkrqjk6hesvjdj7lmcwlwvtd".to_string(),
+				finalize: true,
+				post_tx: true,
+				fluff: true,
+			}),
+			..Default::default()
+		};
+		let slate = sender_api.non_interactive_send(args)?;
+
+		// Check we are creating a tx with the expected lock_height of 0.
+		// We will check this produces a Plain kernel later.
+		assert_eq!(0, slate.lock_height);
+
+		// Check we have a single kernel and that it is a Plain kernel (no lock_height).
+		assert_eq!(slate.tx.kernels().len(), 1);
+		assert_eq!(
+			slate.tx.kernels().first().map(|k| k.features).unwrap(),
+			transaction::KernelFeatures::Plain { fee: 4000000 }
+		);
+		println!(
+			"non-interactive transaction slate: {}",
+			serde_json::to_string_pretty(&slate).unwrap()
+		);
+
+		// mine a few more blocks
+		let _ = test_framework::award_blocks_to_wallet(&chain, wallet1.clone(), 3, false);
+
+		// check wallet2 can restore this output
+		let amount = 60_000_000_000;
+		wallet::controller::owner_single_use(wallet2.clone(), |api| {
+			api.check_repair(false).unwrap();
+			let (wallet2_refreshed, wallet2_info) = api.retrieve_summary_info(true, 1)?;
+			assert!(wallet2_refreshed);
+			assert_eq!(wallet2_info.amount_currently_spendable, amount * 3);
+
+			// todo: check tx log entry is confirmed
+			//			let (refreshed, txs) = api.retrieve_txs(true, None, None)?;
+			//			assert!(refreshed);
+			//			let tx = txs.iter().find(|t| t.kernel_excess == Some(hex::encode(slate.tx.kernels()[0].excess.as_ref().to_vec())));
+			//			assert!(tx.is_some());
+			//			let tx = tx.unwrap();
+			//			assert!(tx.confirmed);
+			//			assert!(tx.confirmation_ts.is_some());
+			Ok(())
+		})?;
+
+		// check wallet2 can spend this output
+
 		Ok(())
 	})?;
 

@@ -18,9 +18,11 @@
 use crate::util::{Mutex, ZeroingString};
 use chrono::prelude::*;
 use std::marker::PhantomData;
+use std::str::FromStr;
 use std::sync::Arc;
 use uuid::Uuid;
 
+use crate::core::address::Address;
 use crate::core::core::Transaction;
 use crate::impls::{HTTPWalletCommAdapter, KeybaseWalletCommAdapter, WalletSeed};
 use crate::keychain::{Identifier, Keychain};
@@ -567,6 +569,117 @@ where
 					true => self.finalize_tx(&slate)?,
 					false => slate,
 				};
+
+				if sa.post_tx {
+					self.post_tx(Some(slate.id), &slate.tx, sa.fluff)?;
+				}
+				Ok(slate)
+			}
+			None => Ok(slate),
+		}
+	}
+
+	/// Non-interactive transaction send, creating a new
+	/// [`Slate`](../gotts_wallet_libwallet/slate/struct.Slate.html) object containing
+	/// the sender's inputs, change outputs, and public signature data. This slate can
+	/// then be posted to the chain via the
+	/// [Owner API's `post_tx`](struct.Owner.html#method.post_tx) method.
+	///
+	/// The `send_args` [`InitTxSendArgs`](../gotts_wallet_libwallet/types/struct.InitTxSendArgs.html),
+	/// of the [`args`](../gotts_wallet_libwallet/types/struct.InitTxArgs.html) field is mandatory
+	/// (i.e. must be Some), because the non-interactive transaction don't need payee's cooperation. The
+	/// `method` field must be 'addr', this function will finalize and post the transaction
+	/// if the `post_tx` field is set. The `finalize` field will be ignored because the transaction
+	/// is always finalized here.
+	///
+	/// # Arguments
+	/// * `args` - [`InitTxArgs`](../gotts_wallet_libwallet/types/struct.InitTxArgs.html),
+	/// transaction initialization arguments. See struct documentation for further detail.
+	///
+	/// # Returns
+	/// * a result containing:
+	/// * The transaction [Slate](../gotts_wallet_libwallet/slate/struct.Slate.html),
+	/// which can be forwarded to the recieving party by any means.
+	/// * or [`libwallet::Error`](../gotts_wallet_libwallet/struct.Error.html) if an error is encountered.
+	///
+	/// # Remarks
+	///
+	/// * This method requires an active connection to a node, and will fail with error if a node
+	/// cannot be contacted to refresh output status.
+	/// * This method will store a completed transaction in the wallet's transaction log.
+	///
+	/// # Example
+	/// Set up as in [new](struct.Owner.html#method.new) method above.
+	/// ```
+	/// # gotts_wallet_api::doctest_helper_setup_doc_env!(wallet, wallet_config);
+	///
+	/// use gotts_wallet_libwallet::api_impl::types::InitTxSendArgs;
+	/// let mut api_owner = Owner::new(wallet.clone());
+	/// // Attempt to create a non-interactive transaction using the 'default' account
+	/// let args = InitTxArgs {
+	/// 	src_acct_name: None,
+	/// 	amount: 2_000_000_000,
+	/// 	minimum_confirmations: 2,
+	/// 	max_outputs: 500,
+	/// 	num_change_outputs: 1,
+	/// 	selection_strategy: "all".to_owned(),
+	/// 	message: None,
+	///     send_args: Some(InitTxSendArgs {
+	///                   method: "addr".to_string(),
+	///                   dest: "gs1qqvau3jpu2t04wy3znghhygrdjqvjxekrvs5vkrqjk6hesvjdj7lmcwlwvtd".to_string(),
+	///                   finalize: true,
+	///                   post_tx: true,
+	///                   fluff: true,
+	///                }),
+	/// 	..Default::default()
+	/// };
+	/// let result = api_owner.non_interactive_send(
+	/// 	args,
+	/// );
+	///
+	/// if let Ok(slate) = result {
+	/// 	// A non-interactive transaction is creagted and sent successfully and has been posted.
+	/// }
+	/// ```
+	pub fn non_interactive_send(&self, args: InitTxArgs) -> Result<Slate, Error> {
+		let send_args = args.send_args.clone();
+		let mut slate;
+		{
+			let mut w = self.wallet.lock();
+			w.open_with_credentials()?;
+			slate = owner::init_send_tx(&mut *w, args, self.doctest_mode)?;
+			w.close()?;
+		}
+		// Helper functionality. If send arguments exist, attempt to process them.
+		match send_args {
+			Some(sa) => {
+				if sa.method != "addr" {
+					return Err(ErrorKind::ClientCallback(
+						"unsupported payment method".to_owned(),
+					))?;
+				}
+
+				let recipient_address = Address::from_str(&sa.dest)?;
+				if !recipient_address.is_pubkey_addr() {
+					return Err(ErrorKind::ClientCallback("unsupported address".to_owned()))?;
+				}
+
+				// Construction of a non-interactive transaction output
+				{
+					let mut w = self.wallet.lock();
+					w.open_with_credentials()?;
+					slate = owner::create_non_interactive_output(
+						&mut *w,
+						&slate,
+						recipient_address,
+						self.doctest_mode,
+					)?;
+					w.close()?;
+				}
+
+				// Finalize transaction
+				self.tx_lock_outputs(&slate, 0)?;
+				slate = self.finalize_tx(&slate)?;
 
 				if sa.post_tx {
 					self.post_tx(Some(slate.id), &slate.tx, sa.fluff)?;

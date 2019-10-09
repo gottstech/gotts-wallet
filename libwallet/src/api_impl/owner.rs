@@ -18,6 +18,7 @@
 use rand::{thread_rng, Rng};
 use uuid::Uuid;
 
+use crate::gotts_core::address::Address;
 use crate::gotts_core::core::hash::Hashed;
 use crate::gotts_core::{self, core::Transaction};
 use crate::gotts_util;
@@ -238,6 +239,35 @@ where
 	Ok(slate)
 }
 
+/// Construction of a non-interactive transaction output
+pub fn create_non_interactive_output<T: ?Sized, C, K>(
+	w: &mut T,
+	slate: &Slate,
+	recipient_address: Address,
+	use_test_rng: bool,
+) -> Result<Slate, Error>
+where
+	T: WalletBackend<C, K>,
+	C: NodeClient,
+	K: Keychain,
+{
+	let mut ret_slate = slate.clone();
+	let parent_key_id = w.parent_key_id();
+
+	tx::add_output_to_slate(
+		&mut *w,
+		&mut ret_slate,
+		&parent_key_id,
+		1,
+		None,
+		false,
+		use_test_rng,
+		Some(recipient_address),
+	)?;
+	//tx::update_message(&mut *w, &mut ret_slate)?;
+	Ok(ret_slate)
+}
+
 /// Initiate a transaction as the recipient (invoicing)
 pub fn issue_invoice_tx<T: ?Sized, C, K>(
 	w: &mut T,
@@ -284,6 +314,7 @@ where
 		message,
 		true,
 		use_test_rng,
+		None,
 	)?;
 
 	// Save the aggsig context in our DB for when we

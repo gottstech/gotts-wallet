@@ -17,6 +17,7 @@
 
 use uuid::Uuid;
 
+use crate::gotts_core::address::Address;
 use crate::gotts_core::consensus::valid_header_version;
 use crate::gotts_core::core::HeaderVersion;
 use crate::gotts_keychain::{Identifier, Keychain};
@@ -190,6 +191,7 @@ pub fn add_output_to_slate<T: ?Sized, C, K>(
 	message: Option<String>,
 	is_initiator: bool,
 	use_test_rng: bool,
+	recipient_address: Option<Address>,
 ) -> Result<Context, Error>
 where
 	T: WalletBackend<C, K>,
@@ -197,8 +199,13 @@ where
 	K: Keychain,
 {
 	// create an output using the amount in the slate
-	let (_, mut context) =
-		selection::build_recipient_output(wallet, slate, parent_key_id.clone(), use_test_rng)?;
+	let (_, mut context) = selection::build_recipient_output(
+		wallet,
+		slate,
+		parent_key_id.clone(),
+		use_test_rng,
+		recipient_address,
+	)?;
 
 	// fill public keys
 	let _ = slate.fill_round_1(
