@@ -658,11 +658,7 @@ where
 						"unsupported payment method".to_owned(),
 					))?;
 				}
-
 				let recipient_address = Address::from_str(&sa.dest)?;
-				if !recipient_address.is_pubkey_addr() {
-					return Err(ErrorKind::ClientCallback("unsupported address".to_owned()))?;
-				}
 
 				// Construction of a non-interactive transaction output
 				{

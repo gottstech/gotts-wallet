@@ -443,7 +443,7 @@ pub trait OwnerRpc {
 					"target_slate_version": null,
 					"send_args": {
 						"method": "addr",
-						"dest": "gs1qqvau3jpu2t04wy3znghhygrdjqvjxekrvs5vkrqjk6hesvjdj7lmcwlwvtd",
+						"dest": "gs1qqvau3jpu2t04wy3znghhygrdjqvjxekrvs5vkrqjk6hesvjdj7lmcnvhhlvqdfrsjt",
 						"finalize": true,
 						"post_tx": true,
 						"fluff": true

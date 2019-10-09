@@ -355,7 +355,8 @@ fn basic_transaction_api(test_dir: &str) -> Result<(), libwallet::Error> {
 			selection_strategy: "all".to_owned(),
 			send_args: Some(InitTxSendArgs {
 				method: "addr".to_string(),
-				dest: "gs1qqvau3jpu2t04wy3znghhygrdjqvjxekrvs5vkrqjk6hesvjdj7lmcwlwvtd".to_string(),
+				dest: "gs1qqvau3jpu2t04wy3znghhygrdjqvjxekrvs5vkrqjk6hesvjdj7lmcnvhhlvqdfrsjt"
+					.to_string(),
 				finalize: true,
 				post_tx: true,
 				fluff: true,
