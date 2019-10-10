@@ -20,7 +20,7 @@ use crate::error::{Error, ErrorKind};
 use crate::gotts_core::core::hash::Hash;
 use crate::gotts_core::core::{Output, Transaction, TxKernelApiEntry};
 use crate::gotts_core::libtx::{aggsig, secp_ser};
-use crate::gotts_keychain::{Identifier, Keychain};
+use crate::gotts_keychain::{Identifier, Keychain, RecipientKey};
 use crate::gotts_util::secp::key::{PublicKey, SecretKey};
 use crate::gotts_util::secp::{self, pedersen, Secp256k1};
 use crate::slate::ParticipantMessages;
@@ -60,11 +60,20 @@ where
 	/// Initialize with whatever stored credentials we have
 	fn open_with_credentials(&mut self) -> Result<(), Error>;
 
+	/// Set recipient key
+	fn set_recipient_key(&mut self, keypath: u32) -> Result<(), Error>;
+
+	/// Return the recipient key
+	fn recipient_key(&self) -> Result<RecipientKey, Error>;
+
 	/// Close wallet and remove any stored credentials (TBD)
 	fn close(&mut self) -> Result<(), Error>;
 
 	/// Return the keychain being used
 	fn keychain(&mut self) -> &mut K;
+
+	/// Return the keychain being used as immutable
+	fn keychain_immutable(&self) -> &K;
 
 	/// Return the client being used to communicate with the node
 	fn w2n_client(&mut self) -> &mut C;
@@ -134,6 +143,13 @@ where
 	/// Next child ID when we want to create a new output, based on current parent
 	fn next_child<'a>(&mut self) -> Result<Identifier, Error>;
 
+	/// Recipient child ID for the receiving address of non-interactive transaction.
+	fn get_recipient_child<'a>(&mut self) -> Result<Identifier, Error>;
+
+	/// Next recipient child ID when we want to create a new receiving address for non-interactive
+	/// transaction.
+	fn next_recipient_child<'a>(&mut self) -> Result<Identifier, Error>;
+
 	/// last verified height of outputs directly descending from the given parent key
 	fn last_confirmed_height<'a>(&mut self) -> Result<u64, Error>;
 
@@ -194,6 +210,9 @@ where
 
 	/// Save last stored child index of a given parent
 	fn save_child_index(&mut self, parent_key_id: &Identifier, child_n: u32) -> Result<(), Error>;
+
+	/// Save last stored recipient child index of a given parent
+	fn save_recipient_child_index(&mut self, child_n: u32) -> Result<(), Error>;
 
 	/// Save last confirmed height of outputs for a given parent
 	fn save_last_confirmed_height(

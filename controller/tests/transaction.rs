@@ -25,6 +25,7 @@ use gotts_wallet_util::gotts_core as core;
 use gotts_wallet_util::gotts_keychain as keychain;
 use gotts_wallet_util::gotts_util as util;
 
+use self::core::address::Address;
 use self::core::core::transaction;
 use self::core::global;
 use self::core::global::ChainTypes;
@@ -342,6 +343,18 @@ fn basic_transaction_api(test_dir: &str) -> Result<(), libwallet::Error> {
 		Ok(())
 	})?;
 
+	// get the non-interactive transaction recipient address for wallet2
+	let mut wallet2_recipient_addr = Address::default();
+	wallet::controller::owner_single_use(wallet2.clone(), |api| {
+		let recipient_key = api.get_recipient_key()?;
+		wallet2_recipient_addr = Address::from_pubkey(
+			&recipient_key.recipient_pub_key,
+			&recipient_key.recipient_key_id,
+			true,
+		);
+		Ok(())
+	})?;
+
 	// create a non-interactive transaction in wallet1
 	let amount = 10_000_000_000;
 	wallet::controller::owner_single_use(wallet1.clone(), |sender_api| {
@@ -355,8 +368,7 @@ fn basic_transaction_api(test_dir: &str) -> Result<(), libwallet::Error> {
 			selection_strategy: "all".to_owned(),
 			send_args: Some(InitTxSendArgs {
 				method: "addr".to_string(),
-				dest: "gs1qqvau3jpu2t04wy3znghhygrdjqvjxekrvs5vkrqjk6hesvjdj7lmcnvhhlvqdfrsjt"
-					.to_string(),
+				dest: wallet2_recipient_addr.to_string(),
 				finalize: true,
 				post_tx: true,
 				fluff: true,

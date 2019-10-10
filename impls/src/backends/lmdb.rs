@@ -27,7 +27,9 @@ use uuid::Uuid;
 use crate::blake2::blake2b::Blake2b;
 
 use super::wallet_store::{self, option_to_not_found};
-use crate::keychain::{ChildNumber, ExtKeychain, Identifier, Keychain};
+use crate::keychain::{
+	ChildNumber, ExtKeychain, ExtKeychainPath, Identifier, Keychain, RecipientKey,
+};
 use crate::store::{to_key, to_key_u64};
 
 use crate::core::core::Transaction;
@@ -39,6 +41,7 @@ use crate::libwallet::{
 };
 use crate::util;
 use crate::util::secp::constants::SECRET_KEY_SIZE;
+use crate::util::secp::PublicKey;
 use crate::util::ZeroingString;
 use crate::WalletSeed;
 use config::WalletConfig;
@@ -49,6 +52,7 @@ pub const TX_SAVE_DIR: &'static str = "saved_txs";
 const OUTPUT_PREFIX: u8 = 'o' as u8;
 const PAYMENT_PREFIX: u8 = 'P' as u8;
 const DERIV_PREFIX: u8 = 'd' as u8;
+const RECIPIENT_DERIV_PREFIX: u8 = 'r' as u8;
 const CONFIRMED_HEIGHT_PREFIX: u8 = 'c' as u8;
 const PRIVATE_TX_CONTEXT_PREFIX: u8 = 'p' as u8;
 const TX_LOG_ENTRY_PREFIX: u8 = 't' as u8;
@@ -102,6 +106,8 @@ pub struct LMDBBackend<C, K> {
 	passphrase: ZeroingString,
 	/// Keychain
 	pub keychain: Option<K>,
+	/// Recipient Key Id
+	recipient_key_id: Option<Identifier>,
 	/// Parent path to use by default for output operations
 	parent_key_id: Identifier,
 	/// wallet to node client
@@ -142,6 +148,7 @@ impl<C, K> LMDBBackend<C, K> {
 			config: config.clone(),
 			passphrase: ZeroingString::from(passphrase),
 			keychain: None,
+			recipient_key_id: None,
 			parent_key_id: LMDBBackend::<C, K>::default_path(),
 			w2n_client: n_client,
 		};
@@ -178,18 +185,63 @@ where
 				.derive_keychain(global::is_floonet())
 				.context(ErrorKind::CallbackImpl("Error deriving keychain"))?,
 		);
+		// Initial a 'd3=0' key as the default recipient key. Configurable via `set_recipient_key` function.
+		self.set_recipient_key(0).unwrap();
 		Ok(())
+	}
+
+	/// Set recipient key.
+	/// Considering the address length, we only open the 'd3' of the path to be configurable by user,
+	/// - d0,d1 are fixed as u32::max, no matter what is the parent_key_id.
+	/// - d2 are fixed as 0 and should not be changed for recipient key.
+	/// i.e. The path = ExtKeychainPath::new(4, u32::max, u32::max, 0, d3).
+	///
+	/// Note: when the 'parent_key_id' changed, for example switching to a different account,
+	/// this recipient key will be same.
+	fn set_recipient_key(&mut self, keypath: u32) -> Result<(), Error> {
+		if self.keychain.is_none() {
+			return Err(ErrorKind::Backend("keychain is none".to_string()).into());
+		}
+		// Initialize the recipient key for non-interactive transaction.
+		let path = ExtKeychainPath::new(4, <u32>::max_value(), <u32>::max_value(), 0, keypath);
+		self.recipient_key_id = Some(Identifier::from_path(&path));
+		Ok(())
+	}
+
+	fn recipient_key(&self) -> Result<RecipientKey, Error> {
+		if self.keychain.is_none() || self.recipient_key_id.is_none() {
+			return Err(
+				ErrorKind::Backend("keychain or recipient_key_id is none".to_string()).into(),
+			);
+		}
+
+		let keychain = self.keychain_immutable();
+		let recipient_key_id = self.recipient_key_id.clone().unwrap();
+		let recipient_pri_key = keychain.derive_key(&recipient_key_id).unwrap();
+		let recipient_pub_key =
+			PublicKey::from_secret_key(keychain.secp(), &recipient_pri_key).unwrap();
+		Ok(RecipientKey {
+			recipient_key_id,
+			recipient_pub_key,
+			recipient_pri_key,
+		})
 	}
 
 	/// Close wallet and remove any stored credentials (TBD)
 	fn close(&mut self) -> Result<(), Error> {
 		self.keychain = None;
+		self.recipient_key_id = None;
 		Ok(())
 	}
 
 	/// Return the keychain being used
 	fn keychain(&mut self) -> &mut K {
 		self.keychain.as_mut().unwrap()
+	}
+
+	/// Return the keychain being used as immutable
+	fn keychain_immutable(&self) -> &K {
+		self.keychain.as_ref().unwrap()
 	}
 
 	/// Return the node client being used
@@ -371,6 +423,53 @@ where
 		deriv_idx = deriv_idx + 1;
 		let mut batch = self.batch()?;
 		batch.save_child_index(&parent_key_id, deriv_idx)?;
+		batch.commit()?;
+		Ok(Identifier::from_path(&return_path))
+	}
+
+	fn get_recipient_child<'a>(&mut self) -> Result<Identifier, Error> {
+		let parent_key_id =
+			ExtKeychainPath::new(2, <u32>::max_value(), <u32>::max_value(), 0, 0).to_identifier();
+		let deriv_idx = {
+			let deriv_key = to_key(
+				RECIPIENT_DERIV_PREFIX,
+				&mut parent_key_id.to_bytes().to_vec(),
+			);
+			match self.db.get_ser(&deriv_key)? {
+				Some(idx) => idx,
+				None => 0,
+			}
+		};
+		let mut return_path = parent_key_id.to_path();
+		return_path.depth = 4;
+		return_path.path[2] = ChildNumber::from(<u32>::max_value());
+		return_path.path[3] = ChildNumber::from(deriv_idx);
+		Ok(Identifier::from_path(&return_path))
+	}
+
+	fn next_recipient_child<'a>(&mut self) -> Result<Identifier, Error> {
+		let parent_key_id =
+			ExtKeychainPath::new(2, <u32>::max_value(), <u32>::max_value(), 0, 0).to_identifier();
+		let mut deriv_idx = {
+			let batch = self.db.batch()?;
+			let deriv_key = to_key(
+				RECIPIENT_DERIV_PREFIX,
+				&mut parent_key_id.to_bytes().to_vec(),
+			);
+			match batch.get_ser(&deriv_key)? {
+				Some(idx) => idx,
+				None => 0,
+			}
+		};
+		deriv_idx = deriv_idx + 1;
+
+		let mut return_path = self.parent_key_id.to_path();
+		assert_eq!(return_path.depth, 2);
+		return_path.depth = 4;
+		return_path.path[2] = ChildNumber::from(<u32>::max_value());
+		return_path.path[3] = ChildNumber::from(deriv_idx);
+		let mut batch = self.batch()?;
+		batch.save_recipient_child_index(deriv_idx)?;
 		batch.commit()?;
 		Ok(Identifier::from_path(&return_path))
 	}
@@ -569,6 +668,21 @@ where
 
 	fn save_child_index(&mut self, parent_id: &Identifier, child_n: u32) -> Result<(), Error> {
 		let deriv_key = to_key(DERIV_PREFIX, &mut parent_id.to_bytes().to_vec());
+		self.db
+			.borrow()
+			.as_ref()
+			.unwrap()
+			.put_ser(&deriv_key, &child_n)?;
+		Ok(())
+	}
+
+	fn save_recipient_child_index(&mut self, child_n: u32) -> Result<(), Error> {
+		let parent_key_id =
+			ExtKeychainPath::new(2, <u32>::max_value(), <u32>::max_value(), 0, 0).to_identifier();
+		let deriv_key = to_key(
+			RECIPIENT_DERIV_PREFIX,
+			&mut parent_key_id.to_bytes().to_vec(),
+		);
 		self.db
 			.borrow()
 			.as_ref()

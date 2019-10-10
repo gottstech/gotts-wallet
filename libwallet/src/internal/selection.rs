@@ -222,7 +222,6 @@ where
 			vec![build::non_interactive_output(
 				amount,
 				Some(w),
-				key_id.clone(),
 				addr,
 				use_test_rng,
 			)],

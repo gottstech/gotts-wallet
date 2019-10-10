@@ -23,7 +23,7 @@ use crate::gotts_core::core::hash::Hashed;
 use crate::gotts_core::{self, core::Transaction};
 use crate::gotts_util;
 
-use crate::gotts_keychain::{Identifier, Keychain};
+use crate::gotts_keychain::{Identifier, Keychain, RecipientKey};
 use crate::internal::{keys, selection, tx, updater};
 use crate::slate::Slate;
 use crate::types::{AcctPathMapping, NodeClient, TxLogEntry, TxWrapper, WalletBackend, WalletInfo};
@@ -237,6 +237,16 @@ where
 		slate.version_info.orig_version = v;
 	}
 	Ok(slate)
+}
+
+/// Get the recipient key for non-interactive transaction
+pub fn get_recipient_key<T: ?Sized, C, K>(w: &mut T) -> Result<RecipientKey, Error>
+where
+	T: WalletBackend<C, K>,
+	C: NodeClient,
+	K: Keychain,
+{
+	w.recipient_key()
 }
 
 /// Construction of a non-interactive transaction output

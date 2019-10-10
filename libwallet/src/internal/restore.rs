@@ -76,6 +76,7 @@ where
 		outputs.len(),
 	);
 
+	let recipient_key = wallet.recipient_key()?;
 	let keychain = wallet.keychain();
 	let builder = proof::ProofBuilder::new(keychain);
 
@@ -83,24 +84,42 @@ where
 		let (commit, ot, is_coinbase, height, mmr_index) = output;
 		// attempt to unwind message from the SecuredPath and get a 'w'
 		// will fail if it's not ours
-		let info = match ot.features.as_flag() {
+		let w;
+		let key_id;
+		match ot.features.as_flag() {
 			OutputFeatures::Plain | OutputFeatures::Coinbase => {
 				let spath = match ot.features.get_spath() {
 					Ok(s) => s,
 					Err(_) => continue,
 				};
 				match proof::rewind(keychain.secp(), &builder, commit, spath) {
-					Ok(i) => i,
+					Ok(i) => {
+						w = i.w;
+						key_id = i.key_id;
+					}
 					Err(_) => continue,
 				}
 			}
 			OutputFeatures::SigLocked => {
-				//todo:
-				continue;
+				let locker = match ot.features.get_locker() {
+					Ok(l) => l,
+					Err(_) => continue,
+				};
+				match proof::rewind_outputlocker(
+					keychain,
+					ot.value,
+					&recipient_key.recipient_pri_key,
+					commit,
+					locker,
+				) {
+					Ok(i) => {
+						w = i;
+						key_id = recipient_key.recipient_key_id.clone();
+					}
+					Err(_) => continue,
+				}
 			}
 		};
-
-		let (amount, w, key_id) = (ot.value, info.w, info.key_id);
 
 		let lock_height = if *is_coinbase {
 			*height + global::coinbase_maturity()
@@ -109,14 +128,18 @@ where
 		};
 
 		info!(
-			"Output found: {:?}, amount: {:?}, key_id: {:?}, mmr_index: {},",
-			commit, amount, key_id, mmr_index,
+			"{:?} Output found: {:?}, amount: {:?}, key_id: {:?}, mmr_index: {},",
+			ot.features.as_flag(),
+			commit,
+			ot.value,
+			key_id,
+			mmr_index,
 		);
 		wallet_outputs.push(OutputResult {
 			commit: *commit,
 			key_id: key_id.clone(),
 			n_child: key_id.to_path().last_path_index(),
-			value: amount,
+			value: ot.value,
 			w,
 			height: *height,
 			lock_height,
@@ -154,6 +177,10 @@ where
 		}
 		start_index = last_retrieved_index + 1;
 	}
+	info!(
+		"collect_chain_outputs: {} utxo outputs identified",
+		result_vec.len()
+	);
 	Ok(result_vec)
 }
 

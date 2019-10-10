@@ -25,7 +25,7 @@ use uuid::Uuid;
 use crate::core::address::Address;
 use crate::core::core::Transaction;
 use crate::impls::{HTTPWalletCommAdapter, KeybaseWalletCommAdapter, WalletSeed};
-use crate::keychain::{Identifier, Keychain};
+use crate::keychain::{Identifier, Keychain, RecipientKey};
 use crate::libwallet::api_impl::owner;
 use crate::libwallet::{
 	AcctPathMapping, Error, ErrorKind, InitTxArgs, IssueInvoiceTxArgs, NodeClient,
@@ -638,7 +638,7 @@ where
 	/// );
 	///
 	/// if let Ok(slate) = result {
-	/// 	// A non-interactive transaction is creagted and sent successfully and has been posted.
+	/// 	// A non-interactive transaction is created and sent successfully and has been posted.
 	/// }
 	/// ```
 	pub fn non_interactive_send(&self, args: InitTxArgs) -> Result<Slate, Error> {
@@ -684,6 +684,35 @@ where
 			}
 			None => Ok(slate),
 		}
+	}
+
+	/// Get the wallet receiving key for the non-interactive transaction.
+	///
+	/// # Returns
+	/// * ``Ok([`RecipientKey`](../gotts_keychain/RecipientKey/struct.RecipientKey.html))` if successful,
+	/// containing the updated slate.
+	/// * or [`libwallet::Error`](../gotts_wallet_libwallet/struct.Error.html) if an error is encountered.
+	///
+	/// # Example
+	/// Set up as in [`new`](struct.Owner.html#method.new) method above.
+	/// ```
+	/// # gotts_wallet_api::doctest_helper_setup_doc_env!(wallet, wallet_config);
+	///
+	/// let mut api_owner = Owner::new(wallet.clone());
+	///
+	/// let result = api_owner.get_recipient_key();
+	///
+	/// if let Ok(recipient_key) = result {
+	///		// if okay, convert it to Address and get the string address to tell the payer.
+	///		// . . .
+	/// }
+	/// ```
+	pub fn get_recipient_key(&self) -> Result<RecipientKey, Error> {
+		let mut w = self.wallet.lock();
+		w.open_with_credentials()?;
+		let recipient_key = owner::get_recipient_key(&mut *w)?;
+		w.close()?;
+		Ok(recipient_key)
 	}
 
 	/// Issues a new invoice transaction slate, essentially a `request for payment`.
