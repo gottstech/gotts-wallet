@@ -336,6 +336,9 @@ pub struct OutputData {
 	pub root_key_id: Identifier,
 	/// Derived key for this output
 	pub key_id: Identifier,
+	/// The ephemeral key for non-interactive transaction output
+	#[serde(with = "secp_ser::option_seckey_serde")]
+	pub ephemeral_key: Option<SecretKey>,
 	/// How many derivations down from the root key
 	pub n_child: u32,
 	/// The actual commit, optionally stored

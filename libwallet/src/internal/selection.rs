@@ -15,6 +15,7 @@
 
 //! Selection of inputs for building transactions
 
+use super::keys::recipient_parent_key_id;
 use crate::error::{Error, ErrorKind};
 use crate::gotts_core::address::Address;
 use crate::gotts_core::core::{amount_to_hr_string, TransactionBody};
@@ -164,6 +165,7 @@ where
 			batch.save(OutputData {
 				root_key_id: parent_key_id.clone(),
 				key_id: id.clone(),
+				ephemeral_key: None,
 				n_child: id.to_path().last_path_index(),
 				commit: commit.clone(),
 				mmr_index: None,
@@ -256,6 +258,7 @@ where
 		batch.save(OutputData {
 			root_key_id: parent_key_id.clone(),
 			key_id: key_id_inner.clone(),
+			ephemeral_key: None,
 			mmr_index: None,
 			n_child: key_id_inner.to_path().last_path_index(),
 			commit,
@@ -584,7 +587,7 @@ where
 	let mut eligible = wallet
 		.iter()
 		.filter(|out| {
-			out.root_key_id == *parent_key_id
+			(out.root_key_id == *parent_key_id || out.root_key_id == recipient_parent_key_id())
 				&& out.eligible_to_spend(current_height, minimum_confirmations)
 		})
 		.collect::<Vec<OutputData>>();
