@@ -21,7 +21,7 @@ use crate::error::{Error, ErrorKind};
 use crate::gotts_core::core::amount_to_hr_string;
 use crate::gotts_core::core::committed::Committed;
 use crate::gotts_core::core::transaction::{
-	Input, KernelFeatures, Output, Transaction, TransactionBody, TxKernel, Weighting,
+	Input, InputEx, KernelFeatures, Output, Transaction, TransactionBody, TxKernel, Weighting,
 };
 use crate::gotts_core::core::verifier_cache::LruVerifierCache;
 use crate::gotts_core::libtx::{aggsig, build, proof::ProofBuild, secp_ser, tx_fee};
@@ -38,7 +38,7 @@ use std::sync::Arc;
 use uuid::Uuid;
 
 use crate::slate_versions::v2::{
-	InputV2, OutputV2, ParticipantDataV2, SlateV2, TransactionBodyV2, TransactionV2, TxKernelV2,
+	InputV2, InputExV2, OutputV2, ParticipantDataV2, SlateV2, TransactionBodyV2, TransactionV2, TxKernelV2,
 	VersionCompatInfoV2,
 };
 use crate::slate_versions::{CURRENT_SLATE_VERSION, GOTTS_BLOCK_HEADER_VERSION};
@@ -809,7 +809,7 @@ impl From<&TransactionBody> for TransactionBodyV2 {
 			kernels,
 		} = body;
 
-		let inputs = map_vec!(inputs, |inp| InputV2::from(inp));
+		let inputs = map_vec!(inputs, |inp| InputExV2::from(inp));
 		let outputs = map_vec!(outputs, |out| OutputV2::from(out));
 		let kernels = map_vec!(kernels, |kern| TxKernelV2::from(kern));
 		TransactionBodyV2 {
@@ -824,6 +824,21 @@ impl From<&Input> for InputV2 {
 	fn from(input: &Input) -> InputV2 {
 		let Input { features, commit } = *input;
 		InputV2 { features, commit }
+	}
+}
+
+impl From<&InputEx> for InputExV2 {
+	fn from(input: &InputEx) -> InputExV2 {
+		match input {
+			InputEx::SingleInput(input) => InputExV2::SingleInput(InputV2::from(input)),
+			InputEx::InputsWithUnlocker {
+				inputs,
+				unlocker,
+			} => InputExV2::InputsWithUnlocker {
+				inputs: map_vec!(inputs, |inp| InputV2::from(inp)),
+				unlocker: unlocker.clone(),
+			}
+		}
 	}
 }
 
@@ -1003,7 +1018,7 @@ impl From<&TransactionBodyV2> for TransactionBody {
 			kernels,
 		} = body;
 
-		let inputs = map_vec!(inputs, |inp| Input::from(inp));
+		let inputs = map_vec!(inputs, |inp| InputEx::from(inp));
 		let outputs = map_vec!(outputs, |out| Output::from(out));
 		let kernels = map_vec!(kernels, |kern| TxKernel::from(kern));
 		TransactionBody {
@@ -1018,6 +1033,21 @@ impl From<&InputV2> for Input {
 	fn from(input: &InputV2) -> Input {
 		let InputV2 { features, commit } = *input;
 		Input { features, commit }
+	}
+}
+
+impl From<&InputExV2> for InputEx {
+	fn from(input: &InputExV2) -> InputEx {
+		match input {
+			InputExV2::SingleInput(input) => InputEx::SingleInput(Input::from(input)),
+			InputExV2::InputsWithUnlocker {
+				inputs,
+				unlocker,
+			} => InputEx::InputsWithUnlocker {
+				inputs: map_vec!(inputs, |inp| Input::from(inp)),
+				unlocker: unlocker.clone(),
+			}
+		}
 	}
 }
 

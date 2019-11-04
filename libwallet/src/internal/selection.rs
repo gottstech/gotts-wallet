@@ -1,3 +1,4 @@
+
 // Copyright 2018 The Grin Developers
 // Modifications Copyright 2019 The Gotts Developers
 //
@@ -166,6 +167,7 @@ where
 				root_key_id: parent_key_id.clone(),
 				key_id: id.clone(),
 				ephemeral_key: None,
+				p2pkh: None,
 				n_child: id.to_path().last_path_index(),
 				commit: commit.clone(),
 				mmr_index: None,
@@ -259,6 +261,7 @@ where
 			root_key_id: parent_key_id.clone(),
 			key_id: key_id_inner.clone(),
 			ephemeral_key: None,
+			p2pkh: None,
 			mmr_index: None,
 			n_child: key_id_inner.to_path().last_path_index(),
 			commit,
@@ -500,8 +503,31 @@ where
 	for coin in coins {
 		if coin.is_coinbase {
 			parts.push(build::coinbase_input(coin.value, coin.key_id.clone()));
-		} else {
+		} else if coin.p2pkh.is_none() {
 			parts.push(build::input(coin.value, coin.w, coin.key_id.clone()));
+		}
+	}
+
+	{
+		let mut siglocked_coins: Vec<OutputData> = coins.clone().drain(..).filter(|c| c.p2pkh.is_some()).collect();
+		siglocked_coins.sort_by_key(|x| x.p2pkh);
+		if siglocked_coins.len() > 0 {
+			let mut prev = siglocked_coins.first().unwrap();
+			let mut input_build_parm: Vec<build::InputExBuildParm> = vec![];
+			for (i, coin) in siglocked_coins.iter().enumerate() {
+				input_build_parm.push(build::InputExBuildParm{
+					value: coin.value,
+					w: coin.w,
+					key_id: coin.key_id.clone(),
+					ephemeral_key: coin.ephemeral_key.clone().unwrap(),
+					p2pkh: coin.p2pkh.unwrap(),
+				});
+				if coin.p2pkh != prev.p2pkh || i == siglocked_coins.len() - 1 {
+					parts.push(build::siglocked_input(input_build_parm.clone()));
+					input_build_parm.clear();
+				}
+				prev = coin;
+			}
 		}
 	}
 

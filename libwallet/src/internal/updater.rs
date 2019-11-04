@@ -703,6 +703,7 @@ where
 			root_key_id: parent_key_id,
 			key_id: key_id.clone(),
 			ephemeral_key: None,
+			p2pkh: None,
 			n_child: key_id.to_path().last_path_index(),
 			mmr_index: None,
 			commit,

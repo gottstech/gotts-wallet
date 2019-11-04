@@ -54,7 +54,7 @@ fn aggsig_sender_receiver_interaction() {
 
 		keychain
 			.secp()
-			.commit(0, blinding_factor.secret_key().unwrap())
+			.commit(0, &blinding_factor.secret_key().unwrap())
 			.unwrap()
 	};
 
@@ -258,7 +258,7 @@ fn aggsig_sender_receiver_interaction_offset() {
 
 		keychain
 			.secp()
-			.commit(0, blinding_factor.secret_key().unwrap())
+			.commit(0, &blinding_factor.secret_key().unwrap())
 			.unwrap()
 	};
 

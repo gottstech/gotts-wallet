@@ -15,6 +15,7 @@
 //! Functions to restore a wallet's outputs from just the master seed
 
 use crate::gotts_core::core::{Output, OutputFeatures};
+use crate::gotts_core::core::hash::Hash;
 use crate::gotts_core::global;
 use crate::gotts_core::libtx::proof;
 use crate::gotts_keychain::{ExtKeychain, Identifier, Keychain};
@@ -31,6 +32,7 @@ struct OutputResult {
 	pub commit: pedersen::Commitment,
 	pub key_id: Identifier,
 	pub ephemeral_key: Option<SecretKey>,
+	pub p2pkh: Option<Hash>,
 	pub n_child: u32,
 	pub mmr_index: u64,
 	pub value: u64,
@@ -76,6 +78,7 @@ where
 		let w;
 		let key_id;
 		let mut ephemeral_key = None;
+		let mut p2pkh = None;
 		match ot.features.as_flag() {
 			OutputFeatures::Plain | OutputFeatures::Coinbase => {
 				let spath = match ot.features.get_spath() {
@@ -105,6 +108,7 @@ where
 					Ok((i, e)) => {
 						w = i;
 						ephemeral_key = Some(e);
+						p2pkh = Some(locker.p2pkh);
 						key_id = recipient_key.recipient_key_id.clone();
 					}
 					Err(_) => continue,
@@ -130,6 +134,7 @@ where
 			commit: *commit,
 			key_id: key_id.clone(),
 			ephemeral_key,
+			p2pkh,
 			n_child: key_id.to_path().last_path_index(),
 			value: ot.value,
 			w,
@@ -240,6 +245,7 @@ where
 		root_key_id: parent_key_id.clone(),
 		key_id: output.key_id,
 		ephemeral_key: output.ephemeral_key,
+		p2pkh: output.p2pkh,
 		n_child: output.n_child,
 		mmr_index: Some(output.mmr_index),
 		commit,
