@@ -339,8 +339,8 @@ pub struct OutputData {
 	/// The ephemeral key for non-interactive transaction output
 	#[serde(with = "secp_ser::option_seckey_serde")]
 	pub ephemeral_key: Option<SecretKey>,
-    /// The recipient's public key hash for non-interactive transaction output
-    pub p2pkh: Option<Hash>,
+	/// The recipient's public key hash for non-interactive transaction output
+	pub p2pkh: Option<Hash>,
 	/// How many derivations down from the root key
 	pub n_child: u32,
 	/// The actual commit, optionally stored
@@ -469,8 +469,8 @@ pub struct PaymentData {
 	pub commit: pedersen::Commitment,
 	/// Value of the output
 	pub value: u64,
-    /// Recipient's address for non-interactive transaction
-    pub recipient_address: Option<String>,
+	/// Recipient's address for non-interactive transaction
+	pub recipient_address: Option<String>,
 	/// Current status of the output
 	pub status: OutputStatus,
 	/// Height of the output

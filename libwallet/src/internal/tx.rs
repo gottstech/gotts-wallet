@@ -309,7 +309,7 @@ where
 				batch.save_payment(PaymentData {
 					commit: output,
 					value: 0, // '0' means unknown here, since '0' value is impossible for an output.
-					recipient_address: None,	// same todo as above
+					recipient_address: None, // same todo as above
 					status: OutputStatus::Unconfirmed,
 					height: slate.height,
 					lock_height: 0,
@@ -321,7 +321,7 @@ where
 			batch.save_payment(PaymentData {
 				commit: outputs[0],
 				value: slate.amount,
-				recipient_address: None,	//todo: save the address here
+				recipient_address: None, //todo: save the address here
 				status: OutputStatus::Unconfirmed,
 				height: slate.height,
 				lock_height: 0,

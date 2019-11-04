@@ -14,8 +14,8 @@
 // limitations under the License.
 //! Functions to restore a wallet's outputs from just the master seed
 
-use crate::gotts_core::core::{Output, OutputFeatures};
 use crate::gotts_core::core::hash::Hash;
+use crate::gotts_core::core::{Output, OutputFeatures};
 use crate::gotts_core::global;
 use crate::gotts_core::libtx::proof;
 use crate::gotts_keychain::{ExtKeychain, Identifier, Keychain};

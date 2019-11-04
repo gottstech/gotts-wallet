@@ -1,4 +1,3 @@
-
 // Copyright 2018 The Grin Developers
 // Modifications Copyright 2019 The Gotts Developers
 //
@@ -509,13 +508,17 @@ where
 	}
 
 	{
-		let mut siglocked_coins: Vec<OutputData> = coins.clone().drain(..).filter(|c| c.p2pkh.is_some()).collect();
+		let mut siglocked_coins: Vec<OutputData> = coins
+			.clone()
+			.drain(..)
+			.filter(|c| c.p2pkh.is_some())
+			.collect();
 		siglocked_coins.sort_by_key(|x| x.p2pkh);
 		if siglocked_coins.len() > 0 {
 			let mut prev = siglocked_coins.first().unwrap();
 			let mut input_build_parm: Vec<build::InputExBuildParm> = vec![];
 			for (i, coin) in siglocked_coins.iter().enumerate() {
-				input_build_parm.push(build::InputExBuildParm{
+				input_build_parm.push(build::InputExBuildParm {
 					value: coin.value,
 					w: coin.w,
 					key_id: coin.key_id.clone(),

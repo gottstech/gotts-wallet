@@ -38,8 +38,8 @@ use std::sync::Arc;
 use uuid::Uuid;
 
 use crate::slate_versions::v2::{
-	InputV2, InputExV2, OutputV2, ParticipantDataV2, SlateV2, TransactionBodyV2, TransactionV2, TxKernelV2,
-	VersionCompatInfoV2,
+	InputExV2, InputV2, OutputV2, ParticipantDataV2, SlateV2, TransactionBodyV2, TransactionV2,
+	TxKernelV2, VersionCompatInfoV2,
 };
 use crate::slate_versions::{CURRENT_SLATE_VERSION, GOTTS_BLOCK_HEADER_VERSION};
 
@@ -831,13 +831,10 @@ impl From<&InputEx> for InputExV2 {
 	fn from(input: &InputEx) -> InputExV2 {
 		match input {
 			InputEx::SingleInput(input) => InputExV2::SingleInput(InputV2::from(input)),
-			InputEx::InputsWithUnlocker {
-				inputs,
-				unlocker,
-			} => InputExV2::InputsWithUnlocker {
+			InputEx::InputsWithUnlocker { inputs, unlocker } => InputExV2::InputsWithUnlocker {
 				inputs: map_vec!(inputs, |inp| InputV2::from(inp)),
 				unlocker: unlocker.clone(),
-			}
+			},
 		}
 	}
 }
@@ -1040,13 +1037,10 @@ impl From<&InputExV2> for InputEx {
 	fn from(input: &InputExV2) -> InputEx {
 		match input {
 			InputExV2::SingleInput(input) => InputEx::SingleInput(Input::from(input)),
-			InputExV2::InputsWithUnlocker {
-				inputs,
-				unlocker,
-			} => InputEx::InputsWithUnlocker {
+			InputExV2::InputsWithUnlocker { inputs, unlocker } => InputEx::InputsWithUnlocker {
 				inputs: map_vec!(inputs, |inp| Input::from(inp)),
 				unlocker: unlocker.clone(),
-			}
+			},
 		}
 	}
 }
