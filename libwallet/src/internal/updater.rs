@@ -721,9 +721,8 @@ where
 	}
 
 	debug!(
-		"receive_coinbase: built candidate output - {:?}, {}",
+		"receive_coinbase: built candidate output - {:?}",
 		key_id.clone(),
-		key_id,
 	);
 
 	let mut block_fees = block_fees.clone();
