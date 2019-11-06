@@ -21,12 +21,12 @@ toml = "0.4"
 dirs = "1.0.3"
 
 # For Release
-#gotts_core = { git = "https://github.com/gottstech/gotts", tag = "v0.0.2" }
-#gotts_keychain = { git = "https://github.com/gottstech/gotts", tag = "v0.0.2" }
-#gotts_chain = { git = "https://github.com/gottstech/gotts", tag = "v0.0.2" }
-#gotts_util = { git = "https://github.com/gottstech/gotts", tag = "v0.0.2" }
-#gotts_api = { git = "https://github.com/gottstech/gotts", tag = "v0.0.2" }
-#gotts_store = { git = "https://github.com/gottstech/gotts", tag = "v0.0.2" }
+gotts_core = { git = "https://github.com/gottstech/gotts", tag = "v0.0.3" }
+gotts_keychain = { git = "https://github.com/gottstech/gotts", tag = "v0.0.3" }
+gotts_chain = { git = "https://github.com/gottstech/gotts", tag = "v0.0.3" }
+gotts_util = { git = "https://github.com/gottstech/gotts", tag = "v0.0.3" }
+gotts_api = { git = "https://github.com/gottstech/gotts", tag = "v0.0.3" }
+gotts_store = { git = "https://github.com/gottstech/gotts", tag = "v0.0.3" }
 
 # For beta release
 #gotts_core = { git = "https://github.com/gottstech/gotts", tag = "v0.0.2-beta.1" }
@@ -37,20 +37,20 @@ dirs = "1.0.3"
 #gotts_store = { git = "https://github.com/gottstech/gotts", tag = "v0.0.2-beta.1" }
 
 # For bleeding edge
-#gotts_core = { git = "https://github.com/gottstech/gotts", rev = "b374137" }
-#gotts_keychain = { git = "https://github.com/gottstech/gotts", rev = "b374137" }
-#gotts_chain = { git = "https://github.com/gottstech/gotts", rev = "b374137" }
-#gotts_util = { git = "https://github.com/gottstech/gotts", rev = "b374137" }
-#gotts_api = { git = "https://github.com/gottstech/gotts", rev = "b374137" }
-#gotts_store = { git = "https://github.com/gottstech/gotts", rev = "b374137" }
+#gotts_core = { git = "https://github.com/gottstech/gotts", rev = "2d97ed8" }
+#gotts_keychain = { git = "https://github.com/gottstech/gotts", rev = "2d97ed8" }
+#gotts_chain = { git = "https://github.com/gottstech/gotts", rev = "2d97ed8" }
+#gotts_util = { git = "https://github.com/gottstech/gotts", rev = "2d97ed8" }
+#gotts_api = { git = "https://github.com/gottstech/gotts", rev = "2d97ed8" }
+#gotts_store = { git = "https://github.com/gottstech/gotts", rev = "2d97ed8" }
 
 # For local testing
-gotts_core = { path = "../../gotts/core"}
-gotts_keychain = { path = "../../gotts/keychain"}
-gotts_chain = { path = "../../gotts/chain"}
-gotts_util = { path = "../../gotts/util"}
-gotts_api = { path = "../../gotts/api"}
-gotts_store = { path = "../../gotts/store"}
+#gotts_core = { path = "../../gotts/core"}
+#gotts_keychain = { path = "../../gotts/keychain"}
+#gotts_chain = { path = "../../gotts/chain"}
+#gotts_util = { path = "../../gotts/util"}
+#gotts_api = { path = "../../gotts/api"}
+#gotts_store = { path = "../../gotts/store"}
 
 [dev-dependencies]
 pretty_assertions = "0.5.1"
