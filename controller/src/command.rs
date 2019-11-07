@@ -15,6 +15,7 @@
 
 use crate::util::{Mutex, ZeroingString};
 use chrono::NaiveDateTime as DateTime;
+use colored::*;
 use std::collections::HashMap;
 /// Gotts wallet command-line function implementations
 use std::fs::File;
@@ -27,6 +28,7 @@ use serde_json as json;
 use uuid::Uuid;
 
 use crate::api::TLSConfig;
+use crate::core::address::Address;
 use crate::core::core;
 use crate::keychain;
 
@@ -799,6 +801,27 @@ pub fn txs(
 		};
 		Ok(())
 	})?;
+	Ok(())
+}
+
+/// Address
+pub fn address(
+	wallet: Arc<Mutex<dyn WalletInst<impl NodeClient + 'static, keychain::ExtKeychain>>>,
+) -> Result<(), Error> {
+	let mut recipient_addr = Address::default();
+	controller::owner_single_use(wallet.clone(), |api| {
+		let recipient_key = api.get_recipient_key()?;
+		recipient_addr = Address::from_pubkey(
+			&recipient_key.recipient_pub_key,
+			&recipient_key.recipient_key_id,
+			true,
+		);
+		Ok(())
+	})?;
+	println!(
+		"Your current Gotts address for receiving: {}",
+		recipient_addr.to_string().bright_green(),
+	);
 	Ok(())
 }
 

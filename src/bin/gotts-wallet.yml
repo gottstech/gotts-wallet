@@ -372,3 +372,5 @@ subcommands:
             takes_value: false
   - passwd:
       about: Changing password for wallet.
+  - address:
+      about: Query current Gotts receiving address for wallet.

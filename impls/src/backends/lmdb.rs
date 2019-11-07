@@ -186,7 +186,8 @@ where
 				.context(ErrorKind::CallbackImpl("Error deriving keychain"))?,
 		);
 		// Initial a 'd3=0' key as the default recipient key. Configurable via `set_recipient_key` function.
-		self.set_recipient_key(0).unwrap();
+		self.set_recipient_key(self.config.recipient_keypath.unwrap_or(0))
+			.unwrap();
 		Ok(())
 	}
 

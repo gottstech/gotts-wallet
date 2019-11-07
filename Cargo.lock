@@ -889,6 +889,7 @@ name = "gotts_wallet_controller"
 version = "0.0.2"
 dependencies = [
  "chrono 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "colored 1.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "easy-jsonrpc 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure_derive 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",

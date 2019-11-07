@@ -123,6 +123,17 @@ fn comments() -> HashMap<String, String> {
 "
 		.to_string(),
 	);
+	retval.insert(
+		"recipient_keypath".to_string(),
+		"
+#Recipient key path. Choose any value within [0, 2^31 - 1]. 0 as default.
+#Considering the address length, we only open the 'd3' of the path to be configurable by user,
+# - d0,d1 are fixed as u32::max, no matter what is the parent_key_id.
+# - d2 are fixed as 0 and should not be changed for recipient key.
+# i.e. The path = ExtKeychainPath::new(4, u32::max, u32::max, 0, d3).
+"
+		.to_string(),
+	);
 
 	retval.insert(
 		"[logging]".to_string(),

@@ -57,6 +57,8 @@ pub struct WalletConfig {
 	pub dark_background_color_scheme: Option<bool>,
 	/// The exploding lifetime (minutes) for keybase notification on coins received
 	pub keybase_notify_ttl: Option<u16>,
+	/// Recipient key path, configurable via `set_recipient_key` function
+	pub recipient_keypath: Option<u32>,
 }
 
 impl Default for WalletConfig {
@@ -76,6 +78,7 @@ impl Default for WalletConfig {
 			tls_certificate_key: None,
 			dark_background_color_scheme: Some(true),
 			keybase_notify_ttl: Some(1440),
+			recipient_keypath: Some(0),
 		}
 	}
 }
