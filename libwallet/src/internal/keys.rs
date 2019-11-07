@@ -15,8 +15,14 @@
 
 //! Wallet key management functions
 use crate::error::{Error, ErrorKind};
-use crate::gotts_keychain::{ChildNumber, ExtKeychain, Identifier, Keychain};
+use crate::gotts_keychain::{ChildNumber, ExtKeychain, ExtKeychainPath, Identifier, Keychain};
 use crate::types::{AcctPathMapping, NodeClient, WalletBackend};
+
+/// The parent key id of the receiving key id for non-interactive transaction.
+/// Useful to identify the non-interactive tx outputs in wallet.
+pub fn recipient_parent_key_id() -> Identifier {
+	ExtKeychainPath::new(3, <u32>::max_value(), <u32>::max_value(), 0, 0).to_identifier()
+}
 
 /// Get next available key in the wallet for a given parent
 pub fn next_available_key<T: ?Sized, C, K>(wallet: &mut T) -> Result<Identifier, Error>

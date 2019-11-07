@@ -54,7 +54,7 @@ fn aggsig_sender_receiver_interaction() {
 
 		keychain
 			.secp()
-			.commit(0, blinding_factor.secret_key(&keychain.secp()).unwrap())
+			.commit(0, &blinding_factor.secret_key().unwrap())
 			.unwrap()
 	};
 
@@ -73,7 +73,7 @@ fn aggsig_sender_receiver_interaction() {
 			.blind_sum(&bs.sub_blinding_factor(BlindingFactor::from_secret_key(skey)))
 			.unwrap();
 
-		let blind = blinding_factor.secret_key(&keychain.secp()).unwrap();
+		let blind = blinding_factor.secret_key().unwrap();
 
 		s_cx = Context::new(&keychain.secp(), blind, &parent, false, 0);
 		s_cx.get_public_keys(&keychain.secp())
@@ -93,22 +93,16 @@ fn aggsig_sender_receiver_interaction() {
 		let (pub_excess, pub_nonce) = rx_cx.get_public_keys(&keychain.secp());
 		rx_cx.add_output(&key_id, &None, 0, 0);
 
-		pub_nonce_sum = PublicKey::from_combination(
-			keychain.secp(),
-			vec![
-				&s_cx.get_public_keys(keychain.secp()).1,
-				&rx_cx.get_public_keys(keychain.secp()).1,
-			],
-		)
+		pub_nonce_sum = PublicKey::from_combination(vec![
+			&s_cx.get_public_keys(keychain.secp()).1,
+			&rx_cx.get_public_keys(keychain.secp()).1,
+		])
 		.unwrap();
 
-		pub_key_sum = PublicKey::from_combination(
-			keychain.secp(),
-			vec![
-				&s_cx.get_public_keys(keychain.secp()).0,
-				&rx_cx.get_public_keys(keychain.secp()).0,
-			],
-		)
+		pub_key_sum = PublicKey::from_combination(vec![
+			&s_cx.get_public_keys(keychain.secp()).0,
+			&rx_cx.get_public_keys(keychain.secp()).0,
+		])
 		.unwrap();
 
 		let msg = kernel_sig_msg();
@@ -196,13 +190,10 @@ fn aggsig_sender_receiver_interaction() {
 		.unwrap();
 
 		// Receiver calculates the final public key (to verify sig later)
-		let final_pubkey = PublicKey::from_combination(
-			keychain.secp(),
-			vec![
-				&s_cx.get_public_keys(keychain.secp()).0,
-				&rx_cx.get_public_keys(keychain.secp()).0,
-			],
-		)
+		let final_pubkey = PublicKey::from_combination(vec![
+			&s_cx.get_public_keys(keychain.secp()).0,
+			&rx_cx.get_public_keys(keychain.secp()).0,
+		])
 		.unwrap();
 
 		(final_sig, final_pubkey)
@@ -244,7 +235,7 @@ fn aggsig_sender_receiver_interaction_offset() {
 	// This is the kernel offset that we use to split the key
 	// Summing these at the block level prevents the
 	// kernels from being used to reconstruct (or identify) individual transactions
-	let kernel_offset = SecretKey::new(&sender_keychain.secp(), &mut thread_rng());
+	let kernel_offset = SecretKey::new(&mut thread_rng());
 
 	// Calculate the kernel excess here for convenience.
 	// Normally this would happen during transaction building.
@@ -267,7 +258,7 @@ fn aggsig_sender_receiver_interaction_offset() {
 
 		keychain
 			.secp()
-			.commit(0, blinding_factor.secret_key(&keychain.secp()).unwrap())
+			.commit(0, &blinding_factor.secret_key().unwrap())
 			.unwrap()
 	};
 
@@ -291,7 +282,7 @@ fn aggsig_sender_receiver_interaction_offset() {
 			)
 			.unwrap();
 
-		let blind = blinding_factor.secret_key(&keychain.secp()).unwrap();
+		let blind = blinding_factor.secret_key().unwrap();
 
 		s_cx = Context::new(&keychain.secp(), blind, &parent, false, 0);
 		s_cx.get_public_keys(&keychain.secp())
@@ -310,22 +301,16 @@ fn aggsig_sender_receiver_interaction_offset() {
 		let (pub_excess, pub_nonce) = rx_cx.get_public_keys(&keychain.secp());
 		rx_cx.add_output(&key_id, &None, 0, 0);
 
-		pub_nonce_sum = PublicKey::from_combination(
-			keychain.secp(),
-			vec![
-				&s_cx.get_public_keys(keychain.secp()).1,
-				&rx_cx.get_public_keys(keychain.secp()).1,
-			],
-		)
+		pub_nonce_sum = PublicKey::from_combination(vec![
+			&s_cx.get_public_keys(keychain.secp()).1,
+			&rx_cx.get_public_keys(keychain.secp()).1,
+		])
 		.unwrap();
 
-		pub_key_sum = PublicKey::from_combination(
-			keychain.secp(),
-			vec![
-				&s_cx.get_public_keys(keychain.secp()).0,
-				&rx_cx.get_public_keys(keychain.secp()).0,
-			],
-		)
+		pub_key_sum = PublicKey::from_combination(vec![
+			&s_cx.get_public_keys(keychain.secp()).0,
+			&rx_cx.get_public_keys(keychain.secp()).0,
+		])
 		.unwrap();
 
 		let msg = kernel_sig_msg();
@@ -412,13 +397,10 @@ fn aggsig_sender_receiver_interaction_offset() {
 		.unwrap();
 
 		// Receiver calculates the final public key (to verify sig later)
-		let final_pubkey = PublicKey::from_combination(
-			keychain.secp(),
-			vec![
-				&s_cx.get_public_keys(keychain.secp()).0,
-				&rx_cx.get_public_keys(keychain.secp()).0,
-			],
-		)
+		let final_pubkey = PublicKey::from_combination(vec![
+			&s_cx.get_public_keys(keychain.secp()).0,
+			&rx_cx.get_public_keys(keychain.secp()).0,
+		])
 		.unwrap();
 
 		(final_sig, final_pubkey)

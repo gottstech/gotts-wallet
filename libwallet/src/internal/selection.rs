@@ -15,7 +15,9 @@
 
 //! Selection of inputs for building transactions
 
+use super::keys::recipient_parent_key_id;
 use crate::error::{Error, ErrorKind};
+use crate::gotts_core::address::Address;
 use crate::gotts_core::core::{amount_to_hr_string, TransactionBody};
 use crate::gotts_core::libtx::{
 	build,
@@ -88,7 +90,7 @@ where
 	// Create our own private context
 	let mut context = Context::new(
 		keychain.secp(),
-		blinding.secret_key(&keychain.secp()).unwrap(),
+		blinding.secret_key().unwrap(),
 		&parent_key_id,
 		use_test_rng,
 		0,
@@ -163,6 +165,8 @@ where
 			batch.save(OutputData {
 				root_key_id: parent_key_id.clone(),
 				key_id: id.clone(),
+				ephemeral_key: None,
+				p2pkh: None,
 				n_child: id.to_path().last_path_index(),
 				commit: commit.clone(),
 				mmr_index: None,
@@ -193,6 +197,7 @@ pub fn build_recipient_output<T: ?Sized, C, K>(
 	slate: &mut Slate,
 	parent_key_id: Identifier,
 	use_test_rng: bool,
+	recipient_address: Option<Address>,
 ) -> Result<(Identifier, Context), Error>
 where
 	T: WalletBackend<C, K>,
@@ -208,51 +213,70 @@ where
 	let height = slate.height;
 
 	let slate_id = slate.id.clone();
-	let blinding = slate.add_transaction_elements(
-		&keychain,
-		&ProofBuilder::new(&keychain),
-		vec![build::output(amount, Some(w), key_id.clone())],
-	)?;
+	let is_non_interactive_transaction = if recipient_address.is_none() {
+		false
+	} else {
+		true
+	};
+	let blinding = match recipient_address {
+		Some(addr) => slate.add_transaction_elements(
+			&keychain,
+			&ProofBuilder::new(&keychain),
+			vec![build::non_interactive_output(
+				amount,
+				Some(w),
+				addr,
+				use_test_rng,
+			)],
+		)?,
+		None => slate.add_transaction_elements(
+			&keychain,
+			&ProofBuilder::new(&keychain),
+			vec![build::output(amount, Some(w), key_id.clone())],
+		)?,
+	};
 
 	// Add blinding sum to our context
 	let mut context = Context::new(
 		keychain.secp(),
-		blinding
-			.secret_key(wallet.keychain().clone().secp())
-			.unwrap(),
+		blinding.secret_key().unwrap(),
 		&parent_key_id,
 		use_test_rng,
 		1,
 	);
 
 	context.add_output(&key_id, &None, amount, w);
-	let messages = Some(slate.participant_messages());
-	let commit = wallet.calc_commit_for_cache(slate.w, &key_id_inner)?;
-	let mut batch = wallet.batch()?;
-	let log_id = batch.next_tx_log_id(&parent_key_id)?;
-	let mut t = TxLogEntry::new(parent_key_id.clone(), TxLogEntryType::TxReceived, log_id);
-	t.tx_slate_id = Some(slate_id);
-	t.amount_credited = amount;
-	t.num_outputs = 1;
-	t.messages = messages;
-	batch.save(OutputData {
-		root_key_id: parent_key_id.clone(),
-		key_id: key_id_inner.clone(),
-		mmr_index: None,
-		n_child: key_id_inner.to_path().last_path_index(),
-		commit,
-		value: amount,
-		w: slate.w,
-		status: OutputStatus::Unconfirmed,
-		height,
-		lock_height: 0,
-		is_coinbase: false,
-		tx_log_entry: Some(log_id),
-		slate_id: Some(slate_id),
-		is_change: Some(false),
-	})?;
-	batch.save_tx_log_entry(t, &parent_key_id)?;
-	batch.commit()?;
+	if !is_non_interactive_transaction {
+		let messages = Some(slate.participant_messages());
+		let commit = wallet.calc_commit_for_cache(slate.w, &key_id_inner)?;
+		let mut batch = wallet.batch()?;
+		let log_id = batch.next_tx_log_id(&parent_key_id)?;
+		let mut t = TxLogEntry::new(parent_key_id.clone(), TxLogEntryType::TxReceived, log_id);
+		t.tx_slate_id = Some(slate_id);
+		t.amount_credited = amount;
+		t.num_outputs = 1;
+		t.messages = messages;
+		batch.save(OutputData {
+			root_key_id: parent_key_id.clone(),
+			key_id: key_id_inner.clone(),
+			ephemeral_key: None,
+			p2pkh: None,
+			mmr_index: None,
+			n_child: key_id_inner.to_path().last_path_index(),
+			commit,
+			value: amount,
+			w: slate.w,
+			status: OutputStatus::Unconfirmed,
+			height,
+			lock_height: 0,
+			is_coinbase: false,
+			tx_log_entry: Some(log_id),
+			slate_id: Some(slate_id),
+			is_change: Some(false),
+		})?;
+		batch.save_tx_log_entry(t, &parent_key_id)?;
+		batch.commit()?;
+	}
 
 	Ok((key_id, context))
 }
@@ -478,8 +502,35 @@ where
 	for coin in coins {
 		if coin.is_coinbase {
 			parts.push(build::coinbase_input(coin.value, coin.key_id.clone()));
-		} else {
+		} else if coin.p2pkh.is_none() {
 			parts.push(build::input(coin.value, coin.w, coin.key_id.clone()));
+		}
+	}
+
+	{
+		let mut siglocked_coins: Vec<OutputData> = coins
+			.clone()
+			.drain(..)
+			.filter(|c| c.p2pkh.is_some())
+			.collect();
+		siglocked_coins.sort_by_key(|x| x.p2pkh);
+		if siglocked_coins.len() > 0 {
+			let mut prev = siglocked_coins.first().unwrap();
+			let mut input_build_parm: Vec<build::InputExBuildParm> = vec![];
+			for (i, coin) in siglocked_coins.iter().enumerate() {
+				input_build_parm.push(build::InputExBuildParm {
+					value: coin.value,
+					w: coin.w,
+					key_id: coin.key_id.clone(),
+					ephemeral_key: coin.ephemeral_key.clone().unwrap(),
+					p2pkh: coin.p2pkh.unwrap(),
+				});
+				if coin.p2pkh != prev.p2pkh || i == siglocked_coins.len() - 1 {
+					parts.push(build::siglocked_input(input_build_parm.clone()));
+					input_build_parm.clear();
+				}
+				prev = coin;
+			}
 		}
 	}
 
@@ -565,7 +616,7 @@ where
 	let mut eligible = wallet
 		.iter()
 		.filter(|out| {
-			out.root_key_id == *parent_key_id
+			(out.root_key_id == *parent_key_id || out.root_key_id == recipient_parent_key_id())
 				&& out.eligible_to_spend(current_height, minimum_confirmations)
 		})
 		.collect::<Vec<OutputData>>();

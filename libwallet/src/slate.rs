@@ -21,7 +21,7 @@ use crate::error::{Error, ErrorKind};
 use crate::gotts_core::core::amount_to_hr_string;
 use crate::gotts_core::core::committed::Committed;
 use crate::gotts_core::core::transaction::{
-	Input, KernelFeatures, Output, Transaction, TransactionBody, TxKernel, Weighting,
+	Input, InputEx, KernelFeatures, Output, Transaction, TransactionBody, TxKernel, Weighting,
 };
 use crate::gotts_core::core::verifier_cache::LruVerifierCache;
 use crate::gotts_core::libtx::{aggsig, build, proof::ProofBuild, secp_ser, tx_fee};
@@ -38,15 +38,15 @@ use std::sync::Arc;
 use uuid::Uuid;
 
 use crate::slate_versions::v2::{
-	InputV2, OutputV2, ParticipantDataV2, SlateV2, TransactionBodyV2, TransactionV2, TxKernelV2,
-	VersionCompatInfoV2,
+	InputExV2, InputV2, OutputV2, ParticipantDataV2, SlateV2, TransactionBodyV2, TransactionV2,
+	TxKernelV2, VersionCompatInfoV2,
 };
 use crate::slate_versions::{CURRENT_SLATE_VERSION, GOTTS_BLOCK_HEADER_VERSION};
 
 /// Public data for each participant in the slate
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ParticipantData {
-	/// Id of participant in the transaction. (For now, 0=sender, 1=rec)
+	/// Id of participant in the transaction. (For now, 0=sender, 1=receiver)
 	#[serde(with = "secp_ser::string_or_u64")]
 	pub id: u64,
 	/// Public key corresponding to private blinding factor
@@ -120,12 +120,10 @@ impl fmt::Display for ParticipantMessageData {
 			writeln!(f, "(Recipient)")?;
 		}
 		writeln!(f, "---------------------")?;
-		let static_secp = gotts_util::static_secp_instance();
-		let static_secp = static_secp.lock();
 		writeln!(
 			f,
 			"Public Key: {}",
-			&gotts_util::to_hex(self.public_key.serialize_vec(&static_secp, true).to_vec())
+			&gotts_util::to_hex(self.public_key.serialize_vec(true).to_vec())
 		)?;
 		let message = match self.message.clone() {
 			None => "None".to_owned(),
@@ -319,8 +317,8 @@ impl Slate {
 			keychain.secp(),
 			sec_key,
 			sec_nonce,
-			&self.pub_nonce_sum(keychain.secp())?,
-			Some(&self.pub_blind_sum(keychain.secp())?),
+			&self.pub_nonce_sum()?,
+			Some(&self.pub_blind_sum()?),
 			&self.msg_to_sign()?,
 		)?;
 		for i in 0..self.num_participants {
@@ -353,26 +351,26 @@ impl Slate {
 	}
 
 	/// Return the sum of public nonces
-	fn pub_nonce_sum(&self, secp: &secp::Secp256k1) -> Result<PublicKey, Error> {
+	fn pub_nonce_sum(&self) -> Result<PublicKey, Error> {
 		let pub_nonces = self
 			.participant_data
 			.iter()
 			.map(|p| &p.public_nonce)
 			.collect();
-		match PublicKey::from_combination(secp, pub_nonces) {
+		match PublicKey::from_combination(pub_nonces) {
 			Ok(k) => Ok(k),
 			Err(e) => Err(ErrorKind::Secp(e))?,
 		}
 	}
 
 	/// Return the sum of public blinding factors
-	fn pub_blind_sum(&self, secp: &secp::Secp256k1) -> Result<PublicKey, Error> {
+	fn pub_blind_sum(&self) -> Result<PublicKey, Error> {
 		let pub_blinds = self
 			.participant_data
 			.iter()
 			.map(|p| &p.public_blind_excess)
 			.collect();
-		match PublicKey::from_combination(secp, pub_blinds) {
+		match PublicKey::from_combination(pub_blinds) {
 			Ok(k) => Ok(k),
 			Err(e) => Err(ErrorKind::Secp(e))?,
 		}
@@ -407,7 +405,7 @@ impl Slate {
 		let pub_key = PublicKey::from_secret_key(keychain.secp(), &sec_key)?;
 		let pub_nonce = PublicKey::from_secret_key(keychain.secp(), &sec_nonce)?;
 
-		let test_message_nonce = SecretKey::from_slice(&keychain.secp(), &[1; 32]).unwrap();
+		let test_message_nonce = SecretKey::from_slice(&[1; 32]).unwrap();
 		let message_nonce = match use_test_rng {
 			false => None,
 			true => Some(&test_message_nonce),
@@ -434,9 +432,9 @@ impl Slate {
 			id: id as u64,
 			public_blind_excess: pub_key,
 			public_nonce: pub_nonce,
-			part_sig: part_sig,
-			message: message,
-			message_sig: message_sig,
+			part_sig,
+			message,
+			message_sig,
 		});
 		Ok(())
 	}
@@ -489,9 +487,9 @@ impl Slate {
 				aggsig::verify_partial_sig(
 					secp,
 					p.part_sig.as_ref().unwrap(),
-					&self.pub_nonce_sum(secp)?,
+					&self.pub_nonce_sum()?,
 					&p.public_blind_excess,
-					Some(&self.pub_blind_sum(secp)?),
+					Some(&self.pub_blind_sum()?),
 					&self.msg_to_sign()?,
 				)?;
 			}
@@ -565,8 +563,8 @@ impl Slate {
 		self.verify_part_sigs(keychain.secp())?;
 
 		let part_sigs = self.part_sigs();
-		let pub_nonce_sum = self.pub_nonce_sum(keychain.secp())?;
-		let final_pubkey = self.pub_blind_sum(keychain.secp())?;
+		let pub_nonce_sum = self.pub_nonce_sum()?;
+		let final_pubkey = self.pub_blind_sum()?;
 		// get the final signature
 		let final_sig = aggsig::add_signatures(&keychain.secp(), part_sigs, &pub_nonce_sum)?;
 
@@ -811,7 +809,7 @@ impl From<&TransactionBody> for TransactionBodyV2 {
 			kernels,
 		} = body;
 
-		let inputs = map_vec!(inputs, |inp| InputV2::from(inp));
+		let inputs = map_vec!(inputs, |inp| InputExV2::from(inp));
 		let outputs = map_vec!(outputs, |out| OutputV2::from(out));
 		let kernels = map_vec!(kernels, |kern| TxKernelV2::from(kern));
 		TransactionBodyV2 {
@@ -826,6 +824,18 @@ impl From<&Input> for InputV2 {
 	fn from(input: &Input) -> InputV2 {
 		let Input { features, commit } = *input;
 		InputV2 { features, commit }
+	}
+}
+
+impl From<&InputEx> for InputExV2 {
+	fn from(input: &InputEx) -> InputExV2 {
+		match input {
+			InputEx::SingleInput(input) => InputExV2::SingleInput(InputV2::from(input)),
+			InputEx::InputsWithUnlocker { inputs, unlocker } => InputExV2::InputsWithUnlocker {
+				inputs: map_vec!(inputs, |inp| InputV2::from(inp)),
+				unlocker: unlocker.clone(),
+			},
+		}
 	}
 }
 
@@ -1005,7 +1015,7 @@ impl From<&TransactionBodyV2> for TransactionBody {
 			kernels,
 		} = body;
 
-		let inputs = map_vec!(inputs, |inp| Input::from(inp));
+		let inputs = map_vec!(inputs, |inp| InputEx::from(inp));
 		let outputs = map_vec!(outputs, |out| Output::from(out));
 		let kernels = map_vec!(kernels, |kern| TxKernel::from(kern));
 		TransactionBody {
@@ -1020,6 +1030,18 @@ impl From<&InputV2> for Input {
 	fn from(input: &InputV2) -> Input {
 		let InputV2 { features, commit } = *input;
 		Input { features, commit }
+	}
+}
+
+impl From<&InputExV2> for InputEx {
+	fn from(input: &InputExV2) -> InputEx {
+		match input {
+			InputExV2::SingleInput(input) => InputEx::SingleInput(Input::from(input)),
+			InputExV2::InputsWithUnlocker { inputs, unlocker } => InputEx::InputsWithUnlocker {
+				inputs: map_vec!(inputs, |inp| Input::from(inp)),
+				unlocker: unlocker.clone(),
+			},
+		}
 	}
 }
 

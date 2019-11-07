@@ -15,6 +15,7 @@
 
 use crate::util::{Mutex, ZeroingString};
 use chrono::NaiveDateTime as DateTime;
+use colored::*;
 use std::collections::HashMap;
 /// Gotts wallet command-line function implementations
 use std::fs::File;
@@ -27,6 +28,7 @@ use serde_json as json;
 use uuid::Uuid;
 
 use crate::api::TLSConfig;
+use crate::core::address::Address;
 use crate::core::core;
 use crate::keychain;
 
@@ -37,6 +39,7 @@ use crate::impls::{
 	LMDBBackend, NullWalletCommAdapter,
 };
 use crate::impls::{HTTPNodeClient, WalletSeed};
+use crate::libwallet::api_impl::types::InitTxSendArgs;
 use crate::libwallet::{
 	InitTxArgs, IssueInvoiceTxArgs, NodeClient, OutputStatus, TxLogEntryType, WalletInst,
 };
@@ -242,6 +245,8 @@ pub fn send(
 	dark_scheme: bool,
 ) -> Result<(), Error> {
 	controller::owner_single_use(wallet.clone(), |api| {
+		let is_non_interactive_tx = if args.method == "addr" { true } else { false };
+
 		if args.estimate_selection_strategies {
 			let strategies = vec!["smallest", "biggest", "all"]
 				.into_iter()
@@ -262,6 +267,17 @@ pub fn send(
 				.collect();
 			display::estimate(args.amount, strategies, dark_scheme);
 		} else {
+			let send_args = if is_non_interactive_tx {
+				Some(InitTxSendArgs {
+					method: "addr".to_string(),
+					dest: args.dest.clone(),
+					finalize: true,
+					post_tx: true,
+					fluff: args.fluff,
+				})
+			} else {
+				None
+			};
 			let init_args = InitTxArgs {
 				src_acct_name: None,
 				amount: args.amount,
@@ -271,10 +287,13 @@ pub fn send(
 				selection_strategy: args.selection_strategy.clone(),
 				message: args.message.clone(),
 				target_slate_version: args.target_slate_version,
-				send_args: None,
+				send_args,
 				..Default::default()
 			};
-			let result = api.init_send_tx(init_args);
+			let result = match is_non_interactive_tx {
+				false => api.init_send_tx(init_args),
+				true => api.non_interactive_send(init_args),
+			};
 			let mut slate = match result {
 				Ok(s) => {
 					info!(
@@ -297,44 +316,46 @@ pub fn send(
 				"self" => NullWalletCommAdapter::new(),
 				_ => NullWalletCommAdapter::new(),
 			};
-			if adapter.supports_sync() {
-				slate = adapter.send_tx_sync(&args.dest, &slate)?;
-				api.tx_lock_outputs(&slate, 0)?;
-				if args.method == "self" {
-					controller::foreign_single_use(wallet, |api| {
-						slate = api.receive_tx(&slate, Some(&args.dest), None)?;
-						Ok(())
-					})?;
-				}
-				if let Err(e) = api.verify_slate_messages(&slate) {
-					error!("Error validating participant messages: {}", e);
-					return Err(e);
-				}
-				slate = api.finalize_tx(&slate)?;
-			} else {
-				adapter.send_tx_async(&args.dest, &slate)?;
-				api.tx_lock_outputs(&slate, 0)?;
-			}
-			if adapter.supports_sync() {
-				let result = api.post_tx(Some(slate.id), &slate.tx, args.fluff);
-				match result {
-					Ok(_) => {
-						info!("Tx sent ok",);
-						return Ok(());
+			if args.method != "addr" {
+				if adapter.supports_sync() {
+					slate = adapter.send_tx_sync(&args.dest, &slate)?;
+					api.tx_lock_outputs(&slate, 0)?;
+					if args.method == "self" {
+						controller::foreign_single_use(wallet, |api| {
+							slate = api.receive_tx(&slate, Some(&args.dest), None)?;
+							Ok(())
+						})?;
 					}
-					Err(e) => {
-						// re-post last unconfirmed txs and try again
-						if let Ok(true) = api.repost_last_txs(args.fluff, false) {
-							// iff one re-post success, post this transaction again
-							if let Ok(_) = api.post_tx(Some(slate.id), &slate.tx, args.fluff) {
-								info!("Tx sent ok (with last unconfirmed tx/s re-post)");
-								return Ok(());
-							}
-						}
-
-						error!("Tx sent fail on post.");
-						let _ = api.cancel_tx(None, Some(slate.id));
+					if let Err(e) = api.verify_slate_messages(&slate) {
+						error!("Error validating participant messages: {}", e);
 						return Err(e);
+					}
+					slate = api.finalize_tx(&slate)?;
+				} else {
+					adapter.send_tx_async(&args.dest, &slate)?;
+					api.tx_lock_outputs(&slate, 0)?;
+				}
+				if adapter.supports_sync() {
+					let result = api.post_tx(Some(slate.id), &slate.tx, args.fluff);
+					match result {
+						Ok(_) => {
+							info!("Tx sent ok",);
+							return Ok(());
+						}
+						Err(e) => {
+							// re-post last unconfirmed txs and try again
+							if let Ok(true) = api.repost_last_txs(args.fluff, false) {
+								// iff one re-post success, post this transaction again
+								if let Ok(_) = api.post_tx(Some(slate.id), &slate.tx, args.fluff) {
+									info!("Tx sent ok (with last unconfirmed tx/s re-post)");
+									return Ok(());
+								}
+							}
+
+							error!("Tx sent fail on post.");
+							let _ = api.cancel_tx(None, Some(slate.id));
+							return Err(e);
+						}
 					}
 				}
 			}
@@ -779,6 +800,27 @@ pub fn txs(
 		};
 		Ok(())
 	})?;
+	Ok(())
+}
+
+/// Address
+pub fn address(
+	wallet: Arc<Mutex<dyn WalletInst<impl NodeClient + 'static, keychain::ExtKeychain>>>,
+) -> Result<(), Error> {
+	let mut recipient_addr = Address::default();
+	controller::owner_single_use(wallet.clone(), |api| {
+		let recipient_key = api.get_recipient_key()?;
+		recipient_addr = Address::from_pubkey(
+			&recipient_key.recipient_pub_key,
+			&recipient_key.recipient_key_id,
+			true,
+		);
+		Ok(())
+	})?;
+	println!(
+		"Your current Gotts address for receiving: {}",
+		recipient_addr.to_string().bright_green(),
+	);
 	Ok(())
 }
 

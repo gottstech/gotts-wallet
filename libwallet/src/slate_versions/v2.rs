@@ -36,7 +36,7 @@
 //!    orig_version: u16,
 //!    block_header_version: u16,
 
-use crate::gotts_core::core::transaction::{OutputFeatures, OutputFeaturesEx};
+use crate::gotts_core::core::transaction::{InputUnlocker, OutputFeatures, OutputFeaturesEx};
 use crate::gotts_core::libtx::secp_ser;
 use crate::gotts_util::secp;
 use crate::gotts_util::secp::key::PublicKey;
@@ -119,12 +119,13 @@ pub struct TransactionV2 {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TransactionBodyV2 {
 	/// List of inputs spent by the transaction.
-	pub inputs: Vec<InputV2>,
+	pub inputs: Vec<InputExV2>,
 	/// List of outputs the transaction produces.
 	pub outputs: Vec<OutputV2>,
 	/// List of kernels that make up this transaction (usually a single kernel).
 	pub kernels: Vec<TxKernelV2>,
 }
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct InputV2 {
 	/// The features of the output being spent.
@@ -132,6 +133,19 @@ pub struct InputV2 {
 	pub features: OutputFeatures,
 	/// The commit referencing the output being spent.
 	pub commit: Commitment,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum InputExV2 {
+	/// Single Input w/o unlocker
+	SingleInput(InputV2),
+	/// Single or multiple Inputs with unlocker
+	InputsWithUnlocker {
+		/// Inputs. To spend those outputs with same 'p2pkh' locker.
+		inputs: Vec<InputV2>,
+		/// The unlocker for spending one or a batch of output/s with same 'p2pkh' locker.
+		unlocker: InputUnlocker,
+	},
 }
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]

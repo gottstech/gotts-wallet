@@ -22,20 +22,18 @@
 
 use crate::gotts_core::core::hash::{DefaultHashable, Hash, Hashed};
 use crate::gotts_core::ser::ProtocolVersion;
-use crate::gotts_keychain::{BlindingFactor, Identifier, IDENTIFIER_SIZE};
+use crate::gotts_keychain::{self, BlindingFactor, Identifier, IDENTIFIER_SIZE};
 use crate::gotts_util::secp::constants::{
-	AGG_SIGNATURE_SIZE, COMPRESSED_PUBLIC_KEY_SIZE, MAX_PROOF_SIZE, PEDERSEN_COMMITMENT_SIZE,
-	SECRET_KEY_SIZE,
+	AGG_SIGNATURE_SIZE, COMPRESSED_PUBLIC_KEY_SIZE, PEDERSEN_COMMITMENT_SIZE, SECRET_KEY_SIZE,
 };
 use crate::gotts_util::secp::key::PublicKey;
-use crate::gotts_util::secp::pedersen::{Commitment, RangeProof};
+use crate::gotts_util::secp::pedersen::Commitment;
 use crate::gotts_util::secp::{self, Signature};
-use crate::gotts_util::secp::{ContextFlag, Secp256k1};
 use byteorder::{BigEndian, ByteOrder, ReadBytesExt};
 use std::fmt::Debug;
 use std::io::{self, Read, Write};
 use std::marker;
-use std::{cmp, error, fmt};
+use std::{error, fmt};
 
 /// Possible errors deriving from serializing or deserializing.
 #[derive(Clone, Eq, PartialEq, Debug, Serialize, Deserialize)]
@@ -70,11 +68,19 @@ pub enum Error {
 	DuplicateError,
 	/// Block header version (hard-fork schedule).
 	InvalidBlockVersion,
+	/// Keychain error
+	Keychain(String),
 }
 
 impl From<io::Error> for Error {
 	fn from(e: io::Error) -> Error {
 		Error::IOErr(format!("{}", e), e.kind())
+	}
+}
+
+impl From<gotts_keychain::Error> for Error {
+	fn from(e: gotts_keychain::Error) -> Error {
+		Error::Keychain(e.to_string())
 	}
 }
 
@@ -93,6 +99,7 @@ impl fmt::Display for Error {
 			Error::TooLargeReadErr => f.write_str("too large read"),
 			Error::HexError(ref e) => write!(f, "hex error {:?}", e),
 			Error::InvalidBlockVersion => f.write_str("invalid block version"),
+			Error::Keychain(ref e) => write!(f, "keychain error {}", e),
 		}
 	}
 }
@@ -116,6 +123,7 @@ impl error::Error for Error {
 			Error::TooLargeReadErr => "too large read",
 			Error::HexError(_) => "hex error",
 			Error::InvalidBlockVersion => "invalid block version",
+			Error::Keychain(_) => "keychain error",
 		}
 	}
 }
@@ -537,40 +545,7 @@ impl Writeable for Identifier {
 impl Readable for Identifier {
 	fn read(reader: &mut dyn Reader) -> Result<Identifier, Error> {
 		let bytes = reader.read_fixed_bytes(IDENTIFIER_SIZE)?;
-		Ok(Identifier::from_bytes(&bytes))
-	}
-}
-
-impl Writeable for RangeProof {
-	fn write<W: Writer>(&self, writer: &mut W) -> Result<(), Error> {
-		writer.write_bytes(self)
-	}
-}
-
-impl Readable for RangeProof {
-	fn read(reader: &mut dyn Reader) -> Result<RangeProof, Error> {
-		let len = reader.read_u64()?;
-		let max_len = cmp::min(len as usize, MAX_PROOF_SIZE);
-		let p = reader.read_fixed_bytes(max_len)?;
-		let mut proof = [0; MAX_PROOF_SIZE];
-		proof[..p.len()].clone_from_slice(&p[..]);
-		Ok(RangeProof {
-			plen: proof.len(),
-			proof,
-		})
-	}
-}
-
-impl FixedLength for RangeProof {
-	const LEN: usize = 8 // length prefix
-        + MAX_PROOF_SIZE;
-}
-
-impl PMMRable for RangeProof {
-	type E = Self;
-
-	fn as_elmt(&self) -> Self::E {
-		self.clone()
+		Ok(Identifier::from_bytes(&bytes)?)
 	}
 }
 
@@ -600,8 +575,7 @@ impl FixedLength for PublicKey {
 impl Writeable for PublicKey {
 	// Write the public key in compressed form
 	fn write<W: Writer>(&self, writer: &mut W) -> Result<(), Error> {
-		let secp = Secp256k1::with_caps(ContextFlag::None);
-		writer.write_fixed_bytes(&self.serialize_vec(&secp, true).as_ref())?;
+		writer.write_fixed_bytes(&self.serialize_vec(true).as_ref())?;
 		Ok(())
 	}
 }
@@ -610,8 +584,7 @@ impl Readable for PublicKey {
 	// Read the public key in compressed form
 	fn read(reader: &mut dyn Reader) -> Result<Self, Error> {
 		let buf = reader.read_fixed_bytes(PublicKey::LEN)?;
-		let secp = Secp256k1::with_caps(ContextFlag::None);
-		let pk = PublicKey::from_slice(&secp, &buf).map_err(|_| Error::CorruptedData)?;
+		let pk = PublicKey::from_slice(&buf).map_err(|_| Error::CorruptedData)?;
 		Ok(pk)
 	}
 }
@@ -877,11 +850,6 @@ impl AsFixedBytes for String {
 impl AsFixedBytes for Hash {
 	fn len(&self) -> usize {
 		32
-	}
-}
-impl AsFixedBytes for secp::pedersen::RangeProof {
-	fn len(&self) -> usize {
-		self.plen
 	}
 }
 impl AsFixedBytes for secp::Signature {

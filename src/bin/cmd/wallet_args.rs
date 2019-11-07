@@ -506,7 +506,7 @@ pub fn parse_send_args(args: &ArgMatches) -> Result<command::SendArgs, ParseErro
 	let estimate_selection_strategies = args.is_present("estimate_selection_strategies");
 
 	// method
-	let method = parse_required(args, "method")?;
+	let mut method = parse_required(args, "method")?;
 
 	// dest
 	let dest = {
@@ -523,6 +523,11 @@ pub fn parse_send_args(args: &ArgMatches) -> Result<command::SendArgs, ParseErro
 			}
 		}
 	};
+
+	if (dest.starts_with("ts1") || dest.starts_with("gs1")) && dest.len() >= 63 {
+		method = "addr";
+	}
+
 	if !estimate_selection_strategies
 		&& method == "http"
 		&& !dest.starts_with("http://")
@@ -557,17 +562,17 @@ pub fn parse_send_args(args: &ArgMatches) -> Result<command::SendArgs, ParseErro
 	};
 
 	Ok(command::SendArgs {
-		amount: amount,
-		message: message,
+		amount,
+		message,
 		minimum_confirmations: min_c,
 		selection_strategy: selection_strategy.to_owned(),
 		estimate_selection_strategies,
 		method: method.to_owned(),
 		dest: dest.to_owned(),
-		change_outputs: change_outputs,
-		fluff: fluff,
-		max_outputs: max_outputs,
-		target_slate_version: target_slate_version,
+		change_outputs,
+		fluff,
+		max_outputs,
+		target_slate_version,
 	})
 }
 
@@ -1008,6 +1013,7 @@ pub fn wallet_command(
 				wallet_config.dark_background_color_scheme.unwrap_or(true),
 			)
 		}
+		("address", Some(_)) => command::address(inst_wallet()),
 		("repost", Some(args)) => {
 			let a = arg_parse!(parse_repost_args(&args));
 			command::repost(inst_wallet(), a)

@@ -14,11 +14,12 @@
 // limitations under the License.
 //! Functions to restore a wallet's outputs from just the master seed
 
-use crate::gotts_core::core::Output;
+use crate::gotts_core::core::hash::Hash;
+use crate::gotts_core::core::{Output, OutputFeatures};
 use crate::gotts_core::global;
 use crate::gotts_core::libtx::proof;
 use crate::gotts_keychain::{ExtKeychain, Identifier, Keychain};
-use crate::gotts_util::secp::pedersen;
+use crate::gotts_util::secp::{pedersen, SecretKey};
 use crate::internal::{keys, updater};
 use crate::types::*;
 use crate::{Error, OutputCommitMapping};
@@ -28,23 +29,16 @@ use std::time::Instant;
 /// Utility struct for return values from below
 #[derive(Clone)]
 struct OutputResult {
-	///
 	pub commit: pedersen::Commitment,
-	///
 	pub key_id: Identifier,
-	///
+	pub ephemeral_key: Option<SecretKey>,
+	pub p2pkh: Option<Hash>,
 	pub n_child: u32,
-	///
 	pub mmr_index: u64,
-	///
 	pub value: u64,
-	///
 	pub w: i64,
-	///
 	pub height: u64,
-	///
 	pub lock_height: u64,
-	///
 	pub is_coinbase: bool,
 }
 
@@ -52,11 +46,8 @@ struct OutputResult {
 /// Collect stats in case we want to just output a single tx log entry
 /// for restored non-coinbase outputs
 struct RestoredTxStats {
-	///
 	pub log_id: u32,
-	///
 	pub amount_credited: u64,
-	///
 	pub num_outputs: usize,
 }
 
@@ -76,6 +67,7 @@ where
 		outputs.len(),
 	);
 
+	let recipient_key = wallet.recipient_key()?;
 	let keychain = wallet.keychain();
 	let builder = proof::ProofBuilder::new(keychain);
 
@@ -83,16 +75,46 @@ where
 		let (commit, ot, is_coinbase, height, mmr_index) = output;
 		// attempt to unwind message from the SecuredPath and get a 'w'
 		// will fail if it's not ours
-		let spath = match ot.features.get_spath() {
-			Ok(s) => s,
-			Err(_) => continue,
+		let w;
+		let key_id;
+		let mut ephemeral_key = None;
+		let mut p2pkh = None;
+		match ot.features.as_flag() {
+			OutputFeatures::Plain | OutputFeatures::Coinbase => {
+				let spath = match ot.features.get_spath() {
+					Ok(s) => s,
+					Err(_) => continue,
+				};
+				match proof::rewind(keychain.secp(), &builder, commit, spath) {
+					Ok(i) => {
+						w = i.w;
+						key_id = i.key_id;
+					}
+					Err(_) => continue,
+				}
+			}
+			OutputFeatures::SigLocked => {
+				let locker = match ot.features.get_locker() {
+					Ok(l) => l,
+					Err(_) => continue,
+				};
+				match proof::rewind_outputlocker(
+					keychain,
+					ot.value,
+					&recipient_key.recipient_pri_key,
+					commit,
+					locker,
+				) {
+					Ok((i, e)) => {
+						w = i;
+						ephemeral_key = Some(e);
+						p2pkh = Some(locker.p2pkh);
+						key_id = recipient_key.recipient_key_id.clone();
+					}
+					Err(_) => continue,
+				}
+			}
 		};
-		let info = match proof::rewind(keychain.secp(), &builder, commit, spath) {
-			Ok(i) => i,
-			Err(_) => continue,
-		};
-
-		let (amount, w, key_id) = (ot.value, info.w, info.key_id);
 
 		let lock_height = if *is_coinbase {
 			*height + global::coinbase_maturity()
@@ -101,14 +123,20 @@ where
 		};
 
 		info!(
-			"Output found: {:?}, amount: {:?}, key_id: {:?}, mmr_index: {},",
-			commit, amount, key_id, mmr_index,
+			"{:?} Output found: {:?}, amount: {:?}, key_id: {:?}, mmr_index: {},",
+			ot.features.as_flag(),
+			commit,
+			ot.value,
+			key_id,
+			mmr_index,
 		);
 		wallet_outputs.push(OutputResult {
 			commit: *commit,
 			key_id: key_id.clone(),
+			ephemeral_key,
+			p2pkh,
 			n_child: key_id.to_path().last_path_index(),
-			value: amount,
+			value: ot.value,
 			w,
 			height: *height,
 			lock_height,
@@ -146,6 +174,10 @@ where
 		}
 		start_index = last_retrieved_index + 1;
 	}
+	info!(
+		"collect_chain_outputs: {} utxo outputs identified",
+		result_vec.len()
+	);
 	Ok(result_vec)
 }
 
@@ -212,6 +244,8 @@ where
 	let _ = batch.save(OutputData {
 		root_key_id: parent_key_id.clone(),
 		key_id: output.key_id,
+		ephemeral_key: output.ephemeral_key,
+		p2pkh: output.p2pkh,
 		n_child: output.n_child,
 		mmr_index: Some(output.mmr_index),
 		commit,
@@ -331,7 +365,7 @@ where
 	// Restore missing outputs, adding transaction for it back to the log
 	for m in missing_outs.into_iter() {
 		warn!(
-			"Confirmed output for {} with ID {} ({:?}) exists in UTXO set but not in wallet. \
+			"Confirmed output for {} with Identifier({}) {:?} exists in UTXO set but not in wallet. \
 			 Restoring.",
 			m.value, m.key_id, m.commit,
 		);
@@ -377,6 +411,11 @@ where
 	let label_base = "account";
 	let mut acct_index = 1;
 	for (path, max_child_index) in found_parents.iter() {
+		// skip the recipient key path
+		if *path == ExtKeychain::derive_key_id(3, <u32>::max_value(), <u32>::max_value(), 0, 0) {
+			continue;
+		}
+
 		// default path already exists
 		if *path != ExtKeychain::derive_key_id(2, 0, 0, 0, 0) {
 			let label = format!("{}_{}", label_base, acct_index);
