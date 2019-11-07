@@ -272,7 +272,7 @@ pub fn send(
 					method: "addr".to_string(),
 					dest: args.dest.clone(),
 					finalize: true,
-					post_tx: false,
+					post_tx: true,
 					fluff: args.fluff,
 				})
 			} else {
@@ -314,49 +314,48 @@ pub fn send(
 				"file" => FileWalletCommAdapter::new(),
 				"keybase" => KeybaseWalletCommAdapter::new(),
 				"self" => NullWalletCommAdapter::new(),
-				"addr" => NullWalletCommAdapter::new(),
 				_ => NullWalletCommAdapter::new(),
 			};
-			if args.method == "addr" {
-				//todo:
-			} else if adapter.supports_sync() {
-				slate = adapter.send_tx_sync(&args.dest, &slate)?;
-				api.tx_lock_outputs(&slate, 0)?;
-				if args.method == "self" {
-					controller::foreign_single_use(wallet, |api| {
-						slate = api.receive_tx(&slate, Some(&args.dest), None)?;
-						Ok(())
-					})?;
-				}
-				if let Err(e) = api.verify_slate_messages(&slate) {
-					error!("Error validating participant messages: {}", e);
-					return Err(e);
-				}
-				slate = api.finalize_tx(&slate)?;
-			} else {
-				adapter.send_tx_async(&args.dest, &slate)?;
-				api.tx_lock_outputs(&slate, 0)?;
-			}
-			if adapter.supports_sync() {
-				let result = api.post_tx(Some(slate.id), &slate.tx, args.fluff);
-				match result {
-					Ok(_) => {
-						info!("Tx sent ok",);
-						return Ok(());
+			if args.method != "addr" {
+				if adapter.supports_sync() {
+					slate = adapter.send_tx_sync(&args.dest, &slate)?;
+					api.tx_lock_outputs(&slate, 0)?;
+					if args.method == "self" {
+						controller::foreign_single_use(wallet, |api| {
+							slate = api.receive_tx(&slate, Some(&args.dest), None)?;
+							Ok(())
+						})?;
 					}
-					Err(e) => {
-						// re-post last unconfirmed txs and try again
-						if let Ok(true) = api.repost_last_txs(args.fluff, false) {
-							// iff one re-post success, post this transaction again
-							if let Ok(_) = api.post_tx(Some(slate.id), &slate.tx, args.fluff) {
-								info!("Tx sent ok (with last unconfirmed tx/s re-post)");
-								return Ok(());
-							}
-						}
-
-						error!("Tx sent fail on post.");
-						let _ = api.cancel_tx(None, Some(slate.id));
+					if let Err(e) = api.verify_slate_messages(&slate) {
+						error!("Error validating participant messages: {}", e);
 						return Err(e);
+					}
+					slate = api.finalize_tx(&slate)?;
+				} else {
+					adapter.send_tx_async(&args.dest, &slate)?;
+					api.tx_lock_outputs(&slate, 0)?;
+				}
+				if adapter.supports_sync() {
+					let result = api.post_tx(Some(slate.id), &slate.tx, args.fluff);
+					match result {
+						Ok(_) => {
+							info!("Tx sent ok",);
+							return Ok(());
+						}
+						Err(e) => {
+							// re-post last unconfirmed txs and try again
+							if let Ok(true) = api.repost_last_txs(args.fluff, false) {
+								// iff one re-post success, post this transaction again
+								if let Ok(_) = api.post_tx(Some(slate.id), &slate.tx, args.fluff) {
+									info!("Tx sent ok (with last unconfirmed tx/s re-post)");
+									return Ok(());
+								}
+							}
+
+							error!("Tx sent fail on post.");
+							let _ = api.cancel_tx(None, Some(slate.id));
+							return Err(e);
+						}
 					}
 				}
 			}
