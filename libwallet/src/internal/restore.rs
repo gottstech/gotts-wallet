@@ -20,6 +20,7 @@ use crate::gotts_core::global;
 use crate::gotts_core::libtx::proof;
 use crate::gotts_keychain::{ExtKeychain, Identifier, Keychain};
 use crate::gotts_util::secp::{pedersen, SecretKey};
+use crate::gotts_util::to_hex;
 use crate::internal::{keys, updater};
 use crate::types::*;
 use crate::{Error, OutputCommitMapping};
@@ -193,7 +194,7 @@ where
 	C: NodeClient,
 	K: Keychain,
 {
-	let commit = wallet.calc_commit_for_cache(output.w, &output.key_id)?;
+	let commit = Some(to_hex(output.commit.0.to_vec()));
 	let mut batch = wallet.batch()?;
 
 	let parent_key_id = output.key_id.parent_path();
