@@ -372,7 +372,7 @@ where
 		let path_buf = Path::new(&path).to_path_buf();
 		let mut stored_tx = File::create(path_buf)?;
 		let tx_hex =
-			util::to_hex(core::ser::ser_vec(tx, core::ser::ProtocolVersion::local()).unwrap());;
+			util::to_hex(core::ser::ser_vec(tx, core::ser::ProtocolVersion::local()).unwrap());
 		stored_tx.write_all(&tx_hex.as_bytes())?;
 		stored_tx.sync_all()?;
 		Ok(())
