@@ -46,13 +46,13 @@ fn get_output_local(chain: &chain::Chain, commit: &pedersen::Commitment) -> Opti
 	];
 
 	for x in outputs.iter() {
-		if let Ok(_) = chain.is_unspent(&x) {
+		if let Ok(_) = chain.is_unspent(&x.commit) {
 			let block_height = chain.get_header_for_output(&x).unwrap().height;
 			let output_pos_height = chain
 				.get_output_pos_height(&x.commit)
 				.unwrap_or(OutputFeaturePosHeight::default());
 			let output = chain
-				.unspent_output_by_position(output_pos_height.position)
+				.unspent_output_by_position(output_pos_height.position, x.features)
 				.unwrap();
 			return Some(OutputEx {
 				output,
