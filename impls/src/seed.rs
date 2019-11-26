@@ -58,6 +58,10 @@ impl WalletSeed {
 		util::to_hex(self.0.to_vec())
 	}
 
+	pub fn to_vec(&self) -> Vec<u8> {
+		self.0.to_vec()
+	}
+
 	pub fn to_mnemonic(&self) -> Result<String, Error> {
 		let result = mnemonic::from_entropy(&self.0);
 		match result {
