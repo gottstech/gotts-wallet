@@ -514,8 +514,14 @@ where
 		start_index: u64,
 		batch_size: u64,
 	) -> Result<(u64, u64), Error> {
-		let res = check_repair_batch(self, delete_unconfirmed, ignore_within, start_index, batch_size)
-			.context(ErrorKind::Restore)?;
+		let res = check_repair_batch(
+			self,
+			delete_unconfirmed,
+			ignore_within,
+			start_index,
+			batch_size,
+		)
+		.context(ErrorKind::Restore)?;
 		Ok(res)
 	}
 }

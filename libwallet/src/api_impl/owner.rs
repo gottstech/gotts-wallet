@@ -641,7 +641,11 @@ where
 }
 
 /// check repair
-pub fn check_repair<T: ?Sized, C, K>(w: &mut T, delete_unconfirmed: bool, ignore_within: u64) -> Result<(), Error>
+pub fn check_repair<T: ?Sized, C, K>(
+	w: &mut T,
+	delete_unconfirmed: bool,
+	ignore_within: u64,
+) -> Result<(), Error>
 where
 	T: WalletBackend<C, K>,
 	C: NodeClient,

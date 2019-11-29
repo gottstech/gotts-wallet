@@ -931,7 +931,7 @@ pub fn check_repair(
 		if args.ignore_within > 0 {
 			info!("Starting wallet check... (but ignore recent txs which just happened within {} minutes.)", args.ignore_within);
 		} else {
-			info!("Starting wallet check...", );
+			info!("Starting wallet check...",);
 		}
 		info!("Updating all wallet outputs, please wait ...",);
 		let result = api.check_repair(args.delete_unconfirmed, args.ignore_within);

@@ -341,13 +341,16 @@ where
 		match matched_out {
 			Some(s) => {
 				let mut is_waiting_confirm = false;
-				if ignore_within != 0 {	// 0 means 'checking all txs'.
+				if ignore_within != 0 {
+					// 0 means 'checking all txs'.
 					if let Some(tx_log_entry) = s.output.tx_log_entry {
 						if outstanding_txs_id.contains(&tx_log_entry) {
 							let tx_log = tx_vec.iter().find(|e| e.id == tx_log_entry).unwrap();
 							// let's ignore the checking on the txs which just happened within 30 minutes, which could still stay in tx pool and wait
 							// for packaging into a block.
-							if tx_log.creation_ts + Duration::minutes(ignore_within as i64) > Utc::now() {
+							if tx_log.creation_ts + Duration::minutes(ignore_within as i64)
+								> Utc::now()
+							{
 								is_waiting_confirm = true;
 							}
 						}
@@ -455,7 +458,11 @@ where
 /// Check / repair wallet contents
 /// assume wallet contents have been freshly updated with contents
 /// of latest block
-pub fn check_repair<T, C, K>(wallet: &mut T, delete_unconfirmed: bool, ignore_within: u64) -> Result<(), Error>
+pub fn check_repair<T, C, K>(
+	wallet: &mut T,
+	delete_unconfirmed: bool,
+	ignore_within: u64,
+) -> Result<(), Error>
 where
 	T: WalletBackend<C, K>,
 	C: NodeClient,
