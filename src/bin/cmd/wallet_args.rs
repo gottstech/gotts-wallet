@@ -747,8 +747,15 @@ pub fn parse_info_args(args: &ArgMatches) -> Result<command::InfoArgs, ParseErro
 
 pub fn parse_check_args(args: &ArgMatches) -> Result<command::CheckArgs, ParseError> {
 	let delete_unconfirmed = args.is_present("delete_unconfirmed");
+	let ignore_within = parse_required(args, "ignore_within")?;
+	let mut ignore_within = parse_u64(ignore_within, "ignore_within")?;
+	// Valid range: [0..1440]. Unit: Minute.
+	if ignore_within > 1440 {
+		ignore_within = 1440;
+	}
 	Ok(command::CheckArgs {
-		delete_unconfirmed: delete_unconfirmed,
+		delete_unconfirmed,
+		ignore_within,
 	})
 }
 

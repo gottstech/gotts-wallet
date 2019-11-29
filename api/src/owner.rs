@@ -1337,6 +1337,9 @@ where
 	/// will happen if this flag is set. Note that if transactions/outputs are removed that later
 	/// confirm on the chain, another call to this function will restore them.
 	///
+	/// * `ignore_within` - ignore checking the txs which just happened within this specified minutes,
+	/// if 0, check all txs including recent Spent and Locked output; proposed value is 30 minutes.
+	///
 	/// # Returns
 	/// * `Ok(())` if successful
 	/// * or [`libwallet::Error`](../gotts_wallet_libwallet/struct.Error.html) if an error is encountered.
@@ -1349,6 +1352,7 @@ where
 	/// let mut api_owner = Owner::new(wallet.clone());
 	/// let result = api_owner.check_repair(
 	/// 	false,
+	///     30,
 	/// );
 	///
 	/// if let Ok(_) = result {
@@ -1357,10 +1361,10 @@ where
 	/// }
 	/// ```
 
-	pub fn check_repair(&self, delete_unconfirmed: bool) -> Result<(), Error> {
+	pub fn check_repair(&self, delete_unconfirmed: bool, ignore_within: u64) -> Result<(), Error> {
 		let mut w = self.wallet.lock();
 		w.open_with_credentials()?;
-		let res = owner::check_repair(&mut *w, delete_unconfirmed);
+		let res = owner::check_repair(&mut *w, delete_unconfirmed, ignore_within);
 		w.close()?;
 		res
 	}
@@ -1370,6 +1374,8 @@ where
 	/// # Arguments
 	///
 	/// * `delete_unconfirmed` - same as in `check_repair`
+	///
+	/// * `ignore_within` - same as in `check_repair`
 	///
 	/// * `start_index` - the UTXO sets PMMR start index
 	///
@@ -1391,7 +1397,7 @@ where
 	///
 	/// let mut api_owner = Owner::new(wallet.clone());
 	/// let result = api_owner.check_repair_batch(
-	/// 	false, 1, 1000, true
+	/// 	false, 30, 1, 1000, true
 	/// );
 	///
 	/// if let Ok((highest_index, last_retrieved_index)) = result {
@@ -1402,6 +1408,7 @@ where
 	pub fn check_repair_batch(
 		&self,
 		delete_unconfirmed: bool,
+		ignore_within: u64,
 		start_index: u64,
 		batch_size: u64,
 		is_update_outputs: bool,
@@ -1411,6 +1418,7 @@ where
 		let res = owner::check_repair_batch(
 			&mut *w,
 			delete_unconfirmed,
+			ignore_within,
 			start_index,
 			batch_size,
 			is_update_outputs,

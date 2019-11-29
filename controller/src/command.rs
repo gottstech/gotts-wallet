@@ -920,6 +920,7 @@ pub fn restore(
 /// wallet check
 pub struct CheckArgs {
 	pub delete_unconfirmed: bool,
+	pub ignore_within: u64,
 }
 
 pub fn check_repair(
@@ -927,9 +928,13 @@ pub fn check_repair(
 	args: CheckArgs,
 ) -> Result<(), Error> {
 	controller::owner_single_use(wallet.clone(), |api| {
-		info!("Starting wallet check...",);
+		if args.ignore_within > 0 {
+			info!("Starting wallet check... (but ignore recent txs which just happened within {} minutes.)", args.ignore_within);
+		} else {
+			info!("Starting wallet check...", );
+		}
 		info!("Updating all wallet outputs, please wait ...",);
-		let result = api.check_repair(args.delete_unconfirmed);
+		let result = api.check_repair(args.delete_unconfirmed, args.ignore_within);
 		match result {
 			Ok(_) => {
 				info!("Wallet check complete",);

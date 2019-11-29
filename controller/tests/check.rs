@@ -165,7 +165,7 @@ fn check_repair_impl(test_dir: &str) -> Result<(), libwallet::Error> {
 
 	// this should restore our missing outputs
 	wallet::controller::owner_single_use(wallet1.clone(), |api| {
-		api.check_repair(true)?;
+		api.check_repair(true, 0)?;
 		Ok(())
 	})?;
 
@@ -207,7 +207,7 @@ fn check_repair_impl(test_dir: &str) -> Result<(), libwallet::Error> {
 
 	// unlock/restore
 	wallet::controller::owner_single_use(wallet1.clone(), |api| {
-		api.check_repair(true)?;
+		api.check_repair(true, 0)?;
 		Ok(())
 	})?;
 
@@ -349,7 +349,7 @@ fn two_wallets_one_seed_impl(test_dir: &str) -> Result<(), libwallet::Error> {
 
 	// 0) Check repair when all is okay should leave wallet contents alone
 	wallet::controller::owner_single_use(wallet1.clone(), |api| {
-		api.check_repair(true)?;
+		api.check_repair(true, 0)?;
 		let info = wallet_info!(wallet1.clone())?;
 		assert_eq!(info.amount_currently_spendable, base_amount * 6);
 		assert_eq!(info.total, base_amount * 6);
@@ -394,7 +394,7 @@ fn two_wallets_one_seed_impl(test_dir: &str) -> Result<(), libwallet::Error> {
 
 	// 2) check_repair should recover them into a single wallet
 	wallet::controller::owner_single_use(wallet1.clone(), |api| {
-		api.check_repair(true)?;
+		api.check_repair(true, 0)?;
 		Ok(())
 	})?;
 
@@ -456,7 +456,7 @@ fn two_wallets_one_seed_impl(test_dir: &str) -> Result<(), libwallet::Error> {
 	})?;
 
 	wallet::controller::owner_single_use(wallet6.clone(), |api| {
-		api.check_repair(true)?;
+		api.check_repair(true, 0)?;
 		Ok(())
 	})?;
 
@@ -540,7 +540,7 @@ fn two_wallets_one_seed_impl(test_dir: &str) -> Result<(), libwallet::Error> {
 		let outputs = api.retrieve_outputs(true, false, None)?.1;
 		assert_eq!(outputs.len(), 3);
 		assert_eq!(info.amount_currently_spendable, base_amount * 15);
-		api.check_repair(true)?;
+		api.check_repair(true, 0)?;
 		let info = wallet_info!(wallet9.clone())?;
 		let outputs = api.retrieve_outputs(true, false, None)?.1;
 		assert_eq!(outputs.len(), 6);
@@ -558,7 +558,7 @@ fn two_wallets_one_seed_impl(test_dir: &str) -> Result<(), libwallet::Error> {
 
 	// 7) Ensure check_repair creates missing accounts
 	wallet::controller::owner_single_use(wallet10.clone(), |api| {
-		api.check_repair(true)?;
+		api.check_repair(true, 0)?;
 		api.set_active_account("account_1")?;
 		let info = wallet_info!(wallet10.clone())?;
 		let outputs = api.retrieve_outputs(true, false, None)?.1;

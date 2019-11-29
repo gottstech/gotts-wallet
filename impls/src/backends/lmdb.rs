@@ -502,18 +502,19 @@ where
 		Ok(res)
 	}
 
-	fn check_repair(&mut self, delete_unconfirmed: bool) -> Result<(), Error> {
-		check_repair(self, delete_unconfirmed).context(ErrorKind::Restore)?;
+	fn check_repair(&mut self, delete_unconfirmed: bool, ignore_within: u64) -> Result<(), Error> {
+		check_repair(self, delete_unconfirmed, ignore_within).context(ErrorKind::Restore)?;
 		Ok(())
 	}
 
 	fn check_repair_batch(
 		&mut self,
 		delete_unconfirmed: bool,
+		ignore_within: u64,
 		start_index: u64,
 		batch_size: u64,
 	) -> Result<(u64, u64), Error> {
-		let res = check_repair_batch(self, delete_unconfirmed, start_index, batch_size)
+		let res = check_repair_batch(self, delete_unconfirmed, ignore_within, start_index, batch_size)
 			.context(ErrorKind::Restore)?;
 		Ok(res)
 	}

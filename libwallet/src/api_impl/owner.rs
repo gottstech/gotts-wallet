@@ -641,20 +641,21 @@ where
 }
 
 /// check repair
-pub fn check_repair<T: ?Sized, C, K>(w: &mut T, delete_unconfirmed: bool) -> Result<(), Error>
+pub fn check_repair<T: ?Sized, C, K>(w: &mut T, delete_unconfirmed: bool, ignore_within: u64) -> Result<(), Error>
 where
 	T: WalletBackend<C, K>,
 	C: NodeClient,
 	K: Keychain,
 {
 	update_outputs(w, true);
-	w.check_repair(delete_unconfirmed)
+	w.check_repair(delete_unconfirmed, ignore_within)
 }
 
 /// check repair
 pub fn check_repair_batch<T: ?Sized, C, K>(
 	w: &mut T,
 	delete_unconfirmed: bool,
+	ignore_within: u64,
 	start_index: u64,
 	batch_size: u64,
 	is_update_outputs: bool,
@@ -667,7 +668,7 @@ where
 	if is_update_outputs {
 		update_outputs(w, true);
 	}
-	w.check_repair_batch(delete_unconfirmed, start_index, batch_size)
+	w.check_repair_batch(delete_unconfirmed, ignore_within, start_index, batch_size)
 }
 
 /// node height
