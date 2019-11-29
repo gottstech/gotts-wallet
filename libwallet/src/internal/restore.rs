@@ -24,6 +24,7 @@ use crate::gotts_util::to_hex;
 use crate::internal::{keys, updater};
 use crate::types::*;
 use crate::{Error, OutputCommitMapping};
+use chrono::{Duration, Utc};
 use std::collections::HashMap;
 use std::time::Instant;
 
@@ -312,6 +313,7 @@ where
 fn check_repair_from_outputs<T, C, K>(
 	wallet: &mut T,
 	delete_unconfirmed: bool,
+	ignore_within: u64,
 	chain_outs: Vec<OutputResult>,
 ) -> Result<(), Error>
 where
@@ -325,6 +327,10 @@ where
 		res
 	};
 
+	// Also get all outstanding txs in local wallet database
+	let tx_vec = updater::retrieve_txs(&mut *wallet, None, None, None, true, None)?;
+	let outstanding_txs_id: Vec<u32> = tx_vec.iter().map(|e| e.id).collect();
+
 	let mut missing_outs = vec![];
 	let mut accidental_spend_outs = vec![];
 	let mut locked_outs = vec![];
@@ -334,11 +340,29 @@ where
 		let matched_out = wallet_outputs.iter().find(|wo| wo.commit == deffo.commit);
 		match matched_out {
 			Some(s) => {
-				if s.output.status == OutputStatus::Spent {
-					accidental_spend_outs.push((s.output.clone(), deffo.clone()));
+				let mut is_waiting_confirm = false;
+				if ignore_within != 0 {
+					// 0 means 'checking all txs'.
+					if let Some(tx_log_entry) = s.output.tx_log_entry {
+						if outstanding_txs_id.contains(&tx_log_entry) {
+							let tx_log = tx_vec.iter().find(|e| e.id == tx_log_entry).unwrap();
+							// let's ignore the checking on the txs which just happened within 30 minutes, which could still stay in tx pool and wait
+							// for packaging into a block.
+							if tx_log.creation_ts + Duration::minutes(ignore_within as i64)
+								> Utc::now()
+							{
+								is_waiting_confirm = true;
+							}
+						}
+					}
 				}
-				if s.output.status == OutputStatus::Locked {
-					locked_outs.push((s.output.clone(), deffo.clone()));
+				if !is_waiting_confirm {
+					if s.output.status == OutputStatus::Spent {
+						accidental_spend_outs.push((s.output.clone(), deffo.clone()));
+					}
+					if s.output.status == OutputStatus::Locked {
+						locked_outs.push((s.output.clone(), deffo.clone()));
+					}
 				}
 			}
 			None => missing_outs.push(deffo),
@@ -434,7 +458,11 @@ where
 /// Check / repair wallet contents
 /// assume wallet contents have been freshly updated with contents
 /// of latest block
-pub fn check_repair<T, C, K>(wallet: &mut T, delete_unconfirmed: bool) -> Result<(), Error>
+pub fn check_repair<T, C, K>(
+	wallet: &mut T,
+	delete_unconfirmed: bool,
+	ignore_within: u64,
+) -> Result<(), Error>
 where
 	T: WalletBackend<C, K>,
 	C: NodeClient,
@@ -449,7 +477,7 @@ where
 		chain_outs.len(),
 	);
 
-	check_repair_from_outputs(wallet, delete_unconfirmed, chain_outs)?;
+	check_repair_from_outputs(wallet, delete_unconfirmed, ignore_within, chain_outs)?;
 
 	let mut sec = now.elapsed().as_secs();
 	let min = sec / 60;
@@ -465,6 +493,7 @@ where
 pub fn check_repair_batch<T, C, K>(
 	wallet: &mut T,
 	delete_unconfirmed: bool,
+	ignore_within: u64,
 	start_index: u64,
 	batch_size: u64,
 ) -> Result<(u64, u64), Error>
@@ -486,7 +515,7 @@ where
 		delete_unconfirmed = false;
 	}
 
-	check_repair_from_outputs(wallet, delete_unconfirmed, result_vec)?;
+	check_repair_from_outputs(wallet, delete_unconfirmed, ignore_within, result_vec)?;
 	Ok((highest_index, last_retrieved_index))
 }
 

@@ -164,12 +164,13 @@ where
 	) -> Result<(u64, u64, u64), Error>;
 
 	/// Attempt to check and fix wallet state
-	fn check_repair(&mut self, delete_unconfirmed: bool) -> Result<(), Error>;
+	fn check_repair(&mut self, delete_unconfirmed: bool, ignore_within: u64) -> Result<(), Error>;
 
 	/// Attempt to check and fix wallet state, by index on batch
 	fn check_repair_batch(
 		&mut self,
 		delete_unconfirmed: bool,
+		ignore_within: u64,
 		start_index: u64,
 		batch_size: u64,
 	) -> Result<(u64, u64), Error>;

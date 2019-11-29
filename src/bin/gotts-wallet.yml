@@ -370,6 +370,12 @@ subcommands:
             short: d
             long: delete_unconfirmed
             takes_value: false
+        - ignore_within:
+            help: Ignore recent transactions within the specified minutes. Default ignore txs within 30 minutes; Check all txs if 0. Valid range [0, 1440].
+            short: i
+            long: ignore_within
+            default_value: "30"
+            takes_value: true
   - passwd:
       about: Changing password for wallet.
   - address:
