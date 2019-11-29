@@ -24,6 +24,7 @@ use crate::gotts_util::to_hex;
 use crate::internal::{keys, updater};
 use crate::types::*;
 use crate::{Error, OutputCommitMapping};
+use chrono::{Duration, Utc};
 use std::collections::HashMap;
 use std::time::Instant;
 
@@ -325,6 +326,10 @@ where
 		res
 	};
 
+	// Also get all outstanding txs in local wallet database
+	let tx_vec = updater::retrieve_txs(&mut *wallet, None, None, None, true, None)?;
+	let outstanding_txs_id: Vec<u32> = tx_vec.iter().map(|e| e.id).collect();
+
 	let mut missing_outs = vec![];
 	let mut accidental_spend_outs = vec![];
 	let mut locked_outs = vec![];
@@ -334,11 +339,24 @@ where
 		let matched_out = wallet_outputs.iter().find(|wo| wo.commit == deffo.commit);
 		match matched_out {
 			Some(s) => {
-				if s.output.status == OutputStatus::Spent {
-					accidental_spend_outs.push((s.output.clone(), deffo.clone()));
+				let mut is_waiting_confirm = false;
+				if let Some(tx_log_entry) = s.output.tx_log_entry {
+					if outstanding_txs_id.contains(&tx_log_entry) {
+						let tx_log = tx_vec.iter().find(|e| e.id == tx_log_entry).unwrap();
+						// let's ignore the checking on the txs which just happened within 30 minutes, which could still stay in tx pool and wait
+						// for packaging into a block.
+						if tx_log.creation_ts + Duration::minutes(30) > Utc::now() {
+							is_waiting_confirm = true;
+						}
+					}
 				}
-				if s.output.status == OutputStatus::Locked {
-					locked_outs.push((s.output.clone(), deffo.clone()));
+				if !is_waiting_confirm {
+					if s.output.status == OutputStatus::Spent {
+						accidental_spend_outs.push((s.output.clone(), deffo.clone()));
+					}
+					if s.output.status == OutputStatus::Locked {
+						locked_outs.push((s.output.clone(), deffo.clone()));
+					}
 				}
 			}
 			None => missing_outs.push(deffo),
