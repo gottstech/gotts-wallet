@@ -688,7 +688,21 @@ where
 
 	let key_id = match key_id {
 		Some(key_id) => match keys::retrieve_existing_key(wallet, key_id, None) {
-			Ok(k) => k.0,
+			Ok((kid, _derivation)) => {
+				let existing_coinbase_output = wallet
+					.iter()
+					.find(|out| out.key_id == kid && out.is_coinbase);
+				if let Some(o) = existing_coinbase_output {
+					// force to use a new key_id if height different
+					if o.height != height {
+						keys::next_available_key(wallet)?
+					} else {
+						kid
+					}
+				} else {
+					kid
+				}
+			}
 			Err(_) => keys::next_available_key(wallet)?,
 		},
 		None => keys::next_available_key(wallet)?,
