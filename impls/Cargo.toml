@@ -1,6 +1,6 @@
 [package]
 name = "gotts_wallet_impls"
-version = "0.0.2"
+version = "0.0.4"
 authors = ["Gotts Developers <gotts.tech@lists.launchpad.net>"]
 description = "Concrete types derived from libwallet traits"
 license = "Apache-2.0"
@@ -26,7 +26,7 @@ tokio-retry = "0.1"
 uuid = { version = "0.7", features = ["serde", "v4"] }
 chrono = { version = "0.4.4", features = ["serde"] }
 
-gotts_wallet_util = { path = "../util", version = "0.0.2" }
+gotts_wallet_util = { path = "../util", version = "0.0.4" }
 
-gotts_wallet_libwallet = { path = "../libwallet", version = "0.0.2" }
-gotts_wallet_config = { path = "../config", version = "0.0.2" }
+gotts_wallet_libwallet = { path = "../libwallet", version = "0.0.4" }
+gotts_wallet_config = { path = "../config", version = "0.0.4" }

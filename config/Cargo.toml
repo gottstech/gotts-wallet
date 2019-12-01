@@ -1,6 +1,6 @@
 [package]
 name = "gotts_wallet_config"
-version = "0.0.2"
+version = "0.0.4"
 authors = ["Gotts Developers <gotts.tech@lists.launchpad.net>"]
 description = "Configuration for gotts wallet , a simple, private and scalable cryptocurrency implementation based on the MimbleWimble chain format."
 license = "Apache-2.0"
@@ -16,7 +16,7 @@ serde_derive = "1"
 toml = "0.4"
 dirs = "1.0.3"
 
-gotts_wallet_util = { path = "../util", version = "0.0.2" }
+gotts_wallet_util = { path = "../util", version = "0.0.4" }
 
 [dev-dependencies]
 pretty_assertions = "0.5.1"
