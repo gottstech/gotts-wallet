@@ -31,6 +31,7 @@ use uuid::Uuid;
 use crate::api::TLSConfig;
 use crate::core::address::Address;
 use crate::core::core;
+use crate::core::global::is_floonet;
 use crate::keychain;
 
 use crate::config::WalletConfig;
@@ -825,7 +826,8 @@ pub fn address(
 					}
 				}
 				println!(
-					"The Gotts address info: \n\tPublicKey = {}, \n\tkeypath = {}, \n\tpkh = {}, \nIt's the address {} by this wallet.",
+					"The Gotts address info: \n\tNetwork = {:?}\n\tPublicKey = {}, \n\tkeypath = {}, \n\tpkh = {}, \nIt's the address {} by this wallet.",
+					address.network,
 					to_hex(address.get_inner_pubkey().serialize_vec(true)),
 					address.get_key_id(),
 					address.pkh().to_hex(),
@@ -840,7 +842,7 @@ pub fn address(
 				let recipient_addr = Address::from_pubkey(
 					&recipient_key.recipient_pub_key,
 					&recipient_key.recipient_key_id,
-					true,
+					!is_floonet(),
 				);
 				println!(
 					"Your current Gotts address for receiving: {}",

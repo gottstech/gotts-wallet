@@ -24,6 +24,7 @@ use uuid::Uuid;
 
 use crate::core::address::Address;
 use crate::core::core::Transaction;
+use crate::core::global::{is_floonet, ChainTypes};
 use crate::impls::{HTTPWalletCommAdapter, KeybaseWalletCommAdapter, WalletSeed};
 use crate::keychain::{Identifier, Keychain, RecipientKey};
 use crate::libwallet::api_impl::owner;
@@ -643,27 +644,32 @@ where
 	/// ```
 	pub fn non_interactive_send(&self, args: InitTxArgs) -> Result<Slate, Error> {
 		let send_args = args.send_args.clone();
-		let mut slate;
-		{
-			let mut w = self.wallet.lock();
-			w.open_with_credentials()?;
-			slate = owner::init_send_tx(&mut *w, args, self.doctest_mode)?;
-			w.close()?;
-		}
 		// Helper functionality. If send arguments exist, attempt to process them.
 		match send_args {
 			Some(sa) => {
 				if sa.method != "addr" {
 					return Err(ErrorKind::ClientCallback(
-						"unsupported payment method".to_owned(),
+						"non-interactive transaction only support sending to an address".to_owned(),
 					))?;
 				}
 				let recipient_address = Address::from_str(&sa.dest)?;
+				let network = match is_floonet() {
+					true => ChainTypes::Floonet,
+					false => ChainTypes::Mainnet,
+				};
+				if recipient_address.network != network {
+					return Err(ErrorKind::ClientCallback(format!(
+						"network type not match, the destination address is a {:?} address",
+						recipient_address.network
+					)))?;
+				}
 
+				let mut slate;
 				// Construction of a non-interactive transaction output
 				{
 					let mut w = self.wallet.lock();
 					w.open_with_credentials()?;
+					slate = owner::init_send_tx(&mut *w, args, self.doctest_mode)?;
 					slate = owner::create_non_interactive_output(
 						&mut *w,
 						&slate,
@@ -682,7 +688,9 @@ where
 				}
 				Ok(slate)
 			}
-			None => Ok(slate),
+			None => Err(ErrorKind::ClientCallback(
+				"InitTxSendArgs is None".to_owned(),
+			))?,
 		}
 	}
 
