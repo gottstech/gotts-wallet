@@ -13,13 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::util::{Mutex, ZeroingString};
+use crate::util::{to_hex, Mutex, ZeroingString};
 use chrono::NaiveDateTime as DateTime;
 use colored::*;
 use std::collections::HashMap;
 /// Gotts wallet command-line function implementations
 use std::fs::File;
 use std::io::Write;
+use std::str::FromStr;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
@@ -803,24 +804,52 @@ pub fn txs(
 	Ok(())
 }
 
+/// Argument for address
+pub struct AddressArgs {
+	pub address_to_check: Option<String>,
+}
+
 /// Address
 pub fn address(
 	wallet: Arc<Mutex<dyn WalletInst<impl NodeClient + 'static, keychain::ExtKeychain>>>,
+	args: AddressArgs,
 ) -> Result<(), Error> {
-	let mut recipient_addr = Address::default();
 	controller::owner_single_use(wallet.clone(), |api| {
-		let recipient_key = api.get_recipient_key()?;
-		recipient_addr = Address::from_pubkey(
-			&recipient_key.recipient_pub_key,
-			&recipient_key.recipient_key_id,
-			true,
-		);
+		match args.address_to_check {
+			Some(addr) => {
+				let address = Address::from_str(&addr)?;
+				let mut is_mine = false;
+				if let Ok(recipient_key) = api.get_recipient_key_by_id(&address.get_key_id()) {
+					if recipient_key.recipient_pub_key == address.get_inner_pubkey() {
+						is_mine = true;
+					}
+				}
+				println!(
+					"The Gotts address info: \n\tPublicKey = {}, \n\tkeypath = {}, \n\tpkh = {}, \nIt's the address {} by this wallet.",
+					to_hex(address.get_inner_pubkey().serialize_vec(true)),
+					address.get_key_id(),
+					address.pkh().to_hex(),
+					match is_mine {
+						true => "owned".bright_green(),
+						false => "not owned".bright_red(),
+					},
+				);
+			}
+			None => {
+				let recipient_key = api.get_recipient_key()?;
+				let recipient_addr = Address::from_pubkey(
+					&recipient_key.recipient_pub_key,
+					&recipient_key.recipient_key_id,
+					true,
+				);
+				println!(
+					"Your current Gotts address for receiving: {}",
+					recipient_addr.to_string().bright_green(),
+				);
+			}
+		}
 		Ok(())
 	})?;
-	println!(
-		"Your current Gotts address for receiving: {}",
-		recipient_addr.to_string().bright_green(),
-	);
 	Ok(())
 }
 

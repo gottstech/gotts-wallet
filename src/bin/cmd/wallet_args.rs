@@ -446,6 +446,15 @@ pub fn parse_recover_args(
 	})
 }
 
+pub fn parse_address_args(args: &ArgMatches) -> Result<command::AddressArgs, ParseError> {
+	let address_to_check = if let Ok(addr) = parse_required(args, "check") {
+		Some(addr.to_string())
+	} else {
+		None
+	};
+	Ok(command::AddressArgs { address_to_check })
+}
+
 pub fn parse_listen_args(
 	config: &mut WalletConfig,
 	g_args: &mut command::GlobalArgs,
@@ -1020,7 +1029,10 @@ pub fn wallet_command(
 				wallet_config.dark_background_color_scheme.unwrap_or(true),
 			)
 		}
-		("address", Some(_)) => command::address(inst_wallet()),
+		("address", Some(args)) => {
+			let a = arg_parse!(parse_address_args(&args));
+			command::address(inst_wallet(), a)
+		}
 		("repost", Some(args)) => {
 			let a = arg_parse!(parse_repost_args(&args));
 			command::repost(inst_wallet(), a)

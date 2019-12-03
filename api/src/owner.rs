@@ -715,6 +715,38 @@ where
 		Ok(recipient_key)
 	}
 
+	/// Get the wallet receiving key for the non-interactive transaction, by a specified key id.
+	///
+	/// # Returns
+	/// * ``Ok([`RecipientKey`](../gotts_keychain/RecipientKey/struct.RecipientKey.html))` if successful,
+	/// containing the updated slate.
+	/// * or [`libwallet::Error`](../gotts_wallet_libwallet/struct.Error.html) if an error is encountered.
+	///
+	/// # Example
+	/// Set up as in [`new`](struct.Owner.html#method.new) method above.
+	/// ```
+	/// # gotts_wallet_api::doctest_helper_setup_doc_env!(wallet, wallet_config);
+	///
+	/// let mut api_owner = Owner::new(wallet.clone());
+	///
+	/// let key_id =
+	///		ExtKeychainPath::new(4, <u32>::max_value(), <u32>::max_value(), 0, 100).to_identifier();
+	///
+	/// let result = api_owner.get_recipient_key_by_id(&key_id);
+	///
+	/// if let Ok(recipient_key) = result {
+	///		// if okay, convert it to Address and get the string address to tell the payer.
+	///		// . . .
+	/// }
+	/// ```
+	pub fn get_recipient_key_by_id(&self, key_id: &Identifier) -> Result<RecipientKey, Error> {
+		let mut w = self.wallet.lock();
+		w.open_with_credentials()?;
+		let recipient_key = owner::get_recipient_key_by_id(&mut *w, key_id)?;
+		w.close()?;
+		Ok(recipient_key)
+	}
+
 	/// Issues a new invoice transaction slate, essentially a `request for payment`.
 	/// The slate created by this function will contain the amount, an output for the amount,
 	/// as well as round 1 of singature creation complete. The slate should then be send
@@ -1544,7 +1576,7 @@ macro_rules! doctest_helper_setup_doc_env {
 		use gotts_wallet_util::gotts_keychain as keychain;
 		use gotts_wallet_util::gotts_util as util;
 
-		use keychain::ExtKeychain;
+		use keychain::{ExtKeychain, ExtKeychainPath};
 		use tempfile::tempdir;
 
 		use std::sync::Arc;

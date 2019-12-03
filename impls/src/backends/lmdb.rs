@@ -228,6 +228,22 @@ where
 		})
 	}
 
+	fn recipient_key_by_id(&self, key_id: &Identifier) -> Result<RecipientKey, Error> {
+		if self.keychain.is_none() {
+			return Err(ErrorKind::Backend("keychain is none".to_string()).into());
+		}
+
+		let keychain = self.keychain_immutable();
+		let recipient_pri_key = keychain.derive_key(key_id).unwrap();
+		let recipient_pub_key =
+			PublicKey::from_secret_key(keychain.secp(), &recipient_pri_key).unwrap();
+		Ok(RecipientKey {
+			recipient_key_id: key_id.clone(),
+			recipient_pub_key,
+			recipient_pri_key,
+		})
+	}
+
 	/// Close wallet and remove any stored credentials (TBD)
 	fn close(&mut self) -> Result<(), Error> {
 		self.keychain = None;
