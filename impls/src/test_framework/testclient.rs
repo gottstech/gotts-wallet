@@ -553,6 +553,7 @@ impl NodeClient for LocalWalletClient {
 		&self,
 		start_height: u64,
 		max_outputs: u64,
+		_nit_only: bool,
 	) -> Result<
 		(
 			u64,

@@ -167,7 +167,12 @@ where
 	) -> Result<(u64, u64, u64), Error>;
 
 	/// Attempt to check and fix wallet state
-	fn check_repair(&mut self, delete_unconfirmed: bool, ignore_within: u64) -> Result<(), Error>;
+	fn check_repair(
+		&mut self,
+		delete_unconfirmed: bool,
+		ignore_within: u64,
+		address_to_check: Option<String>,
+	) -> Result<(), Error>;
 
 	/// Attempt to check and fix wallet state, by index on batch
 	fn check_repair_batch(
@@ -176,6 +181,7 @@ where
 		ignore_within: u64,
 		start_index: u64,
 		batch_size: u64,
+		address_to_check: Option<String>,
 	) -> Result<(u64, u64), Error>;
 }
 
@@ -300,15 +306,16 @@ pub trait NodeClient: Sync + Send + Clone {
 		wallet_kernels_keys: Vec<String>,
 	) -> Result<HashMap<pedersen::Commitment, TxKernelApiEntry>, Error>;
 
-	/// Get a list of outputs from the node by traversing the UTXO
-	/// set in PMMR index order.
-	/// Returns
+	/// Get a list of outputs from the node by traversing the UTXO set in PMMR index order.
+	/// Caller can set 'nit_only' as true for only Non-Interactive Outputs UTXO traversing.
+	/// Returns:
 	/// (last available output index, last insertion index retrieved,
 	/// outputs(commit, proof, is_coinbase, height, mmr_index))
 	fn get_outputs_by_pmmr_index(
 		&self,
 		start_height: u64,
 		max_outputs: u64,
+		nit_only: bool,
 	) -> Result<
 		(
 			u64,

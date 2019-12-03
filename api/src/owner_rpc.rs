@@ -1431,7 +1431,7 @@ pub trait OwnerRpc {
 	{
 		"jsonrpc": "2.0",
 		"method": "check_repair",
-		"params": [false, 30],
+		"params": [false, 30, null],
 		"id": 1
 	}
 	# "#
@@ -1448,7 +1448,12 @@ pub trait OwnerRpc {
 	# , 1, false, false, false);
 	```
 	 */
-	fn check_repair(&self, delete_unconfirmed: bool, ignore_within: u64) -> Result<(), ErrorKind>;
+	fn check_repair(
+		&self,
+		delete_unconfirmed: bool,
+		ignore_within: u64,
+		address_to_check: Option<String>,
+	) -> Result<(), ErrorKind>;
 
 	/**
 	Networked version of [Owner::node_height](struct.Owner.html#method.node_height).
@@ -1598,8 +1603,14 @@ where
 		Owner::restore(self).map_err(|e| e.kind())
 	}
 
-	fn check_repair(&self, delete_unconfirmed: bool, ignore_within: u64) -> Result<(), ErrorKind> {
-		Owner::check_repair(self, delete_unconfirmed, ignore_within).map_err(|e| e.kind())
+	fn check_repair(
+		&self,
+		delete_unconfirmed: bool,
+		ignore_within: u64,
+		address_to_check: Option<String>,
+	) -> Result<(), ErrorKind> {
+		Owner::check_repair(self, delete_unconfirmed, ignore_within, address_to_check)
+			.map_err(|e| e.kind())
 	}
 
 	fn node_height(&self) -> Result<NodeHeightResult, ErrorKind> {

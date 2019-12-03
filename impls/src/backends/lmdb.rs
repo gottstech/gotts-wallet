@@ -518,8 +518,14 @@ where
 		Ok(res)
 	}
 
-	fn check_repair(&mut self, delete_unconfirmed: bool, ignore_within: u64) -> Result<(), Error> {
-		check_repair(self, delete_unconfirmed, ignore_within).context(ErrorKind::Restore)?;
+	fn check_repair(
+		&mut self,
+		delete_unconfirmed: bool,
+		ignore_within: u64,
+		address_to_check: Option<String>,
+	) -> Result<(), Error> {
+		check_repair(self, delete_unconfirmed, ignore_within, address_to_check)
+			.context(ErrorKind::Restore)?;
 		Ok(())
 	}
 
@@ -529,6 +535,7 @@ where
 		ignore_within: u64,
 		start_index: u64,
 		batch_size: u64,
+		address_to_check: Option<String>,
 	) -> Result<(u64, u64), Error> {
 		let res = check_repair_batch(
 			self,
@@ -536,6 +543,7 @@ where
 			ignore_within,
 			start_index,
 			batch_size,
+			address_to_check,
 		)
 		.context(ErrorKind::Restore)?;
 		Ok(res)

@@ -230,6 +230,7 @@ impl NodeClient for HTTPNodeClient {
 		&self,
 		start_height: u64,
 		max_outputs: u64,
+		nit_only: bool,
 	) -> Result<
 		(
 			u64,
@@ -241,7 +242,11 @@ impl NodeClient for HTTPNodeClient {
 		let addr = self.node_url();
 		let query_param = format!("start_index={}&max={}", start_height, max_outputs);
 
-		let url = format!("{}/v1/txhashset/outputs?{}", addr, query_param,);
+		let url = if !nit_only {
+			format!("{}/v1/txhashset/outputs?{}", addr, query_param)
+		} else {
+			format!("{}/v1/txhashset/nit-outputs?{}", addr, query_param)
+		};
 
 		let mut api_outputs: Vec<(pedersen::Commitment, Output, bool, u64, u64)> = Vec::new();
 

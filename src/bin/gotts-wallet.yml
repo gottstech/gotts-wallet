@@ -376,6 +376,11 @@ subcommands:
             long: ignore_within
             default_value: "30"
             takes_value: true
+        - address:
+            help: Check the non-interactive transaction output on the specified address.
+            short: a
+            long: address
+            takes_value: true
   - passwd:
       about: Changing password for wallet.
   - address:
