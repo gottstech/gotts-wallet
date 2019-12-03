@@ -249,6 +249,19 @@ where
 	w.recipient_key()
 }
 
+/// Get the recipient key for non-interactive transaction, by a specified key id
+pub fn get_recipient_key_by_id<T: ?Sized, C, K>(
+	w: &mut T,
+	key_id: &Identifier,
+) -> Result<RecipientKey, Error>
+where
+	T: WalletBackend<C, K>,
+	C: NodeClient,
+	K: Keychain,
+{
+	w.recipient_key_by_id(key_id)
+}
+
 /// Construction of a non-interactive transaction output
 pub fn create_non_interactive_output<T: ?Sized, C, K>(
 	w: &mut T,

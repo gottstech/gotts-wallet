@@ -66,6 +66,9 @@ where
 	/// Return the recipient key
 	fn recipient_key(&self) -> Result<RecipientKey, Error>;
 
+	/// Return a recipient key by the key id
+	fn recipient_key_by_id(&self, key_id: &Identifier) -> Result<RecipientKey, Error>;
+
 	/// Close wallet and remove any stored credentials (TBD)
 	fn close(&mut self) -> Result<(), Error>;
 

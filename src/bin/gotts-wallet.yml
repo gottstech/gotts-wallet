@@ -380,3 +380,9 @@ subcommands:
       about: Changing password for wallet.
   - address:
       about: Query current Gotts receiving address for wallet.
+      args:
+        - check:
+            help: Check the address info
+            short: c
+            long: check
+            takes_value: true
