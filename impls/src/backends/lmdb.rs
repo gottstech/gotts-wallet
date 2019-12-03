@@ -505,7 +505,7 @@ where
 	}
 
 	fn restore(&mut self) -> Result<(), Error> {
-		restore(self).context(ErrorKind::Restore)?;
+		restore(self)?;
 		Ok(())
 	}
 
@@ -514,7 +514,7 @@ where
 		start_index: u64,
 		batch_size: u64,
 	) -> Result<(u64, u64, u64), Error> {
-		let res = restore_batch(self, start_index, batch_size).context(ErrorKind::Restore)?;
+		let res = restore_batch(self, start_index, batch_size)?;
 		Ok(res)
 	}
 
@@ -524,8 +524,7 @@ where
 		ignore_within: u64,
 		address_to_check: Option<String>,
 	) -> Result<(), Error> {
-		check_repair(self, delete_unconfirmed, ignore_within, address_to_check)
-			.context(ErrorKind::Restore)?;
+		check_repair(self, delete_unconfirmed, ignore_within, address_to_check)?;
 		Ok(())
 	}
 
@@ -544,8 +543,7 @@ where
 			start_index,
 			batch_size,
 			address_to_check,
-		)
-		.context(ErrorKind::Restore)?;
+		)?;
 		Ok(res)
 	}
 }
