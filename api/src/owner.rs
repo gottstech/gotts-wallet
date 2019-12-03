@@ -1576,7 +1576,7 @@ macro_rules! doctest_helper_setup_doc_env {
 		use gotts_wallet_util::gotts_keychain as keychain;
 		use gotts_wallet_util::gotts_util as util;
 
-		use keychain::ExtKeychain;
+		use keychain::{ExtKeychain, ExtKeychainPath};
 		use tempfile::tempdir;
 
 		use std::sync::Arc;
