@@ -762,9 +762,15 @@ pub fn parse_check_args(args: &ArgMatches) -> Result<command::CheckArgs, ParseEr
 	if ignore_within > 1440 {
 		ignore_within = 1440;
 	}
+	let address_to_check = if let Ok(addr) = parse_required(args, "address") {
+		Some(addr.to_string())
+	} else {
+		None
+	};
 	Ok(command::CheckArgs {
 		delete_unconfirmed,
 		ignore_within,
+		address_to_check,
 	})
 }
 

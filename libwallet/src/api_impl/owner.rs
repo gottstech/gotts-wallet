@@ -658,6 +658,7 @@ pub fn check_repair<T: ?Sized, C, K>(
 	w: &mut T,
 	delete_unconfirmed: bool,
 	ignore_within: u64,
+	address_to_check: Option<String>,
 ) -> Result<(), Error>
 where
 	T: WalletBackend<C, K>,
@@ -665,7 +666,7 @@ where
 	K: Keychain,
 {
 	update_outputs(w, true);
-	w.check_repair(delete_unconfirmed, ignore_within)
+	w.check_repair(delete_unconfirmed, ignore_within, address_to_check)
 }
 
 /// check repair
@@ -676,6 +677,7 @@ pub fn check_repair_batch<T: ?Sized, C, K>(
 	start_index: u64,
 	batch_size: u64,
 	is_update_outputs: bool,
+	address_to_check: Option<String>,
 ) -> Result<(u64, u64), Error>
 where
 	T: WalletBackend<C, K>,
@@ -685,7 +687,13 @@ where
 	if is_update_outputs {
 		update_outputs(w, true);
 	}
-	w.check_repair_batch(delete_unconfirmed, ignore_within, start_index, batch_size)
+	w.check_repair_batch(
+		delete_unconfirmed,
+		ignore_within,
+		start_index,
+		batch_size,
+		address_to_check,
+	)
 }
 
 /// node height

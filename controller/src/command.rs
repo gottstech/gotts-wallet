@@ -952,6 +952,7 @@ pub fn restore(
 pub struct CheckArgs {
 	pub delete_unconfirmed: bool,
 	pub ignore_within: u64,
+	pub address_to_check: Option<String>,
 }
 
 pub fn check_repair(
@@ -965,7 +966,11 @@ pub fn check_repair(
 			info!("Starting wallet check...",);
 		}
 		info!("Updating all wallet outputs, please wait ...",);
-		let result = api.check_repair(args.delete_unconfirmed, args.ignore_within);
+		let result = api.check_repair(
+			args.delete_unconfirmed,
+			args.ignore_within,
+			args.address_to_check,
+		);
 		match result {
 			Ok(_) => {
 				info!("Wallet check complete",);

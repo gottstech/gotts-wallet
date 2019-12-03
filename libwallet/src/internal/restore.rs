@@ -14,18 +14,20 @@
 // limitations under the License.
 //! Functions to restore a wallet's outputs from just the master seed
 
+use crate::gotts_core::address::Address;
 use crate::gotts_core::core::hash::Hash;
 use crate::gotts_core::core::{Output, OutputFeatures};
 use crate::gotts_core::global;
 use crate::gotts_core::libtx::proof;
-use crate::gotts_keychain::{ExtKeychain, Identifier, Keychain};
+use crate::gotts_keychain::{ExtKeychain, Identifier, Keychain, RecipientKey};
 use crate::gotts_util::secp::{pedersen, SecretKey};
 use crate::gotts_util::to_hex;
 use crate::internal::{keys, updater};
 use crate::types::*;
-use crate::{Error, OutputCommitMapping};
+use crate::{Error, ErrorKind, OutputCommitMapping};
 use chrono::{Duration, Utc};
 use std::collections::HashMap;
+use std::str::FromStr;
 use std::time::Instant;
 
 /// Utility struct for return values from below
@@ -56,6 +58,7 @@ struct RestoredTxStats {
 fn identify_utxo_outputs<T, C, K>(
 	wallet: &mut T,
 	outputs: Vec<(pedersen::Commitment, Output, bool, u64, u64)>,
+	recipient_key_to_check: &Option<RecipientKey>,
 ) -> Result<Vec<OutputResult>, Error>
 where
 	T: WalletBackend<C, K>,
@@ -69,7 +72,11 @@ where
 		outputs.len(),
 	);
 
-	let recipient_key = wallet.recipient_key()?;
+	let recipient_key = if let Some(r) = recipient_key_to_check {
+		r.clone()
+	} else {
+		wallet.recipient_key()?
+	};
 	let keychain = wallet.keychain();
 	let builder = proof::ProofBuilder::new(keychain);
 
@@ -149,7 +156,10 @@ where
 	Ok(wallet_outputs)
 }
 
-fn collect_chain_outputs<T, C, K>(wallet: &mut T) -> Result<Vec<OutputResult>, Error>
+fn collect_chain_outputs<T, C, K>(
+	wallet: &mut T,
+	recipient_key_to_check: &Option<RecipientKey>,
+) -> Result<Vec<OutputResult>, Error>
 where
 	T: WalletBackend<C, K>,
 	C: NodeClient,
@@ -158,10 +168,15 @@ where
 	let batch_size = 1000;
 	let mut start_index = 1;
 	let mut result_vec: Vec<OutputResult> = vec![];
+	let nit_only = if recipient_key_to_check.is_some() {
+		true
+	} else {
+		false
+	};
 	loop {
 		let (highest_index, last_retrieved_index, outputs) = wallet
 			.w2n_client()
-			.get_outputs_by_pmmr_index(start_index, batch_size)?;
+			.get_outputs_by_pmmr_index(start_index, batch_size, nit_only)?;
 		info!(
 			"Checking {} outputs, up to index {}. (Highest index: {})",
 			outputs.len(),
@@ -169,7 +184,11 @@ where
 			last_retrieved_index,
 		);
 
-		result_vec.append(&mut identify_utxo_outputs(wallet, outputs)?);
+		result_vec.append(&mut identify_utxo_outputs(
+			wallet,
+			outputs,
+			recipient_key_to_check,
+		)?);
 
 		if highest_index == last_retrieved_index {
 			break;
@@ -322,10 +341,7 @@ where
 	K: Keychain,
 {
 	// Now, get all outputs owned by this wallet (regardless of account)
-	let wallet_outputs = {
-		let res = updater::retrieve_outputs(&mut *wallet, true, None, None, None)?;
-		res
-	};
+	let wallet_outputs = updater::retrieve_outputs(&mut *wallet, true, None, None, None)?;
 
 	// Also get all outstanding txs in local wallet database
 	let tx_vec = updater::retrieve_txs(&mut *wallet, None, None, None, true, None)?;
@@ -455,6 +471,38 @@ where
 	Ok(())
 }
 
+fn check_nit_outputs<T, C, K>(wallet: &mut T, chain_outs: Vec<OutputResult>) -> Result<(), Error>
+where
+	T: WalletBackend<C, K>,
+	C: NodeClient,
+	K: Keychain,
+{
+	// Now, get all outputs owned by this wallet (regardless of account)
+	let wallet_outputs = updater::retrieve_outputs(&mut *wallet, true, None, None, None)?;
+
+	let mut missing_outs = vec![];
+	// check all definitive outputs exist in the wallet outputs
+	for deffo in chain_outs.into_iter() {
+		let matched_out = wallet_outputs.iter().find(|wo| wo.commit == deffo.commit);
+		if matched_out.is_none() {
+			missing_outs.push(deffo);
+		}
+	}
+
+	let mut found_parents: HashMap<Identifier, u32> = HashMap::new();
+	// Restore missing outputs, adding transaction for it back to the log
+	for m in missing_outs.into_iter() {
+		warn!(
+			"Confirmed output for {} with Identifier({}) {:?} exists in UTXO set but not in wallet. \
+			 Restoring.",
+			m.value, m.key_id, m.commit,
+		);
+		restore_missing_output(wallet, m, &mut found_parents, &mut None)?;
+	}
+
+	Ok(())
+}
+
 /// Check / repair wallet contents
 /// assume wallet contents have been freshly updated with contents
 /// of latest block
@@ -462,22 +510,45 @@ pub fn check_repair<T, C, K>(
 	wallet: &mut T,
 	delete_unconfirmed: bool,
 	ignore_within: u64,
+	address_to_check: Option<String>,
 ) -> Result<(), Error>
 where
 	T: WalletBackend<C, K>,
 	C: NodeClient,
 	K: Keychain,
 {
+	let mut recipient_key_to_check = None;
+	if let Some(addr) = address_to_check {
+		// Check whether this address belongs to this wallet
+		let address = Address::from_str(&addr)?;
+		let mut is_mine = false;
+		if let Ok(recipient_key) = wallet.recipient_key_by_id(&address.get_key_id()) {
+			if recipient_key.recipient_pub_key == address.get_inner_pubkey() {
+				is_mine = true;
+				recipient_key_to_check = Some(recipient_key);
+			}
+		}
+		if !is_mine {
+			return Err(ErrorKind::GenericError(
+				"address not owned by this wallet".to_string(),
+			))?;
+		}
+	}
+
 	// First, get a definitive list of outputs we own from the chain
 	let now = Instant::now();
 	info!("Starting wallet check.");
-	let chain_outs = collect_chain_outputs(wallet)?;
+	let chain_outs = collect_chain_outputs(wallet, &recipient_key_to_check)?;
 	info!(
 		"Identified {} wallet_outputs as belonging to this wallet",
 		chain_outs.len(),
 	);
 
-	check_repair_from_outputs(wallet, delete_unconfirmed, ignore_within, chain_outs)?;
+	if recipient_key_to_check.is_none() {
+		check_repair_from_outputs(wallet, delete_unconfirmed, ignore_within, chain_outs)?;
+	} else {
+		check_nit_outputs(wallet, chain_outs)?;
+	}
 
 	let mut sec = now.elapsed().as_secs();
 	let min = sec / 60;
@@ -496,18 +567,46 @@ pub fn check_repair_batch<T, C, K>(
 	ignore_within: u64,
 	start_index: u64,
 	batch_size: u64,
+	address_to_check: Option<String>,
 ) -> Result<(u64, u64), Error>
 where
 	T: WalletBackend<C, K>,
 	C: NodeClient,
 	K: Keychain,
 {
-	let mut result_vec: Vec<OutputResult> = vec![];
+	let mut recipient_key_to_check = None;
+	if let Some(addr) = address_to_check {
+		// Check whether this address belongs to this wallet
+		let address = Address::from_str(&addr)?;
+		let mut is_mine = false;
+		if let Ok(recipient_key) = wallet.recipient_key_by_id(&address.get_key_id()) {
+			if recipient_key.recipient_pub_key == address.get_inner_pubkey() {
+				is_mine = true;
+				recipient_key_to_check = Some(recipient_key);
+			}
+		}
+		if !is_mine {
+			return Err(ErrorKind::GenericError(
+				"address not owned by this wallet".to_string(),
+			))?;
+		}
+	}
+
+	let nit_only = if recipient_key_to_check.is_some() {
+		true
+	} else {
+		false
+	};
+	let mut chain_outs: Vec<OutputResult> = vec![];
 	let (highest_index, last_retrieved_index, outputs) = wallet
 		.w2n_client()
-		.get_outputs_by_pmmr_index(start_index, batch_size)?;
+		.get_outputs_by_pmmr_index(start_index, batch_size, nit_only)?;
 
-	result_vec.append(&mut identify_utxo_outputs(wallet, outputs)?);
+	chain_outs.append(&mut identify_utxo_outputs(
+		wallet,
+		outputs,
+		&recipient_key_to_check,
+	)?);
 
 	// 'delete_unconfirmed' only make sense at the last call of this batch repair
 	let mut delete_unconfirmed = delete_unconfirmed;
@@ -515,7 +614,11 @@ where
 		delete_unconfirmed = false;
 	}
 
-	check_repair_from_outputs(wallet, delete_unconfirmed, ignore_within, result_vec)?;
+	if recipient_key_to_check.is_none() {
+		check_repair_from_outputs(wallet, delete_unconfirmed, ignore_within, chain_outs)?;
+	} else {
+		check_nit_outputs(wallet, chain_outs)?;
+	}
 	Ok((highest_index, last_retrieved_index))
 }
 
@@ -590,7 +693,7 @@ where
 	let now = Instant::now();
 	info!("Starting restore.");
 
-	let result_vec = collect_chain_outputs(wallet)?;
+	let result_vec = collect_chain_outputs(wallet, &None)?;
 
 	restore_from_outputs(wallet, result_vec)?;
 
@@ -616,9 +719,9 @@ where
 	let mut result_vec: Vec<OutputResult> = vec![];
 	let (highest_index, last_retrieved_index, outputs) = wallet
 		.w2n_client()
-		.get_outputs_by_pmmr_index(start_index, batch_size)?;
+		.get_outputs_by_pmmr_index(start_index, batch_size, false)?;
 
-	result_vec.append(&mut identify_utxo_outputs(wallet, outputs.clone())?);
+	result_vec.append(&mut identify_utxo_outputs(wallet, outputs.clone(), &None)?);
 
 	let num_of_found = result_vec.len();
 	restore_from_outputs(wallet, result_vec)?;

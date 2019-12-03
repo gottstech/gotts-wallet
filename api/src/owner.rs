@@ -1380,6 +1380,9 @@ where
 	/// * `ignore_within` - ignore checking the txs which just happened within this specified minutes,
 	/// if 0, check all txs including recent Spent and Locked output; proposed value is 30 minutes.
 	///
+	/// * `address_to_check` - if `Some(String)`, only checking the non-interactive transaction outputs
+	/// which exist on the chain but missing in the local wallet.
+	///
 	/// # Returns
 	/// * `Ok(())` if successful
 	/// * or [`libwallet::Error`](../gotts_wallet_libwallet/struct.Error.html) if an error is encountered.
@@ -1393,6 +1396,7 @@ where
 	/// let result = api_owner.check_repair(
 	/// 	false,
 	///     30,
+	/// 	None,
 	/// );
 	///
 	/// if let Ok(_) = result {
@@ -1401,10 +1405,15 @@ where
 	/// }
 	/// ```
 
-	pub fn check_repair(&self, delete_unconfirmed: bool, ignore_within: u64) -> Result<(), Error> {
+	pub fn check_repair(
+		&self,
+		delete_unconfirmed: bool,
+		ignore_within: u64,
+		address_to_check: Option<String>,
+	) -> Result<(), Error> {
 		let mut w = self.wallet.lock();
 		w.open_with_credentials()?;
-		let res = owner::check_repair(&mut *w, delete_unconfirmed, ignore_within);
+		let res = owner::check_repair(&mut *w, delete_unconfirmed, ignore_within, address_to_check);
 		w.close()?;
 		res
 	}
@@ -1426,6 +1435,9 @@ where
 	/// one time of update_outputs() in a whole check_repair_batch procedure. Only set this parameter
 	/// as `true` in the 1st call of this function in a check_repair_batch procedure.
 	///
+	/// * `address_to_check` - if `Some(String)`, only checking the non-interactive transaction outputs
+	/// which exist on the chain but missing in the local wallet.
+	///
 	/// # Returns
 	/// * `Ok((highest_index, last_retrieved_index))` if successful
 	/// * or [`libwallet::Error`](../gotts_wallet_libwallet/struct.Error.html) if an error is encountered.
@@ -1437,7 +1449,7 @@ where
 	///
 	/// let mut api_owner = Owner::new(wallet.clone());
 	/// let result = api_owner.check_repair_batch(
-	/// 	false, 30, 1, 1000, true
+	/// 	false, 30, 1, 1000, true, None
 	/// );
 	///
 	/// if let Ok((highest_index, last_retrieved_index)) = result {
@@ -1452,6 +1464,7 @@ where
 		start_index: u64,
 		batch_size: u64,
 		is_update_outputs: bool,
+		address_to_check: Option<String>,
 	) -> Result<(u64, u64), Error> {
 		let mut w = self.wallet.lock();
 		w.open_with_credentials()?;
@@ -1462,6 +1475,7 @@ where
 			start_index,
 			batch_size,
 			is_update_outputs,
+			address_to_check,
 		);
 		w.close()?;
 		res
