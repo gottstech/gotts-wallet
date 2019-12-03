@@ -402,7 +402,7 @@ fn basic_transaction_api(test_dir: &str) -> Result<(), libwallet::Error> {
 	// check wallet2 can restore this output
 	let amount = 190_000_000_000;
 	wallet::controller::owner_single_use(wallet2.clone(), |api| {
-		api.check_repair(false, 0).unwrap();
+		api.check_repair(false, 0, None).unwrap();
 		let (_, outputs_commit_map) = api.retrieve_outputs(false, true, None)?;
 		println!(
 			"wallet2 retrieve outputs: {}",
@@ -583,7 +583,7 @@ fn basic_transaction_api(test_dir: &str) -> Result<(), libwallet::Error> {
 	// check wallet2 can restore this output
 	let amount = 263_000_000_000;
 	wallet::controller::owner_single_use(wallet2.clone(), |api| {
-		api.check_repair(false, 0).unwrap();
+		api.check_repair(false, 0, None).unwrap();
 		let (_, outputs_commit_map) = api.retrieve_outputs(false, true, None)?;
 		println!(
 			"wallet2 retrieve outputs: {}",
