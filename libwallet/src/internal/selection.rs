@@ -29,6 +29,7 @@ use crate::gotts_keychain::{Identifier, Keychain};
 use crate::internal::keys;
 use crate::slate::Slate;
 use crate::types::*;
+use itertools::Itertools;
 use rand::{thread_rng, Rng};
 use std::cmp::Reverse;
 use std::collections::HashMap;
@@ -508,28 +509,31 @@ where
 	}
 
 	{
-		let mut siglocked_coins: Vec<OutputData> = coins
+		let siglocked_coins: Vec<OutputData> = coins
 			.clone()
 			.drain(..)
 			.filter(|c| c.p2pkh.is_some())
 			.collect();
-		siglocked_coins.sort_by_key(|x| x.p2pkh);
 		if siglocked_coins.len() > 0 {
-			let mut prev = siglocked_coins.first().unwrap();
-			let mut input_build_parm: Vec<build::InputExBuildParm> = vec![];
-			for (i, coin) in siglocked_coins.iter().enumerate() {
-				input_build_parm.push(build::InputExBuildParm {
-					value: coin.value,
-					w: coin.w,
-					key_id: coin.key_id.clone(),
-					ephemeral_key: coin.ephemeral_key.clone().unwrap(),
-					p2pkh: coin.p2pkh.unwrap(),
-				});
-				if coin.p2pkh != prev.p2pkh || i == siglocked_coins.len() - 1 {
-					parts.push(build::siglocked_input(input_build_parm.clone()));
-					input_build_parm.clear();
+			let grouped = siglocked_coins
+				.iter()
+				.group_by(|&coin| coin.p2pkh.unwrap())
+				.into_iter()
+				.map(|(_k, group)| group.cloned().collect())
+				.collect::<Vec<Vec<OutputData>>>();
+			for coins in &grouped {
+				let mut input_build_parm: Vec<build::InputExBuildParm> =
+					Vec::with_capacity(coins.len());
+				for coin in coins {
+					input_build_parm.push(build::InputExBuildParm {
+						value: coin.value,
+						w: coin.w,
+						key_id: coin.key_id.clone(),
+						ephemeral_key: coin.ephemeral_key.clone().unwrap(),
+						p2pkh: coin.p2pkh.unwrap(),
+					});
 				}
-				prev = coin;
+				parts.push(build::siglocked_input(input_build_parm.clone()));
 			}
 		}
 	}
