@@ -1,6 +1,6 @@
 [package]
 name = "gotts_wallet_util"
-version = "0.0.4"
+version = "0.0.5"
 authors = ["Gotts Developers <gotts.tech@lists.launchpad.net>"]
 description = "Util, for generic utilities and to re-export gotts crates"
 license = "Apache-2.0"
@@ -21,28 +21,28 @@ toml = "0.4"
 dirs = "1.0.3"
 
 # For Release
-gotts_core = { git = "https://github.com/gottstech/gotts", tag = "v0.0.4" }
-gotts_keychain = { git = "https://github.com/gottstech/gotts", tag = "v0.0.4" }
-gotts_chain = { git = "https://github.com/gottstech/gotts", tag = "v0.0.4" }
-gotts_util = { git = "https://github.com/gottstech/gotts", tag = "v0.0.4" }
-gotts_api = { git = "https://github.com/gottstech/gotts", tag = "v0.0.4" }
-gotts_store = { git = "https://github.com/gottstech/gotts", tag = "v0.0.4" }
+gotts_core = { git = "https://github.com/gottstech/gotts", tag = "v0.0.5" }
+gotts_keychain = { git = "https://github.com/gottstech/gotts", tag = "v0.0.5" }
+gotts_chain = { git = "https://github.com/gottstech/gotts", tag = "v0.0.5" }
+gotts_util = { git = "https://github.com/gottstech/gotts", tag = "v0.0.5" }
+gotts_api = { git = "https://github.com/gottstech/gotts", tag = "v0.0.5" }
+gotts_store = { git = "https://github.com/gottstech/gotts", tag = "v0.0.5" }
 
 # For beta release
-#gotts_core = { git = "https://github.com/gottstech/gotts", tag = "v0.0.4-beta.1" }
-#gotts_keychain = { git = "https://github.com/gottstech/gotts", tag = "v0.0.4-beta.1" }
-#gotts_chain = { git = "https://github.com/gottstech/gotts", tag = "v0.0.4-beta.1" }
-#gotts_util = { git = "https://github.com/gottstech/gotts", tag = "v0.0.4-beta.1" }
-#gotts_api = { git = "https://github.com/gottstech/gotts", tag = "v0.0.4-beta.1" }
-#gotts_store = { git = "https://github.com/gottstech/gotts", tag = "v0.0.4-beta.1" }
+#gotts_core = { git = "https://github.com/gottstech/gotts", tag = "v0.0.5-beta.1" }
+#gotts_keychain = { git = "https://github.com/gottstech/gotts", tag = "v0.0.5-beta.1" }
+#gotts_chain = { git = "https://github.com/gottstech/gotts", tag = "v0.0.5-beta.1" }
+#gotts_util = { git = "https://github.com/gottstech/gotts", tag = "v0.0.5-beta.1" }
+#gotts_api = { git = "https://github.com/gottstech/gotts", tag = "v0.0.5-beta.1" }
+#gotts_store = { git = "https://github.com/gottstech/gotts", tag = "v0.0.5-beta.1" }
 
 # For bleeding edge
-#gotts_core = { git = "https://github.com/gottstech/gotts", rev = "113008f" }
-#gotts_keychain = { git = "https://github.com/gottstech/gotts", rev = "113008f" }
-#gotts_chain = { git = "https://github.com/gottstech/gotts", rev = "113008f" }
-#gotts_util = { git = "https://github.com/gottstech/gotts", rev = "113008f" }
-#gotts_api = { git = "https://github.com/gottstech/gotts", rev = "113008f" }
-#gotts_store = { git = "https://github.com/gottstech/gotts", rev = "113008f" }
+#gotts_core = { git = "https://github.com/gottstech/gotts", rev = "7d82c78" }
+#gotts_keychain = { git = "https://github.com/gottstech/gotts", rev = "7d82c78" }
+#gotts_chain = { git = "https://github.com/gottstech/gotts", rev = "7d82c78" }
+#gotts_util = { git = "https://github.com/gottstech/gotts", rev = "7d82c78" }
+#gotts_api = { git = "https://github.com/gottstech/gotts", rev = "7d82c78" }
+#gotts_store = { git = "https://github.com/gottstech/gotts", rev = "7d82c78" }
 
 # For local testing
 #gotts_core = { path = "../../gotts/core"}
