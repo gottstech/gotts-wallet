@@ -627,18 +627,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "gotts_api"
 version = "0.0.5"
-source = "git+https://github.com/gottstech/gotts?tag=v0.0.5#7d82c78d61e71a3817a63efc6d5b4db0898b2931"
+source = "git+https://github.com/gottstech/gotts?rev=1987486#19874865765303d3ea599a26088cb2b7951cb22a"
 dependencies = [
  "enum_primitive 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure_derive 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures 0.1.29 (registry+https://github.com/rust-lang/crates.io-index)",
- "gotts_chain 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
- "gotts_core 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
- "gotts_p2p 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
- "gotts_pool 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
- "gotts_store 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
- "gotts_util 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
+ "gotts_chain 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
+ "gotts_core 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
+ "gotts_p2p 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
+ "gotts_pool 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
+ "gotts_store 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
+ "gotts_util 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
  "http 0.1.18 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper 0.12.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper-rustls 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -660,7 +660,7 @@ dependencies = [
 [[package]]
 name = "gotts_chain"
 version = "0.0.5"
-source = "git+https://github.com/gottstech/gotts?tag=v0.0.5#7d82c78d61e71a3817a63efc6d5b4db0898b2931"
+source = "git+https://github.com/gottstech/gotts?rev=1987486#19874865765303d3ea599a26088cb2b7951cb22a"
 dependencies = [
  "bitflags 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -668,10 +668,10 @@ dependencies = [
  "croaring 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure_derive 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "gotts_core 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
- "gotts_keychain 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
- "gotts_store 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
- "gotts_util 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
+ "gotts_core 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
+ "gotts_keychain 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
+ "gotts_store 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
+ "gotts_util 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "lru-cache 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -683,7 +683,7 @@ dependencies = [
 [[package]]
 name = "gotts_core"
 version = "0.0.5"
-source = "git+https://github.com/gottstech/gotts?tag=v0.0.5#7d82c78d61e71a3817a63efc6d5b4db0898b2931"
+source = "git+https://github.com/gottstech/gotts?rev=1987486#19874865765303d3ea599a26088cb2b7951cb22a"
 dependencies = [
  "bech32 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "blake2-rfc 0.2.18 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -694,8 +694,8 @@ dependencies = [
  "enum_primitive 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure_derive 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "gotts_keychain 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
- "gotts_util 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
+ "gotts_keychain 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
+ "gotts_util 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "lru-cache 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -712,7 +712,7 @@ dependencies = [
 [[package]]
 name = "gotts_keychain"
 version = "0.0.5"
-source = "git+https://github.com/gottstech/gotts?tag=v0.0.5#7d82c78d61e71a3817a63efc6d5b4db0898b2931"
+source = "git+https://github.com/gottstech/gotts?rev=1987486#19874865765303d3ea599a26088cb2b7951cb22a"
 dependencies = [
  "blake2-rfc 0.2.18 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -720,7 +720,7 @@ dependencies = [
  "enum_primitive 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure_derive 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "gotts_util 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
+ "gotts_util 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
  "hex 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "hmac 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -739,16 +739,16 @@ dependencies = [
 [[package]]
 name = "gotts_p2p"
 version = "0.0.5"
-source = "git+https://github.com/gottstech/gotts?tag=v0.0.5#7d82c78d61e71a3817a63efc6d5b4db0898b2931"
+source = "git+https://github.com/gottstech/gotts?rev=1987486#19874865765303d3ea599a26088cb2b7951cb22a"
 dependencies = [
  "bitflags 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bytes 0.4.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "enum_primitive 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "gotts_chain 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
- "gotts_core 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
- "gotts_store 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
- "gotts_util 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
+ "gotts_chain 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
+ "gotts_core 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
+ "gotts_store 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
+ "gotts_util 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "net2 0.2.33 (registry+https://github.com/rust-lang/crates.io-index)",
  "num 0.1.42 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -761,16 +761,16 @@ dependencies = [
 [[package]]
 name = "gotts_pool"
 version = "0.0.5"
-source = "git+https://github.com/gottstech/gotts?tag=v0.0.5#7d82c78d61e71a3817a63efc6d5b4db0898b2931"
+source = "git+https://github.com/gottstech/gotts?rev=1987486#19874865765303d3ea599a26088cb2b7951cb22a"
 dependencies = [
  "blake2-rfc 0.2.18 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure_derive 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "gotts_core 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
- "gotts_keychain 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
- "gotts_store 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
- "gotts_util 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
+ "gotts_core 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
+ "gotts_keychain 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
+ "gotts_store 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
+ "gotts_util 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -797,15 +797,15 @@ dependencies = [
 [[package]]
 name = "gotts_store"
 version = "0.0.5"
-source = "git+https://github.com/gottstech/gotts?tag=v0.0.5#7d82c78d61e71a3817a63efc6d5b4db0898b2931"
+source = "git+https://github.com/gottstech/gotts?rev=1987486#19874865765303d3ea599a26088cb2b7951cb22a"
 dependencies = [
  "byteorder 1.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "croaring 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.5.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure_derive 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "gotts_core 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
- "gotts_util 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
+ "gotts_core 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
+ "gotts_util 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
  "libc 0.2.62 (registry+https://github.com/rust-lang/crates.io-index)",
  "lmdb-zero 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -818,7 +818,7 @@ dependencies = [
 [[package]]
 name = "gotts_util"
 version = "0.0.5"
-source = "git+https://github.com/gottstech/gotts?tag=v0.0.5#7d82c78d61e71a3817a63efc6d5b4db0898b2931"
+source = "git+https://github.com/gottstech/gotts?rev=1987486#19874865765303d3ea599a26088cb2b7951cb22a"
 dependencies = [
  "backtrace 0.3.38 (registry+https://github.com/rust-lang/crates.io-index)",
  "base64 0.9.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -977,12 +977,12 @@ version = "0.0.5"
 dependencies = [
  "backtrace 0.3.38 (registry+https://github.com/rust-lang/crates.io-index)",
  "dirs 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "gotts_api 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
- "gotts_chain 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
- "gotts_core 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
- "gotts_keychain 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
- "gotts_store 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
- "gotts_util 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)",
+ "gotts_api 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
+ "gotts_chain 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
+ "gotts_core 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
+ "gotts_keychain 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
+ "gotts_store 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
+ "gotts_util 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "log4rs 0.8.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -3002,15 +3002,15 @@ dependencies = [
 "checksum getrandom 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)" = "473a1265acc8ff1e808cd0a1af8cee3c2ee5200916058a2ca113c29f2d903571"
 "checksum git2 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)" = "39f27186fbb5ec67ece9a56990292bc5aed3c3fc51b9b07b0b52446b1dfb4a82"
 "checksum glob 0.2.11 (registry+https://github.com/rust-lang/crates.io-index)" = "8be18de09a56b60ed0edf84bc9df007e30040691af7acd1c41874faac5895bfb"
-"checksum gotts_api 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)" = "<none>"
-"checksum gotts_chain 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)" = "<none>"
-"checksum gotts_core 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)" = "<none>"
-"checksum gotts_keychain 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)" = "<none>"
-"checksum gotts_p2p 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)" = "<none>"
-"checksum gotts_pool 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)" = "<none>"
+"checksum gotts_api 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)" = "<none>"
+"checksum gotts_chain 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)" = "<none>"
+"checksum gotts_core 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)" = "<none>"
+"checksum gotts_keychain 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)" = "<none>"
+"checksum gotts_p2p 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)" = "<none>"
+"checksum gotts_pool 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)" = "<none>"
 "checksum gotts_secp256k1zkp 0.7.10 (git+https://github.com/gottstech/rust-secp256k1-zkp?rev=51798f2)" = "<none>"
-"checksum gotts_store 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)" = "<none>"
-"checksum gotts_util 0.0.5 (git+https://github.com/gottstech/gotts?tag=v0.0.5)" = "<none>"
+"checksum gotts_store 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)" = "<none>"
+"checksum gotts_util 0.0.5 (git+https://github.com/gottstech/gotts?rev=1987486)" = "<none>"
 "checksum h2 0.1.26 (registry+https://github.com/rust-lang/crates.io-index)" = "a5b34c246847f938a410a03c5458c7fee2274436675e76d8b903c08efc29c462"
 "checksum heck 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "20564e78d53d2bb135c343b3f47714a56af2061f1c928fdb541dc7b9fdd94205"
 "checksum hex 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)" = "805026a5d0141ffc30abb3be3173848ad46a1b1664fe632428479619a3644d77"

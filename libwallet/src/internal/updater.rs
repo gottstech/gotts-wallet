@@ -747,7 +747,7 @@ where
 	let keychain = wallet.keychain();
 	let (out, kern) = reward::output(
 		keychain,
-		&ProofBuilder::new(keychain),
+		&ProofBuilder::new(keychain, &parent_key_id),
 		&key_id,
 		block_fees.fees,
 		test_mode,

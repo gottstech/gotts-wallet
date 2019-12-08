@@ -69,8 +69,13 @@ where
 		if !is_initator { Some(slate.w) } else { None },
 		use_test_rng,
 	)?;
+	let rewind_hash_key_id = wallet.parent_key_id();
 	let keychain = wallet.keychain();
-	let blinding = slate.add_transaction_elements(keychain, &ProofBuilder::new(keychain), elems)?;
+	let blinding = slate.add_transaction_elements(
+		keychain,
+		&ProofBuilder::new(keychain, &rewind_hash_key_id),
+		elems,
+	)?;
 
 	slate.fee = fee;
 	let mut sum_of_w: i64 = inputs.iter().fold(0i64, |acc, x| acc.saturating_add(x.w));
@@ -208,6 +213,7 @@ where
 	// Create a potential output for this transaction
 	let key_id = keys::next_available_key(wallet).unwrap();
 	let keychain = wallet.keychain().clone();
+	let rewind_hash_key_id = wallet.parent_key_id();
 	let key_id_inner = key_id.clone();
 	let amount = slate.amount;
 	let w = slate.w;
@@ -222,7 +228,7 @@ where
 	let blinding = match recipient_address {
 		Some(addr) => slate.add_transaction_elements(
 			&keychain,
-			&ProofBuilder::new(&keychain),
+			&ProofBuilder::new(&keychain, &rewind_hash_key_id),
 			vec![build::non_interactive_output(
 				amount,
 				Some(w),
@@ -232,7 +238,7 @@ where
 		)?,
 		None => slate.add_transaction_elements(
 			&keychain,
-			&ProofBuilder::new(&keychain),
+			&ProofBuilder::new(&keychain, &rewind_hash_key_id),
 			vec![build::output(amount, Some(w), key_id.clone())],
 		)?,
 	};

@@ -77,8 +77,9 @@ where
 	} else {
 		wallet.recipient_key()?
 	};
+	let rewind_hash_key_id = wallet.parent_key_id();
 	let keychain = wallet.keychain();
-	let builder = proof::ProofBuilder::new(keychain);
+	let builder = proof::ProofBuilder::new(keychain, &rewind_hash_key_id);
 
 	for output in outputs.iter() {
 		let (commit, ot, is_coinbase, height, mmr_index) = output;
@@ -94,10 +95,19 @@ where
 					Ok(s) => s,
 					Err(_) => continue,
 				};
-				match proof::rewind(keychain.secp(), &builder, commit, spath) {
+				match proof::rewind(
+					keychain.secp(),
+					&builder,
+					&rewind_hash_key_id,
+					commit,
+					spath,
+				) {
 					Ok(i) => {
 						w = i.w;
-						key_id = i.key_id;
+						key_id = rewind_hash_key_id
+							.to_path()
+							.extend(i.key_id_last_path)
+							.to_identifier();
 					}
 					Err(_) => continue,
 				}
@@ -449,6 +459,10 @@ where
 	}
 
 	// restore labels, account paths and child derivation indices
+	let existing_accounts: Vec<Identifier> = keys::accounts(wallet)?
+		.iter()
+		.map(|m| m.path.clone())
+		.collect();
 	let label_base = "account";
 	let mut acct_index = 1;
 	for (path, max_child_index) in found_parents.iter() {
@@ -457,8 +471,8 @@ where
 			continue;
 		}
 
-		// default path already exists
-		if *path != ExtKeychain::derive_key_id(2, 0, 0, 0, 0) {
+		// if path doesn't exists
+		if !existing_accounts.contains(path) {
 			let label = format!("{}_{}", label_base, acct_index);
 			keys::set_acct_path(wallet, &label, path)?;
 			acct_index += 1;
