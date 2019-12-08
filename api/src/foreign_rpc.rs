@@ -314,7 +314,7 @@ pub trait ForeignRpc {
 			  "id": "1",
 			  "message": "Thanks, Gotts",
 			  "message_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841bfd0a9a7f8a0c487a008a0d20f26abad55bbae626e7ddaf985cf57452f27c44a1",
-			  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b62b1d9b023a5cfece03e976900bd55a25a34e896c2fe5ee13fdaeb413620ae74",
+			  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b8454c85300a6d7fb7d77c873914e0d1502b00ab298fa55827dd643a077fadbe5",
 			  "public_blind_excess": "026fd9331688e26ba0703f700d6d1c0c1626ca02389d5a1aa981cf0e77bb83d370",
 			  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f"
 			}
@@ -472,7 +472,7 @@ pub trait ForeignRpc {
 			  "id": "0",
 			  "public_blind_excess": "020e44132261fcdc9112d1bae25ab54d9c00609353cb23143771f2dc3c3f94484e",
 			  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f",
-			  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b267c4d03effc5d6961657de79245ffe3d90637df26cbaa5a06f2be09f8550402",
+			  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841bafe46603a2a7a24712959ca24f2ed00301eba8645de7e18ad3efa3bc469c132a",
 			  "message": null,
 			  "message_sig": null
 			}
@@ -498,7 +498,7 @@ pub trait ForeignRpc {
 			  "id": "1",
 			  "message": null,
 			  "message_sig": null,
-			  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b02f44f6e1a2b319a8cfb59afbf87e3cded9036e8eabd3cd3a66ff8145b685a0b",
+			  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841bc30cb64f13336436c8dd1675cc6170897212a517849794a5965706fbe6a62457",
 			  "public_blind_excess": "03900add00e609f21c5565fa95b09824973d2f8985119e59fcf26acb27b6133fd3",
 			  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f"
 			},
@@ -506,7 +506,7 @@ pub trait ForeignRpc {
 			  "id": "0",
 			  "message": null,
 			  "message_sig": null,
-			  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b267c4d03effc5d6961657de79245ffe3d90637df26cbaa5a06f2be09f8550402",
+			  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841bafe46603a2a7a24712959ca24f2ed00301eba8645de7e18ad3efa3bc469c132a",
 			  "public_blind_excess": "020e44132261fcdc9112d1bae25ab54d9c00609353cb23143771f2dc3c3f94484e",
 			  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f"
 			}
@@ -530,7 +530,7 @@ pub trait ForeignRpc {
 			  "kernels": [
 				{
 				  "excess": "087e67f6adc6e5d29345d2155e190cf90822dfdd3a4fab1f3f033b44f8c1827b62",
-				  "excess_sig": "66074d25a751c4743342c90ad8ead9454daa00d9b9aed29bca321036d16c4b4d28709d7109288f03ee60d79652cde2b1c7976dc71189e72dad61b71e53be5e0d",
+				  "excess_sig": "66074d25a751c4743342c90ad8ead9454daa00d9b9aed29bca321036d16c4b4d72f11c53b5da067eda72b3171c90408d73fd4d7ce17e76306a47aab72d433881",
 				  "features": "Plain",
 				  "fee": "7000000",
 				  "lock_height": "0"

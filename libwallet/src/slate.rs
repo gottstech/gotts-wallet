@@ -161,8 +161,8 @@ pub struct Slate {
 	#[serde(with = "secp_ser::string_or_i64")]
 	pub w: i64,
 	/// fee amount
-	#[serde(with = "secp_ser::string_or_u64")]
-	pub fee: u64,
+	#[serde(with = "secp_ser::string_or_u32")]
+	pub fee: u32,
 	/// Block height for the transaction
 	#[serde(with = "secp_ser::string_or_u64")]
 	pub height: u64,
@@ -466,11 +466,11 @@ impl Slate {
 			))?;
 		}
 
-		if fee > self.amount + self.fee {
+		if fee > self.amount + self.fee as u64 {
 			let reason = format!(
 				"Rejected the transfer because transaction fee ({}) exceeds received amount ({}).",
 				amount_to_hr_string(fee, false),
-				amount_to_hr_string(self.amount + self.fee, false)
+				amount_to_hr_string(self.amount + self.fee as u64, false)
 			);
 			info!("{}", reason);
 			return Err(ErrorKind::Fee(reason.to_string()))?;

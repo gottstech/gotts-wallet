@@ -582,7 +582,7 @@ pub struct Context {
 	/// Id, mmr_index (if known), amount, w
 	pub input_ids: Vec<(Identifier, Option<u64>, u64, i64)>,
 	/// store the calculated fee
-	pub fee: u64,
+	pub fee: u32,
 	/// keep track of the participant id
 	pub participant_id: usize,
 }
@@ -666,7 +666,7 @@ impl Context {
 	pub fn is_zero_sum_of_value(&self, amount: u64) -> bool {
 		let inputs: u64 = self.input_ids.iter().fold(0u64, |acc, x| acc + x.2);
 		let outputs: u64 = self.output_ids.iter().fold(0u64, |acc, x| acc + x.2);
-		inputs == outputs + self.fee + amount
+		inputs == outputs + self.fee as u64 + amount
 	}
 
 	/// Check the w balance
@@ -837,8 +837,8 @@ pub struct TxLogEntry {
 	#[serde(with = "secp_ser::string_or_u64")]
 	pub amount_debited: u64,
 	/// Fee
-	#[serde(with = "secp_ser::opt_string_or_u64")]
-	pub fee: Option<u64>,
+	#[serde(with = "secp_ser::opt_string_or_u32")]
+	pub fee: Option<u32>,
 	/// Message data, stored as json
 	pub messages: Option<ParticipantMessages>,
 	/// Location of the store transaction, (reference or resending)

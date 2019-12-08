@@ -63,8 +63,8 @@ pub struct SlateV2 {
 	#[serde(with = "secp_ser::string_or_i64")]
 	pub w: i64,
 	/// fee amount
-	#[serde(with = "secp_ser::string_or_u64")]
-	pub fee: u64,
+	#[serde(with = "secp_ser::string_or_u32")]
+	pub fee: u32,
 	/// Block height for the transaction
 	#[serde(with = "secp_ser::string_or_u64")]
 	pub height: u64,
@@ -163,8 +163,8 @@ pub struct TxKernelV2 {
 	/// Options for a kernel's structure or use
 	pub features: CompatKernelFeatures,
 	/// Fee originally included in the transaction this proof is for.
-	#[serde(with = "secp_ser::string_or_u64")]
-	pub fee: u64,
+	#[serde(with = "secp_ser::string_or_u32")]
+	pub fee: u32,
 	/// This kernel is not valid earlier than lock_height blocks
 	/// The max lock_height of all *inputs* to this transaction
 	#[serde(with = "secp_ser::string_or_u64")]
