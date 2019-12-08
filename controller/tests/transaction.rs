@@ -152,7 +152,7 @@ fn basic_transaction_api(test_dir: &str) -> Result<(), libwallet::Error> {
 		assert!(tx.confirmation_ts.is_none());
 		assert_eq!(tx.amount_debited - tx.amount_credited, fee + amount);
 		println!("tx: {:?}", tx);
-		assert_eq!(Some(fee), tx.fee);
+		assert_eq!(Some(fee as u32), tx.fee);
 		Ok(())
 	})?;
 

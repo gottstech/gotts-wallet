@@ -308,7 +308,7 @@ pub fn select_send_tx<T: ?Sized, C, K, B>(
 		Vec<Box<build::Append<K, B>>>,
 		Vec<OutputData>,
 		Vec<(u64, Identifier, Option<u64>, i64)>, // change amounts, derivations, mmr_index and w
-		u64,                                      // fee
+		u32,                                      // fee
 	),
 	Error,
 >
@@ -381,7 +381,7 @@ pub fn select_coins_and_fee<T: ?Sized, C, K>(
 		Vec<OutputData>,
 		u64, // total
 		u64, // amount
-		u64, // fee
+		u32, // fee
 	),
 	Error,
 >
@@ -468,7 +468,7 @@ where
 			amount_with_fee = amount + fee;
 		}
 	}
-	Ok((coins, total, amount, fee))
+	Ok((coins, total, amount, fee as u32))
 }
 
 /// Selects inputs and change for a transaction
@@ -476,7 +476,7 @@ pub fn inputs_and_change<T: ?Sized, C, K, B>(
 	coins: &Vec<OutputData>,
 	wallet: &mut T,
 	amount: u64,
-	fee: u64,
+	fee: u32,
 	num_change_outputs: usize,
 	slate_w: Option<i64>,
 	use_test_rng: bool,
@@ -503,7 +503,7 @@ where
 	// if we are spending 10,000 coins to send 1,000 then our change will be 9,000
 	// if the fee is 80 then the recipient will receive 1000 and our change will be
 	// 8,920
-	let change = total - amount - fee;
+	let change = total - amount - fee as u64;
 
 	// build inputs using the appropriate derived key_ids
 	for coin in coins {

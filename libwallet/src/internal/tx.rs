@@ -82,7 +82,7 @@ pub fn estimate_send_tx<T: ?Sized, C, K>(
 ) -> Result<
 	(
 		u64, // total
-		u64, // fee
+		u32, // fee
 	),
 	Error,
 >

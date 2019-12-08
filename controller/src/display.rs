@@ -345,11 +345,11 @@ pub fn txs(
 		bMG->"Tx \nData",
 	]);
 
-	let mut total_fee = 0;
+	let mut total_fee: u64 = 0;
 	let mut total_amount_credited = 0;
 	let mut total_amount_debited = 0;
 	for t in txs {
-		total_fee += if let Some(fee) = t.fee { fee } else { 0 };
+		total_fee += if let Some(fee) = t.fee { fee as u64 } else { 0 };
 		total_amount_credited += t.amount_credited;
 		total_amount_debited += t.amount_debited;
 
@@ -367,7 +367,7 @@ pub fn txs(
 		let amount_debited_str = core::amount_to_hr_string(t.amount_debited, true);
 		let amount_credited_str = core::amount_to_hr_string(t.amount_credited, true);
 		let fee = match t.fee {
-			Some(f) => format!("{}", core::amount_to_hr_string(f, true)),
+			Some(f) => format!("{}", core::amount_to_hr_string(f as u64, true)),
 			None => "None".to_owned(),
 		};
 		let net_diff = if t.amount_credited >= t.amount_debited {
@@ -580,7 +580,7 @@ pub fn estimate(
 	strategies: Vec<(
 		&str, // strategy
 		u64,  // total amount to be locked
-		u64,  // fee
+		u32,  // fee
 	)>,
 	dark_background_color_scheme: bool,
 ) {
@@ -601,13 +601,13 @@ pub fn estimate(
 		if dark_background_color_scheme {
 			table.add_row(row![
 				bFC->strategy,
-				FR->amount_to_hr_string(fee, false),
+				FR->amount_to_hr_string(fee as u64, false),
 				FY->amount_to_hr_string(total, false),
 			]);
 		} else {
 			table.add_row(row![
 				bFD->strategy,
-				FR->amount_to_hr_string(fee, false),
+				FR->amount_to_hr_string(fee as u64, false),
 				FY->amount_to_hr_string(total, false),
 			]);
 		}
