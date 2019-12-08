@@ -404,7 +404,7 @@ pub trait OwnerRpc {
 					  "commit": "08e7af2033557d22be69fbffca0cd2181ab775b1a7ae594ba01248e410c6587a78",
 					  "features": {
 						"Plain": {
-						  "spath": "0b3fbe3083c497835386fabb3b26bce280d49567e29d36fd877af1d4"
+						  "spath": "9f07ee9602c6d772d4df0f4f"
 						}
 					  },
 					  "value": 53992000000
@@ -462,9 +462,9 @@ pub trait OwnerRpc {
 		# ,
 		# r#"
 		{
-		  "id": 1,
-		  "jsonrpc": "2.0",
-		  "result": {
+			"id": 1,
+			"jsonrpc": "2.0",
+			"result": {
 			"Ok": {
 			  "amount": "6000000000",
 			  "fee": "8000000",
@@ -528,7 +528,7 @@ pub trait OwnerRpc {
 					  "commit": "08e7af2033557d22be69fbffca0cd2181ab775b1a7ae594ba01248e410c6587a78",
 					  "features": {
 						"Plain": {
-						  "spath": "0b3fbe3083c497835386fabb3b26bce280d49567e29d36fd877af1d4"
+						  "spath": "9f07ee9602c6d772d4df0f4f"
 						}
 					  },
 					  "value": 53992000000
@@ -543,7 +543,7 @@ pub trait OwnerRpc {
 			  },
 			  "w": "-64"
 			}
-		  }
+			}
 		}
 		# "#
 		# ,4, false, false, false);
@@ -578,55 +578,55 @@ pub trait OwnerRpc {
 			"id": 1,
 			"jsonrpc": "2.0",
 			"result": {
-				"Ok": {
-					"amount": "6000000000",
-					"fee": "0",
-					"height": "4",
-					"id": "0436430c-2b02-624c-2032-570501212b00",
-					"lock_height": "0",
-					"num_participants": 2,
-					"participant_data": [
-						{
-						  "id": "1",
-						  "message": "Please give me your gotts",
-						  "message_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b9e196e487ee7865a2901d1ad0012a7bd25ddc0759fd1cca3e02e8f402dd01dd2",
-						  "part_sig": null,
-						  "public_blind_excess": "03453117c78d6d9f2885602a843856b4737b3e0838b28b3f861c5082fbfa428c36",
-						  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f"
-						}
-					],
-					"tx": {
-						"body": {
-							"inputs": [],
-							"kernels": [
-								{
-									"excess": "000000000000000000000000000000000000000000000000000000000000000000",
-									"excess_sig": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-									"features": "Plain",
-									"fee": "0",
-									"lock_height": "0"
-								}
-							],
-							"outputs": [
-								{
-								  "commit": "08e7af2033557d22be69fbffca0cd2181ab775b1a7ae594ba01248e410c6587a78",
-								  "features": {
-									"Plain": {
-									  "spath": "0b3fbe3083c497835386fabb3b26bce280d49567e29d36fd877af1d4"
-									}
-								  },
-								  "value": 6000000000
-								}
-							]
-						}
-					},
-					"version_info": {
-						"orig_version": 2,
-						"version": 2,
-						"block_header_version": 1
-					},
-					"w": "64"
+			"Ok": {
+			  "amount": "6000000000",
+			  "fee": "0",
+			  "height": "4",
+			  "id": "0436430c-2b02-624c-2032-570501212b00",
+			  "lock_height": "0",
+			  "num_participants": 2,
+			  "participant_data": [
+				{
+				  "id": "1",
+				  "message": "Please give me your gotts",
+				  "message_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b9e196e487ee7865a2901d1ad0012a7bd25ddc0759fd1cca3e02e8f402dd01dd2",
+				  "part_sig": null,
+				  "public_blind_excess": "03453117c78d6d9f2885602a843856b4737b3e0838b28b3f861c5082fbfa428c36",
+				  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f"
 				}
+			  ],
+			  "tx": {
+				"body": {
+				  "inputs": [],
+				  "kernels": [
+					{
+					  "excess": "000000000000000000000000000000000000000000000000000000000000000000",
+					  "excess_sig": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+					  "features": "Plain",
+					  "fee": "0",
+					  "lock_height": "0"
+					}
+				  ],
+				  "outputs": [
+					{
+					  "commit": "08e7af2033557d22be69fbffca0cd2181ab775b1a7ae594ba01248e410c6587a78",
+					  "features": {
+						"Plain": {
+						  "spath": "9f07ee9602c6d772d4df0f4f"
+						}
+					  },
+					  "value": 6000000000
+					}
+				  ]
+				}
+			  },
+			  "version_info": {
+				"block_header_version": 1,
+				"orig_version": 2,
+				"version": 2
+			  },
+			  "w": "64"
+			}
 			}
 		}
 		# "#
@@ -647,53 +647,53 @@ pub trait OwnerRpc {
 			"method": "process_invoice_tx",
 			"params": [
 				{
-					"amount": "6000000000",
-					"w": "64",
-					"fee": "0",
-					"height": "4",
-					"id": "0436430c-2b02-624c-2032-570501212b00",
-					"lock_height": "0",
-					"num_participants": 2,
-					"participant_data": [
-						{
-						  "id": "1",
-						  "message": "Please give me your gotts",
-						  "message_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b5e2dca8b19c930f5f2db2b83163172610cf2b4038e8add5b1f471680e7db55d0",
-						  "part_sig": null,
-						  "public_blind_excess": "03af68dd2d26dfc9ade85441e8b41c49b6160423f3b0ca820a4703fa9b6a7b64cd",
-						  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f"
-						}
-					],
-					"tx": {
-						"body": {
-							"inputs": [],
-							"kernels": [
-								{
-									"excess": "000000000000000000000000000000000000000000000000000000000000000000",
-									"excess_sig": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-									"features": "Plain",
-									"fee": "0",
-									"lock_height": "0"
-								}
-							],
-							"outputs": [
-								{
-								  "commit": "08e7af2033557d22be69fbffca0cd2181ab775b1a7ae594ba01248e410c6587a78",
-								  "features": {
-									"Plain": {
-									  "spath": "0b3fbe3083c497835386fabb3b26bce280d49567e29d36fd877af1d4"
-									}
-								  },
-								  "value": 6000000000
-								}
-							]
-						}
-					},
-					"version_info": {
-						"orig_version": 2,
-						"version": 2,
-						"block_header_version": 1
+				  "amount": "6000000000",
+				  "fee": "0",
+				  "height": "4",
+				  "id": "0436430c-2b02-624c-2032-570501212b00",
+				  "lock_height": "0",
+				  "num_participants": 2,
+				  "participant_data": [
+					{
+					  "id": "1",
+					  "message": "Please give me your gotts",
+					  "message_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b9e196e487ee7865a2901d1ad0012a7bd25ddc0759fd1cca3e02e8f402dd01dd2",
+					  "part_sig": null,
+					  "public_blind_excess": "03453117c78d6d9f2885602a843856b4737b3e0838b28b3f861c5082fbfa428c36",
+					  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f"
 					}
+				  ],
+				  "tx": {
+					"body": {
+					  "inputs": [],
+					  "kernels": [
+						{
+						  "excess": "000000000000000000000000000000000000000000000000000000000000000000",
+						  "excess_sig": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+						  "features": "Plain",
+						  "fee": "0",
+						  "lock_height": "0"
+						}
+					  ],
+					  "outputs": [
+						{
+						  "commit": "08e7af2033557d22be69fbffca0cd2181ab775b1a7ae594ba01248e410c6587a78",
+						  "features": {
+							"Plain": {
+							  "spath": "9f07ee9602c6d772d4df0f4f"
+							}
+						  },
+						  "value": 6000000000
+						}
+					  ]
+					}
+				  },
+				  "version_info": {
+					"block_header_version": 1,
+					"orig_version": 2,
+					"version": 2
+				  },
+				  "w": "64"
 				},
 				{
 					"src_acct_name": null,
@@ -713,9 +713,9 @@ pub trait OwnerRpc {
 		# ,
 		# r#"
 		{
-		"id": 1,
-		"jsonrpc": "2.0",
-		"result": {
+			"id": 1,
+			"jsonrpc": "2.0",
+			"result": {
 			"Ok": {
 			  "amount": "6000000000",
 			  "fee": "8000000",
@@ -727,16 +727,16 @@ pub trait OwnerRpc {
 				{
 				  "id": "1",
 				  "message": "Please give me your gotts",
-				  "message_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b5e2dca8b19c930f5f2db2b83163172610cf2b4038e8add5b1f471680e7db55d0",
+				  "message_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b9e196e487ee7865a2901d1ad0012a7bd25ddc0759fd1cca3e02e8f402dd01dd2",
 				  "part_sig": null,
-				  "public_blind_excess": "03af68dd2d26dfc9ade85441e8b41c49b6160423f3b0ca820a4703fa9b6a7b64cd",
+				  "public_blind_excess": "03453117c78d6d9f2885602a843856b4737b3e0838b28b3f861c5082fbfa428c36",
 				  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f"
 				},
 				{
 				  "id": "0",
 				  "message": "Ok, here are your gotts",
 				  "message_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841bfc5a7e9c2fb684ffb21618abccff2f78f9355ab93213defa3a9566a561797dd6",
-				  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841bc0f1a8b847af95c4aae9a50ec9ef396a79bae307a17dd1c29a85fd1a0454763e",
+				  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b1292445b05de4fbb4e1f4136f39884f084e2cbd15a80c14a25db436992b5999b",
 				  "public_blind_excess": "0306ba3e5c535f6fc26fea5b7a37ab21c99b7b31c86ab922e0e175b6998dcd36c0",
 				  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f"
 				}
@@ -765,7 +765,7 @@ pub trait OwnerRpc {
 					  "commit": "08e1e17735ff0e4217bdd253bc0e9933a0c01bdf1dd08dccf6cf2e36b776ebae9d",
 					  "features": {
 						"Plain": {
-						  "spath": "a49a6ddeb5054ff64a3837ff8a68e8a4f475c71c51b7acc6d44a5014"
+						  "spath": "8b2d48dfec02d9d54c65886f"
 						}
 					  },
 					  "value": 53992000000
@@ -774,7 +774,7 @@ pub trait OwnerRpc {
 					  "commit": "08e7af2033557d22be69fbffca0cd2181ab775b1a7ae594ba01248e410c6587a78",
 					  "features": {
 						"Plain": {
-						  "spath": "0b3fbe3083c497835386fabb3b26bce280d49567e29d36fd877af1d4"
+						  "spath": "9f07ee9602c6d772d4df0f4f"
 						}
 					  },
 					  "value": 6000000000
@@ -789,7 +789,7 @@ pub trait OwnerRpc {
 			  },
 			  "w": "64"
 			}
-		}
+			}
 	}
 	# "#
 	# ,4, false, false, false);
@@ -937,7 +937,7 @@ pub trait OwnerRpc {
 				{
 				  "features": {
 					"Plain": {
-					  "spath": "c7392a2915c120a3072571a19a7e73ae71ceee117c5c8615b1aeb44a"
+					  "spath": "3bbf1cb8082ce224e443f714"
 					}
 				  },
 				  "commit": "09e66a240425be5d6e8873c78f87c1489cb77736216a8fb0639962d7e3b4111b9e",
@@ -946,7 +946,7 @@ pub trait OwnerRpc {
 				{
 				  "features": {
 					"Plain": {
-					  "spath": "9e0f681afae46a92556f7086b1e6c2146effd2c8f2c25727946b249e"
+					  "spath": "dd1095c1ea0180f076c18bda"
 					}
 				  },
 				  "commit": "099af2fbafc88308fc210cf6341a443b90312f2dfb90b50cda0c7d1dc5d5a59c6e",
@@ -994,88 +994,88 @@ pub trait OwnerRpc {
 	# ,
 	# r#"
 	{
-		"jsonrpc": "2.0",
 		"id": 1,
+		"jsonrpc": "2.0",
 		"result": {
 		"Ok": {
-			  "amount": "60000000000",
-			  "fee": "7000000",
-			  "height": "5",
-			  "id": "0436430c-2b02-624c-2032-570501212b00",
-			  "lock_height": "0",
-			  "num_participants": 2,
-			  "participant_data": [
+		  "amount": "60000000000",
+		  "fee": "7000000",
+		  "height": "5",
+		  "id": "0436430c-2b02-624c-2032-570501212b00",
+		  "lock_height": "0",
+		  "num_participants": 2,
+		  "participant_data": [
+			{
+			  "id": "0",
+			  "message": null,
+			  "message_sig": null,
+			  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b267c4d03effc5d6961657de79245ffe3d90637df26cbaa5a06f2be09f8550402",
+			  "public_blind_excess": "020e44132261fcdc9112d1bae25ab54d9c00609353cb23143771f2dc3c3f94484e",
+			  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f"
+			},
+			{
+			  "id": "1",
+			  "message": null,
+			  "message_sig": null,
+			  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b02f44f6e1a2b319a8cfb59afbf87e3cded9036e8eabd3cd3a66ff8145b685a0b",
+			  "public_blind_excess": "03900add00e609f21c5565fa95b09824973d2f8985119e59fcf26acb27b6133fd3",
+			  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f"
+			}
+		  ],
+		  "tx": {
+			"body": {
+			  "inputs": [
 				{
-				  "id": "0",
-				  "message": null,
-				  "message_sig": null,
-				  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b267c4d03effc5d6961657de79245ffe3d90637df26cbaa5a06f2be09f8550402",
-				  "public_blind_excess": "020e44132261fcdc9112d1bae25ab54d9c00609353cb23143771f2dc3c3f94484e",
-				  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f"
+				  "SingleInput": {
+					"commit": "09eae1a4ac785f845b33d2689d3a48df7c158e602564d23d81078ecd5b6385b491",
+					"features": "Coinbase"
+				  }
 				},
 				{
-				  "id": "1",
-				  "message": null,
-				  "message_sig": null,
-				  "part_sig": "8f07ddd5e9f5179cff19486034181ed76505baaad53e5d994064127b56c5841b02f44f6e1a2b319a8cfb59afbf87e3cded9036e8eabd3cd3a66ff8145b685a0b",
-				  "public_blind_excess": "03900add00e609f21c5565fa95b09824973d2f8985119e59fcf26acb27b6133fd3",
-				  "public_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f"
+				  "SingleInput": {
+					"commit": "09a75b07e6b329e5a98be34e88d7bec3062fdddc2044a1b9efe9accec9858571c4",
+					"features": "Coinbase"
+				  }
 				}
 			  ],
-			  "tx": {
-				"body": {
-				  "inputs": [
-					{
-					  "SingleInput": {
-						"commit": "09eae1a4ac785f845b33d2689d3a48df7c158e602564d23d81078ecd5b6385b491",
-						"features": "Coinbase"
-					  }
-					},
-					{
-					  "SingleInput": {
-						"commit": "09a75b07e6b329e5a98be34e88d7bec3062fdddc2044a1b9efe9accec9858571c4",
-						"features": "Coinbase"
-					  }
-					}
-				  ],
-				  "kernels": [
-					{
-					  "excess": "087e67f6adc6e5d29345d2155e190cf90822dfdd3a4fab1f3f033b44f8c1827b62",
-					  "excess_sig": "66074d25a751c4743342c90ad8ead9454daa00d9b9aed29bca321036d16c4b4d28709d7109288f03ee60d79652cde2b1c7976dc71189e72dad61b71e53be5e0d",
-					  "features": "Plain",
-					  "fee": "7000000",
-					  "lock_height": "0"
-					}
-				  ],
-				  "outputs": [
-					{
-					  "commit": "09e66a240425be5d6e8873c78f87c1489cb77736216a8fb0639962d7e3b4111b9e",
-					  "features": {
-						"Plain": {
-						  "spath": "c7392a2915c120a3072571a19a7e73ae71ceee117c5c8615b1aeb44a"
-						}
-					  },
-					  "value": 60000000000
-					},
-					{
-					  "commit": "099af2fbafc88308fc210cf6341a443b90312f2dfb90b50cda0c7d1dc5d5a59c6e",
-					  "features": {
-						"Plain": {
-						  "spath": "9e0f681afae46a92556f7086b1e6c2146effd2c8f2c25727946b249e"
-						}
-					  },
-					  "value": 59993000000
-					}
-				  ]
+			  "kernels": [
+				{
+				  "excess": "087e67f6adc6e5d29345d2155e190cf90822dfdd3a4fab1f3f033b44f8c1827b62",
+				  "excess_sig": "66074d25a751c4743342c90ad8ead9454daa00d9b9aed29bca321036d16c4b4d28709d7109288f03ee60d79652cde2b1c7976dc71189e72dad61b71e53be5e0d",
+				  "features": "Plain",
+				  "fee": "7000000",
+				  "lock_height": "0"
 				}
-			  },
-			  "version_info": {
-				"block_header_version": 1,
-				"orig_version": 2,
-				"version": 2
-			  },
-			  "w": "-64"
+			  ],
+			  "outputs": [
+				{
+				  "commit": "09e66a240425be5d6e8873c78f87c1489cb77736216a8fb0639962d7e3b4111b9e",
+				  "features": {
+					"Plain": {
+					  "spath": "3bbf1cb8082ce224e443f714"
+					}
+				  },
+				  "value": 60000000000
+				},
+				{
+				  "commit": "099af2fbafc88308fc210cf6341a443b90312f2dfb90b50cda0c7d1dc5d5a59c6e",
+				  "features": {
+					"Plain": {
+					  "spath": "dd1095c1ea0180f076c18bda"
+					}
+				  },
+				  "value": 59993000000
+				}
+			  ]
 			}
+		  },
+		  "version_info": {
+			"block_header_version": 1,
+			"orig_version": 2,
+			"version": 2
+		  },
+		  "w": "-64"
+		}
 		}
 	}
 	# "#
@@ -1245,57 +1245,57 @@ pub trait OwnerRpc {
 	# ,
 	# r#"
 	{
-		"jsonrpc": "2.0",
-		"id": 1,
-		"result": {
-			"Ok": {
-			  "body": {
-				"inputs": [
-				  {
-					"SingleInput": {
-					  "commit": "09eae1a4ac785f845b33d2689d3a48df7c158e602564d23d81078ecd5b6385b491",
-					  "features": "Coinbase"
-					}
-				  },
-				  {
-					"SingleInput": {
-					  "commit": "09a75b07e6b329e5a98be34e88d7bec3062fdddc2044a1b9efe9accec9858571c4",
-					  "features": "Coinbase"
-					}
-				  }
-				],
-				"kernels": [
-				  {
-					"excess": "000000000000000000000000000000000000000000000000000000000000000000",
-					"excess_sig": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-					"features": "Plain",
-					"fee": "7000000",
-					"lock_height": "0"
-				  }
-				],
-				"outputs": [
-				  {
-					"commit": "09e66a240425be5d6e8873c78f87c1489cb77736216a8fb0639962d7e3b4111b9e",
-					"features": {
-					  "Plain": {
-						"spath": "c7392a2915c120a3072571a19a7e73ae71ceee117c5c8615b1aeb44a"
-					  }
-					},
-					"value": 60000000000
-				  },
-				  {
-					"commit": "099af2fbafc88308fc210cf6341a443b90312f2dfb90b50cda0c7d1dc5d5a59c6e",
-					"features": {
-					  "Plain": {
-						"spath": "9e0f681afae46a92556f7086b1e6c2146effd2c8f2c25727946b249e"
-					  }
-					},
-					"value": 59993000000
-				  }
-				]
+	  "id": 1,
+	  "jsonrpc": "2.0",
+	  "result": {
+		"Ok": {
+		  "body": {
+			"inputs": [
+			  {
+				"SingleInput": {
+				  "commit": "09eae1a4ac785f845b33d2689d3a48df7c158e602564d23d81078ecd5b6385b491",
+				  "features": "Coinbase"
+				}
+			  },
+			  {
+				"SingleInput": {
+				  "commit": "09a75b07e6b329e5a98be34e88d7bec3062fdddc2044a1b9efe9accec9858571c4",
+				  "features": "Coinbase"
+				}
 			  }
-			}
+			],
+			"kernels": [
+			  {
+				"excess": "000000000000000000000000000000000000000000000000000000000000000000",
+				"excess_sig": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+				"features": "Plain",
+				"fee": "7000000",
+				"lock_height": "0"
+			  }
+			],
+			"outputs": [
+			  {
+				"commit": "09e66a240425be5d6e8873c78f87c1489cb77736216a8fb0639962d7e3b4111b9e",
+				"features": {
+				  "Plain": {
+					"spath": "3bbf1cb8082ce224e443f714"
+				  }
+				},
+				"value": 60000000000
+			  },
+			  {
+				"commit": "099af2fbafc88308fc210cf6341a443b90312f2dfb90b50cda0c7d1dc5d5a59c6e",
+				"features": {
+				  "Plain": {
+					"spath": "dd1095c1ea0180f076c18bda"
+				  }
+				},
+				"value": 59993000000
+			  }
+			]
+		  }
 		}
+	  }
 	}
 	# "#
 	# , 5, true, true, false);

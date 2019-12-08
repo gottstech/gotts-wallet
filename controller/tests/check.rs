@@ -511,7 +511,9 @@ fn two_wallets_one_seed_impl(test_dir: &str) -> Result<(), libwallet::Error> {
 		let outputs = api.retrieve_outputs(true, false, None)?.1;
 		assert_eq!(outputs.len(), 15);
 		assert_eq!(info.amount_currently_spendable, base_amount * 120);
+		api.create_account_path("account_1")?;
 		api.set_active_account("account_1")?;
+		api.check_repair(true, 0, None)?;
 		let info = wallet_info!(wallet8.clone())?;
 		let outputs = api.retrieve_outputs(true, false, None)?.1;
 		assert_eq!(outputs.len(), 3);
@@ -547,6 +549,7 @@ fn two_wallets_one_seed_impl(test_dir: &str) -> Result<(), libwallet::Error> {
 		assert_eq!(info.amount_currently_spendable, base_amount * 21);
 
 		api.set_active_account("default")?;
+		api.check_repair(true, 0, None)?;
 		let info = wallet_info!(wallet9.clone())?;
 		let outputs = api.retrieve_outputs(true, false, None)?.1;
 		assert_eq!(outputs.len(), 15);
@@ -558,14 +561,16 @@ fn two_wallets_one_seed_impl(test_dir: &str) -> Result<(), libwallet::Error> {
 
 	// 7) Ensure check_repair creates missing accounts
 	wallet::controller::owner_single_use(wallet10.clone(), |api| {
-		api.check_repair(true, 0, None)?;
+		api.create_account_path("account_1")?;
 		api.set_active_account("account_1")?;
+		api.check_repair(true, 0, None)?;
 		let info = wallet_info!(wallet10.clone())?;
 		let outputs = api.retrieve_outputs(true, false, None)?.1;
 		assert_eq!(outputs.len(), 6);
 		assert_eq!(info.amount_currently_spendable, base_amount * 21);
 
 		api.set_active_account("default")?;
+		api.check_repair(true, 0, None)?;
 		let info = wallet_info!(wallet10.clone())?;
 		let outputs = api.retrieve_outputs(true, false, None)?.1;
 		assert_eq!(outputs.len(), 15);

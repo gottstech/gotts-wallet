@@ -449,7 +449,7 @@ where
 #[cfg(test)]
 mod test {
 	use crate::gotts_core::libtx::{build, ProofBuilder};
-	use crate::gotts_keychain::{ExtKeychain, ExtKeychainPath, Keychain};
+	use crate::gotts_keychain::{ExtKeychain, ExtKeychainPath, Identifier, Keychain};
 	use rand::{thread_rng, Rng};
 
 	#[test]
@@ -457,7 +457,7 @@ mod test {
 	// based on the public key and amount begin spent
 	fn output_commitment_equals_input_commitment_on_spend() {
 		let keychain = ExtKeychain::from_random_seed(false).unwrap();
-		let builder = ProofBuilder::new(&keychain);
+		let builder = ProofBuilder::new(&keychain, &Identifier::zero());
 		let key_id1 = ExtKeychainPath::new(1, 1, 0, 0, 0).to_identifier();
 		let w: i64 = thread_rng().gen();
 

@@ -45,6 +45,7 @@ fn setup(test_dir: &str) {
 }
 
 fn restore_wallet(base_dir: &str, wallet_dir: &str) -> Result<(), libwallet::Error> {
+	println!("restoring wallet: {}", wallet_dir);
 	let source_seed = format!("{}/{}/wallet.seed", base_dir, wallet_dir);
 	let dest_dir = format!("{}/{}_restore", base_dir, wallet_dir);
 	fs::create_dir_all(dest_dir.clone())?;
@@ -69,8 +70,23 @@ fn restore_wallet(base_dir: &str, wallet_dir: &str) -> Result<(), libwallet::Err
 
 	// perform the restore and update wallet info
 	wallet::controller::owner_single_use(wallet.clone(), |api| {
+		println!("restoring...");
 		let _ = api.restore()?;
 		let _ = api.retrieve_summary_info(true, 1)?;
+
+		println!("checking account1 ...");
+		if api.set_active_account("account1").is_err() {
+			api.create_account_path("account1")?;
+			api.set_active_account("account1")?;
+		}
+		api.check_repair(true, 0, None)?;
+
+		println!("checking account2 ...");
+		if api.set_active_account("account2").is_err() {
+			api.create_account_path("account2")?;
+			api.set_active_account("account2")?;
+		}
+		api.check_repair(true, 0, None)?;
 		Ok(())
 	})?;
 
@@ -196,6 +212,13 @@ fn setup_restore(test_dir: &str) -> Result<(), libwallet::Error> {
 		test_framework::create_wallet(&format!("{}/wallet1", test_dir), client1.clone(), None);
 	wallet_proxy.add_wallet("wallet1", client1.get_send_instance(), wallet1.clone());
 
+	// wallet 1 create 2 more accounts but not used.
+	wallet::controller::owner_single_use(wallet1.clone(), |api| {
+		api.create_account_path("account1")?;
+		api.create_account_path("account2")?;
+		Ok(())
+	})?;
+
 	// define recipient wallet, add to proxy
 	let client2 = LocalWalletClient::new("wallet2", wallet_proxy.tx.clone());
 	let wallet2 =
@@ -220,6 +243,13 @@ fn setup_restore(test_dir: &str) -> Result<(), libwallet::Error> {
 	let wallet3 =
 		test_framework::create_wallet(&format!("{}/wallet3", test_dir), client3.clone(), None);
 	wallet_proxy.add_wallet("wallet3", client3.get_send_instance(), wallet3.clone());
+
+	// wallet 3 create 2 more accounts but not used.
+	wallet::controller::owner_single_use(wallet3.clone(), |api| {
+		api.create_account_path("account1")?;
+		api.create_account_path("account2")?;
+		Ok(())
+	})?;
 
 	// Set the wallet proxy listener running
 	let wp_running = wallet_proxy.running.clone();

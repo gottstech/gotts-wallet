@@ -18,7 +18,7 @@ use gotts_wallet_libwallet::Context;
 use gotts_wallet_util::gotts_core::core::transaction::{self};
 use gotts_wallet_util::gotts_core::libtx::{aggsig, proof};
 use gotts_wallet_util::gotts_keychain::{
-	BlindSum, BlindingFactor, ExtKeychain, ExtKeychainPath, Keychain,
+	BlindSum, BlindingFactor, ExtKeychain, ExtKeychainPath, Identifier, Keychain,
 };
 use gotts_wallet_util::gotts_util::secp;
 use gotts_wallet_util::gotts_util::secp::key::{PublicKey, SecretKey};
@@ -436,7 +436,8 @@ fn aggsig_sender_receiver_interaction_offset() {
 #[test]
 fn test_rewind_securedpath() {
 	let keychain = ExtKeychain::from_random_seed(true).unwrap();
-	let builder = proof::ProofBuilder::new(&keychain);
+	let rewind_hash_key_id = Identifier::zero();
+	let builder = proof::ProofBuilder::new(&keychain, &rewind_hash_key_id);
 	let key_id = ExtKeychain::derive_key_id(1, 1, 0, 0, 0);
 	let key_id2 = ExtKeychain::derive_key_id(1, 2, 0, 0, 0);
 	let w: i64 = thread_rng().gen();
@@ -444,19 +445,38 @@ fn test_rewind_securedpath() {
 	let commit = keychain.commit(w, &key_id).unwrap();
 
 	let proof = proof::create_secured_path(&keychain, &builder, w, &key_id, commit);
-	let proof_info = proof::rewind(keychain.secp(), &builder, &commit, &proof).unwrap();
+	let proof_info = proof::rewind(
+		keychain.secp(),
+		&builder,
+		&rewind_hash_key_id,
+		&commit,
+		&proof,
+	)
+	.unwrap();
 
-	let (r_w, r_key_id) = (proof_info.w, proof_info.key_id);
+	let (r_w, r_key_id_last_path) = (proof_info.w, proof_info.key_id_last_path);
 	assert_eq!(r_w, w);
-	assert_eq!(r_key_id, key_id);
+	assert_eq!(r_key_id_last_path, key_id.to_path().last_path_index());
 
 	// cannot rewind with a different commit
 	let commit2 = keychain.commit(w, &key_id2).unwrap();
-	let proof_info = proof::rewind(keychain.secp(), &builder, &commit2, &proof);
+	let proof_info = proof::rewind(
+		keychain.secp(),
+		&builder,
+		&rewind_hash_key_id,
+		&commit2,
+		&proof,
+	);
 	assert!(proof_info.is_err());
 
 	// cannot rewind with a commitment to a different w
 	let commit3 = keychain.commit(1234i64, &key_id).unwrap();
-	let proof_info = proof::rewind(keychain.secp(), &builder, &commit3, &proof);
+	let proof_info = proof::rewind(
+		keychain.secp(),
+		&builder,
+		&rewind_hash_key_id,
+		&commit3,
+		&proof,
+	);
 	assert!(proof_info.is_err());
 }
