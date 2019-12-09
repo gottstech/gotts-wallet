@@ -444,15 +444,8 @@ fn test_rewind_securedpath() {
 
 	let commit = keychain.commit(w, &key_id).unwrap();
 
-	let proof = proof::create_secured_path(&keychain, &builder, w, &key_id, commit);
-	let proof_info = proof::rewind(
-		keychain.secp(),
-		&builder,
-		&rewind_hash_key_id,
-		&commit,
-		&proof,
-	)
-	.unwrap();
+	let proof = proof::create_secured_path(&builder, w, &key_id, commit);
+	let proof_info = proof::rewind(&builder, &rewind_hash_key_id, &commit, &proof).unwrap();
 
 	let (r_w, r_key_id_last_path) = (proof_info.w, proof_info.key_id_last_path);
 	assert_eq!(r_w, w);
@@ -460,23 +453,11 @@ fn test_rewind_securedpath() {
 
 	// cannot rewind with a different commit
 	let commit2 = keychain.commit(w, &key_id2).unwrap();
-	let proof_info = proof::rewind(
-		keychain.secp(),
-		&builder,
-		&rewind_hash_key_id,
-		&commit2,
-		&proof,
-	);
+	let proof_info = proof::rewind(&builder, &rewind_hash_key_id, &commit2, &proof);
 	assert!(proof_info.is_err());
 
 	// cannot rewind with a commitment to a different w
 	let commit3 = keychain.commit(1234i64, &key_id).unwrap();
-	let proof_info = proof::rewind(
-		keychain.secp(),
-		&builder,
-		&rewind_hash_key_id,
-		&commit3,
-		&proof,
-	);
+	let proof_info = proof::rewind(&builder, &rewind_hash_key_id, &commit3, &proof);
 	assert!(proof_info.is_err());
 }
