@@ -95,13 +95,7 @@ where
 					Ok(s) => s,
 					Err(_) => continue,
 				};
-				match proof::rewind(
-					keychain.secp(),
-					&builder,
-					&rewind_hash_key_id,
-					commit,
-					spath,
-				) {
+				match proof::rewind(&builder, &rewind_hash_key_id, commit, spath) {
 					Ok(i) => {
 						w = i.w;
 						key_id = rewind_hash_key_id
@@ -125,7 +119,7 @@ where
 					locker,
 				) {
 					Ok((i, e)) => {
-						w = i;
+						w = i.w;
 						ephemeral_key = Some(e);
 						p2pkh = Some(locker.p2pkh);
 						key_id = recipient_key.recipient_key_id.clone();
