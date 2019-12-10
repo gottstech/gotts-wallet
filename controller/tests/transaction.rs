@@ -349,7 +349,7 @@ fn basic_transaction_api(test_dir: &str) -> Result<(), libwallet::Error> {
 		let recipient_key = api.get_recipient_key()?;
 		wallet2_recipient_addr = Address::from_pubkey(
 			&recipient_key.recipient_pub_key,
-			&recipient_key.recipient_key_id,
+			recipient_key.recipient_key_id.last_path_index(),
 			true,
 		);
 		Ok(())

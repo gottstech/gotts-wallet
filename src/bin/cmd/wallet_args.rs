@@ -452,7 +452,27 @@ pub fn parse_address_args(args: &ArgMatches) -> Result<command::AddressArgs, Par
 	} else {
 		None
 	};
-	Ok(command::AddressArgs { address_to_check })
+	let d0 = parse_required(args, "d0")?;
+	let d0 = parse_u64(d0, "d0")?;
+	// Valid range: [0..2^31-1].
+	if d0 > (std::u32::MAX >> 1) as u64 {
+		return Err(ParseError::ArgumentError(
+			"valid range: [0..2^31-1]".to_string(),
+		));
+	}
+	let d1 = parse_required(args, "d1")?;
+	let d1 = parse_u64(d1, "d1")?;
+	// Valid range: [0..2^31-1].
+	if d1 > (std::u32::MAX >> 1) as u64 {
+		return Err(ParseError::ArgumentError(
+			"valid range: [0..2^31-1]".to_string(),
+		));
+	}
+	Ok(command::AddressArgs {
+		address_to_check,
+		d0_until: d0 as u32,
+		d1_until: d1 as u32,
+	})
 }
 
 pub fn parse_listen_args(

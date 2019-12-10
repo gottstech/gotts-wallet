@@ -391,3 +391,13 @@ subcommands:
             short: c
             long: check
             takes_value: true
+        - d0:
+            help: Search until 1st path reach a value. Valid range [0, 2^31-1].
+            long: d0
+            default_value: "100"
+            takes_value: true
+        - d1:
+            help: Search until 2nd path reach a value. Valid range [0, 2^31-1].
+            long: d1
+            default_value: "100"
+            takes_value: true

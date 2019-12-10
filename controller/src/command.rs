@@ -43,7 +43,8 @@ use crate::impls::{
 use crate::impls::{HTTPNodeClient, WalletSeed};
 use crate::libwallet::api_impl::types::InitTxSendArgs;
 use crate::libwallet::{
-	InitTxArgs, IssueInvoiceTxArgs, NodeClient, OutputStatus, TxLogEntryType, WalletInst,
+	AcctPathMapping, InitTxArgs, IssueInvoiceTxArgs, NodeClient, OutputStatus, TxLogEntryType,
+	WalletInst,
 };
 use crate::{controller, display};
 
@@ -212,7 +213,7 @@ pub fn account(
 	} else {
 		let label = args.create.unwrap();
 		let res = controller::owner_single_use(wallet, |api| {
-			api.create_account_path(&label)?;
+			api.create_account(&label)?;
 			thread::sleep(Duration::from_millis(200));
 			info!("Account: '{}' Created!", label);
 			Ok(())
@@ -808,6 +809,8 @@ pub fn txs(
 /// Argument for address
 pub struct AddressArgs {
 	pub address_to_check: Option<String>,
+	pub d0_until: u32,
+	pub d1_until: u32,
 }
 
 /// Address
@@ -819,33 +822,55 @@ pub fn address(
 		match args.address_to_check {
 			Some(addr) => {
 				let address = Address::from_str(&addr)?;
-				let mut is_mine = false;
-				if let Ok(recipient_key) = api.get_recipient_key_by_id(&address.get_key_id()) {
-					if recipient_key.recipient_pub_key == address.get_inner_pubkey() {
-						is_mine = true;
-					}
-				}
+				let acct_path = api.check_address(&addr, args.d0_until, args.d1_until);
 				println!(
 					"The Gotts address info: \n\tNetwork = {:?}\n\tPublicKey = {}, \n\tkeypath = {}, \n\tpkh = {}, \nIt's the address {} by this wallet.",
 					address.network,
 					to_hex(address.get_inner_pubkey().serialize_vec(true)),
-					address.get_key_id(),
+					address.get_key_id_last_path(),
 					address.pkh().to_hex(),
-					match is_mine {
-						true => "owned".bright_green(),
-						false => "not owned".bright_red(),
+					match acct_path {
+						Ok(_) => "owned".bright_green(),
+						Err(_) => "not owned".bright_red(),
 					},
 				);
+				// if owned but account not created, create it automatically.
+				if let Ok(AcctPathMapping { label, path }) = acct_path {
+					if label == "none" {
+						let path_number = path.to_path().path;
+						let new_label = format!(
+							"account{}-{}",
+							u32::from(path_number[0]),
+							u32::from(path_number[1])
+						);
+						api.create_account_path(&new_label, &path)?;
+						println!(
+							"new account {} has been created for this address. path = {}",
+							new_label.bright_green(),
+							format!(
+								"m/{}/{}",
+								u32::from(path_number[0]),
+								u32::from(path_number[1])
+							)
+							.bright_green(),
+						);
+					} else {
+						println!(
+							"The address is managed by wallet account: {}",
+							label.bright_green()
+						);
+					}
+				}
 			}
 			None => {
 				let recipient_key = api.get_recipient_key()?;
 				let recipient_addr = Address::from_pubkey(
 					&recipient_key.recipient_pub_key,
-					&recipient_key.recipient_key_id,
+					recipient_key.recipient_key_id.to_path().last_path_index(),
 					!is_floonet(),
 				);
 				println!(
-					"Your current Gotts address for receiving: {}",
+					"Your Gotts address for receiving: {}",
 					recipient_addr.to_string().bright_green(),
 				);
 			}

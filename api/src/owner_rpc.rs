@@ -78,7 +78,7 @@ pub trait OwnerRpc {
 	# r#"
 	{
 		"jsonrpc": "2.0",
-		"method": "create_account_path",
+		"method": "create_account",
 		"params": ["account1"],
 		"id": 1
 	}
@@ -96,7 +96,37 @@ pub trait OwnerRpc {
 	# ,4, false, false, false);
 	```
 	 */
-	fn create_account_path(&self, label: &String) -> Result<Identifier, ErrorKind>;
+	fn create_account(&self, label: &String) -> Result<Identifier, ErrorKind>;
+
+	/**
+	Networked version of [Owner::create_account_path](struct.Owner.html#method.create_account_path).
+
+	# Json rpc example
+
+	```
+	# gotts_wallet_api::doctest_helper_json_rpc_owner_assert_response!(
+	# r#"
+	{
+		"jsonrpc": "2.0",
+		"method": "create_account_path",
+		"params": ["account1", "0200000000000000010000000000000000"],
+		"id": 1
+	}
+	# "#
+	# ,
+	# r#"
+	{
+		"jsonrpc": "2.0",
+		"result": {
+			"Ok": null
+		},
+		"id": 1
+	}
+	# "#
+	# ,4, false, false, false);
+	```
+	 */
+	fn create_account_path(&self, label: &String, path: &Identifier) -> Result<(), ErrorKind>;
 
 	/**
 	Networked version of [Owner::set_active_account](struct.Owner.html#method.set_active_account).
@@ -1497,8 +1527,12 @@ where
 		Owner::accounts(self).map_err(|e| e.kind())
 	}
 
-	fn create_account_path(&self, label: &String) -> Result<Identifier, ErrorKind> {
-		Owner::create_account_path(self, label).map_err(|e| e.kind())
+	fn create_account(&self, label: &String) -> Result<Identifier, ErrorKind> {
+		Owner::create_account(self, label).map_err(|e| e.kind())
+	}
+
+	fn create_account_path(&self, label: &String, path: &Identifier) -> Result<(), ErrorKind> {
+		Owner::create_account_path(self, label, path).map_err(|e| e.kind())
 	}
 
 	fn set_active_account(&self, label: &String) -> Result<(), ErrorKind> {

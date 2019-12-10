@@ -78,7 +78,7 @@ impl Default for WalletConfig {
 			tls_certificate_key: None,
 			dark_background_color_scheme: Some(true),
 			keybase_notify_ttl: Some(1440),
-			recipient_keypath: Some(0),
+			recipient_keypath: None,
 		}
 	}
 }

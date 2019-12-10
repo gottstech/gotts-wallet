@@ -76,15 +76,15 @@ fn file_exchange_test_impl(test_dir: &str) -> Result<(), libwallet::Error> {
 
 	// add some accounts
 	wallet::controller::owner_single_use(wallet1.clone(), |api| {
-		api.create_account_path("mining")?;
-		api.create_account_path("listener")?;
+		api.create_account("mining")?;
+		api.create_account("listener")?;
 		Ok(())
 	})?;
 
 	// add some accounts
 	wallet::controller::owner_single_use(wallet2.clone(), |api| {
-		api.create_account_path("account1")?;
-		api.create_account_path("account2")?;
+		api.create_account("account1")?;
+		api.create_account("account2")?;
 		Ok(())
 	})?;
 

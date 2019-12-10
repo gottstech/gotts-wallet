@@ -17,6 +17,7 @@
 //! implementation
 
 use crate::error::{Error, ErrorKind};
+use crate::gotts_core::address::Address;
 use crate::gotts_core::core::hash::Hash;
 use crate::gotts_core::core::{Output, Transaction, TxKernelApiEntry};
 use crate::gotts_core::libtx::{aggsig, secp_ser};
@@ -68,6 +69,18 @@ where
 
 	/// Return a recipient key by the key id
 	fn recipient_key_by_id(&self, key_id: &Identifier) -> Result<RecipientKey, Error>;
+
+	/// Check whether an Address belongs to this wallet. If yes, return the corresponding account name and key id.
+	/// Note:
+	/// 1. This checking is NOT an exhausting check, which need '2^64' loops and is impractical.
+	/// 2. This checking relys on the stored wallet accounts, if current existing accounts doesn't cover this
+	/// address, it will automatically search the first 1,000 possible accounts.
+	fn check_address(
+		&self,
+		addr: &Address,
+		d0_until: u32,
+		d1_until: u32,
+	) -> Result<AcctPathMapping, Error>;
 
 	/// Close wallet and remove any stored credentials (TBD)
 	fn close(&mut self) -> Result<(), Error>;

@@ -199,16 +199,58 @@ where
 	///
 	/// let api_owner = Owner::new(wallet.clone());
 	///
-	/// let result = api_owner.create_account_path("account1");
+	/// let result = api_owner.create_account("account1");
 	///
 	/// if let Ok(identifier) = result {
 	///		//...
 	/// }
 	/// ```
 
-	pub fn create_account_path(&self, label: &str) -> Result<Identifier, Error> {
+	pub fn create_account(&self, label: &str) -> Result<Identifier, Error> {
 		let mut w = self.wallet.lock();
-		owner::create_account_path(&mut *w, label)
+		owner::create_account(&mut *w, label)
+	}
+
+	/// Creates a new 'account', which is a mapping of a user-specified
+	/// label to a BIP32 path
+	///
+	/// # Arguments
+	/// * `label` - A human readable label to which to map the new BIP32 Path
+	///
+	/// # Returns
+	/// * Result Containing:
+	/// * A [Keychain Identifier](../gotts_keychain/struct.Identifier.html) for the new path
+	/// * or [`libwallet::Error`](../gotts_wallet_libwallet/struct.Error.html) if an error is encountered.
+	///
+	/// # Remarks
+	///
+	/// * Wallets should be initialised with the 'default' path mapped to `m/0/0`
+	/// * Each call to this function will increment the first element of the path
+	/// so the first call will create an account at `m/1/0` and the second at
+	/// `m/2/0` etc. . .
+	/// * The account path is used throughout as the parent key for most key-derivation
+	/// operations. See [`set_active_account`](struct.Owner.html#method.set_active_account) for
+	/// further details.
+	///
+	/// * This function does not need to use the root wallet seed or keychain.
+	///
+	/// # Example
+	/// Set up as in [`new`](struct.Owner.html#method.new) method above.
+	/// ```
+	/// # gotts_wallet_api::doctest_helper_setup_doc_env!(wallet, wallet_config);
+	///
+	/// let api_owner = Owner::new(wallet.clone());
+	///
+	/// let result = api_owner.create_account_path("account1", &Identifier::zero().extend(0).extend(1));
+	///
+	/// if let Ok(identifier) = result {
+	///		//...
+	/// }
+	/// ```
+
+	pub fn create_account_path(&self, label: &str, path: &Identifier) -> Result<(), Error> {
+		let mut w = self.wallet.lock();
+		owner::create_account_path(&mut *w, label, path)
 	}
 
 	/// Sets the wallet's currently active account. This sets the
@@ -227,7 +269,7 @@ where
 	///
 	/// * Wallet parent paths are 2 path elements long, e.g. `m/0/0` is the path
 	/// labelled 'default'. Keys derived from this parent path are 3 elements long,
-	/// e.g. the secret keys derived from the `m/0/0` path will be  at paths `m/0/0/0`,
+	/// e.g. the secret keys derived from the `m/0/0` path will be at paths `m/0/0/0`,
 	/// `m/0/0/1` etc...
 	///
 	/// * This function does not need to use the root wallet seed or keychain.
@@ -239,7 +281,7 @@ where
 	///
 	/// let api_owner = Owner::new(wallet.clone());
 	///
-	/// let result = api_owner.create_account_path("account1");
+	/// let result = api_owner.create_account("account1");
 	///
 	/// if let Ok(identifier) = result {
 	///		// set the account active
@@ -738,7 +780,7 @@ where
 	/// let mut api_owner = Owner::new(wallet.clone());
 	///
 	/// let key_id =
-	///		ExtKeychainPath::new(4, <u32>::max_value(), <u32>::max_value(), 0, 100).to_identifier();
+	///		ExtKeychainPath::new(3, std::u32::MAX>>1, std::u32::MAX>>1, 100, 0).to_identifier();
 	///
 	/// let result = api_owner.get_recipient_key_by_id(&key_id);
 	///
@@ -753,6 +795,52 @@ where
 		let recipient_key = owner::get_recipient_key_by_id(&mut *w, key_id)?;
 		w.close()?;
 		Ok(recipient_key)
+	}
+
+	/// Check whether an Address belongs to this wallet. If yes, return the corresponding account name and key id.
+	/// Note:
+	/// 1. This checking is NOT an exhausting check, which need '2^64' loops and is impractical.
+	/// 2. This checking relys on the stored wallet accounts, if current existing accounts doesn't cover this
+	/// address, it will automatically search the first 1,000 possible accounts.
+	///
+	/// # Arguments
+	/// * `address` - Gotts address string.
+	///
+	/// * `d0_until` - Search until 1st key path reach a value. Valid range [0, 2^31-1].
+	///
+	/// * `d1_until` - Search until 2nd key path reach a value. Valid range [0, 2^31-1].
+	///
+	/// # Returns
+	/// * ``Ok([`AcctPathMapping`](../gotts_wallet_libwallet/types/struct.AcctPathMapping.html))` if successful,
+	/// containing the corresponding account name and key id.
+	/// * or [`libwallet::Error`](../gotts_wallet_libwallet/struct.Error.html) if an error is encountered.
+	///
+	/// # Example
+	/// Set up as in [`new`](struct.Owner.html#method.new) method above.
+	/// ```
+	/// # gotts_wallet_api::doctest_helper_setup_doc_env!(wallet, wallet_config);
+	///
+	/// let mut api_owner = Owner::new(wallet.clone());
+	///
+	/// let result = api_owner.check_address("ts1qqwhh03sc2zw6v0hw9ta2ddv79szh6tdfza7smsf20zaskzajg2qutvjzs8zs244w6j", 100, 100);
+	///
+	/// if let Ok(acct_path) = result {
+	///		// if okay, the specified address belongs to this wallet.
+	///		// . . .
+	/// }
+	/// ```
+	pub fn check_address(
+		&self,
+		address: &str,
+		d0_until: u32,
+		d1_until: u32,
+	) -> Result<AcctPathMapping, Error> {
+		let addr = Address::from_str(&address)?;
+		let mut w = self.wallet.lock();
+		w.open_with_credentials()?;
+		let acct_path = owner::check_address(&mut *w, &addr, d0_until, d1_until)?;
+		w.close()?;
+		Ok(acct_path)
 	}
 
 	/// Issues a new invoice transaction slate, essentially a `request for payment`.
@@ -1598,7 +1686,7 @@ macro_rules! doctest_helper_setup_doc_env {
 		use gotts_wallet_util::gotts_keychain as keychain;
 		use gotts_wallet_util::gotts_util as util;
 
-		use keychain::{ExtKeychain, ExtKeychainPath};
+		use keychain::{ExtKeychain, ExtKeychainPath, Identifier};
 		use tempfile::tempdir;
 
 		use std::sync::Arc;

@@ -525,12 +525,13 @@ where
 	C: NodeClient,
 	K: Keychain,
 {
+	let parent_path = wallet.parent_key_id();
 	let mut recipient_key_to_check = None;
 	if let Some(addr) = address_to_check {
 		// Check whether this address belongs to this wallet
 		let address = Address::from_str(&addr)?;
 		let mut is_mine = false;
-		if let Ok(recipient_key) = wallet.recipient_key_by_id(&address.get_key_id()) {
+		if let Ok(recipient_key) = wallet.recipient_key_by_id(&address.get_key_id(&parent_path)) {
 			if recipient_key.recipient_pub_key == address.get_inner_pubkey() {
 				is_mine = true;
 				recipient_key_to_check = Some(recipient_key);
@@ -582,12 +583,13 @@ where
 	C: NodeClient,
 	K: Keychain,
 {
+	let parent_path = wallet.parent_key_id();
 	let mut recipient_key_to_check = None;
 	if let Some(addr) = address_to_check {
 		// Check whether this address belongs to this wallet
 		let address = Address::from_str(&addr)?;
 		let mut is_mine = false;
-		if let Ok(recipient_key) = wallet.recipient_key_by_id(&address.get_key_id()) {
+		if let Ok(recipient_key) = wallet.recipient_key_by_id(&address.get_key_id(&parent_path)) {
 			if recipient_key.recipient_pub_key == address.get_inner_pubkey() {
 				is_mine = true;
 				recipient_key_to_check = Some(recipient_key);

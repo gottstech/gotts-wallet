@@ -46,13 +46,27 @@ where
 }
 
 /// new account path
-pub fn create_account_path<T: ?Sized, C, K>(w: &mut T, label: &str) -> Result<Identifier, Error>
+pub fn create_account<T: ?Sized, C, K>(w: &mut T, label: &str) -> Result<Identifier, Error>
 where
 	T: WalletBackend<C, K>,
 	C: NodeClient,
 	K: Keychain,
 {
-	keys::new_acct_path(&mut *w, label)
+	keys::new_acct(&mut *w, label)
+}
+
+/// new account path
+pub fn create_account_path<T: ?Sized, C, K>(
+	w: &mut T,
+	label: &str,
+	path: &Identifier,
+) -> Result<(), Error>
+where
+	T: WalletBackend<C, K>,
+	C: NodeClient,
+	K: Keychain,
+{
+	keys::new_acct_path(&mut *w, label, path)
 }
 
 /// set active account
@@ -260,6 +274,25 @@ where
 	K: Keychain,
 {
 	w.recipient_key_by_id(key_id)
+}
+
+/// Check whether an Address belongs to this wallet. If yes, return the corresponding account name and key id.
+/// Note:
+/// 1. This checking is NOT an exhausting check, which need '2^64' loops and is impractical.
+/// 2. This checking relys on the stored wallet accounts, if current existing accounts doesn't cover this
+/// address, it will automatically search the first 1,000 possible accounts.
+pub fn check_address<T: ?Sized, C, K>(
+	w: &mut T,
+	addr: &Address,
+	d0_until: u32,
+	d1_until: u32,
+) -> Result<AcctPathMapping, Error>
+where
+	T: WalletBackend<C, K>,
+	C: NodeClient,
+	K: Keychain,
+{
+	w.check_address(addr, d0_until, d1_until)
 }
 
 /// Construction of a non-interactive transaction output

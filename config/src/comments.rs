@@ -116,21 +116,18 @@ fn comments() -> HashMap<String, String> {
 	retval.insert(
 		"keybase_notify_ttl".to_string(),
 		"
+#The Key ID last path for Gotts receiving address. Choose any value within [0, 2^31 - 1].
+#Default for random value.
+#The complete path will be the current wallet account extending this last path value:
+#i.e. Path = \"m/p1/p2/recipient_keypath\" or \"m/p1/p2/random\",
+#and the \"m/p1/p2\" depends on the current active wallet account.
+#To use a fixed Gotts receiving address, uncomment it and set it as your preferred value.
+#recipient_keypath = 0
+
 #The exploding lifetime for keybase notification on coins received.
 #Unit: Minute. Default value 1440 minutes for one day.
 #Refer to https://keybase.io/blog/keybase-exploding-messages for detail.
 #To disable this notification, set it as 0.
-"
-		.to_string(),
-	);
-	retval.insert(
-		"recipient_keypath".to_string(),
-		"
-#Recipient key path. Choose any value within [0, 2^31 - 1]. 0 as default.
-#Considering the address length, we only open the 'd3' of the path to be configurable by user,
-# - d0,d1 are fixed as u32::max, no matter what is the parent_key_id.
-# - d2 are fixed as 0 and should not be changed for recipient key.
-# i.e. The path = ExtKeychainPath::new(4, u32::max, u32::max, 0, d3).
 "
 		.to_string(),
 	);

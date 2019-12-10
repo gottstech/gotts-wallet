@@ -76,14 +76,14 @@ fn restore_wallet(base_dir: &str, wallet_dir: &str) -> Result<(), libwallet::Err
 
 		println!("checking account1 ...");
 		if api.set_active_account("account1").is_err() {
-			api.create_account_path("account1")?;
+			api.create_account("account1")?;
 			api.set_active_account("account1")?;
 		}
 		api.check_repair(true, 0, None)?;
 
 		println!("checking account2 ...");
 		if api.set_active_account("account2").is_err() {
-			api.create_account_path("account2")?;
+			api.create_account("account2")?;
 			api.set_active_account("account2")?;
 		}
 		api.check_repair(true, 0, None)?;
@@ -214,8 +214,8 @@ fn setup_restore(test_dir: &str) -> Result<(), libwallet::Error> {
 
 	// wallet 1 create 2 more accounts but not used.
 	wallet::controller::owner_single_use(wallet1.clone(), |api| {
-		api.create_account_path("account1")?;
-		api.create_account_path("account2")?;
+		api.create_account("account1")?;
+		api.create_account("account2")?;
 		Ok(())
 	})?;
 
@@ -227,8 +227,8 @@ fn setup_restore(test_dir: &str) -> Result<(), libwallet::Error> {
 
 	// wallet 2 will use another account
 	wallet::controller::owner_single_use(wallet2.clone(), |api| {
-		api.create_account_path("account1")?;
-		api.create_account_path("account2")?;
+		api.create_account("account1")?;
+		api.create_account("account2")?;
 		Ok(())
 	})?;
 
@@ -246,8 +246,8 @@ fn setup_restore(test_dir: &str) -> Result<(), libwallet::Error> {
 
 	// wallet 3 create 2 more accounts but not used.
 	wallet::controller::owner_single_use(wallet3.clone(), |api| {
-		api.create_account_path("account1")?;
-		api.create_account_path("account2")?;
+		api.create_account("account1")?;
+		api.create_account("account2")?;
 		Ok(())
 	})?;
 
