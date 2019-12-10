@@ -98,16 +98,16 @@ fn check_repair_impl(test_dir: &str) -> Result<(), libwallet::Error> {
 
 	// add some accounts
 	wallet::controller::owner_single_use(wallet1.clone(), |api| {
-		api.create_account_path("account_1")?;
-		api.create_account_path("account_2")?;
-		api.create_account_path("account_3")?;
+		api.create_account("account_1")?;
+		api.create_account("account_2")?;
+		api.create_account("account_3")?;
 		api.set_active_account("account_1")?;
 		Ok(())
 	})?;
 
 	// add account to wallet 2
 	wallet::controller::owner_single_use(wallet2.clone(), |api| {
-		api.create_account_path("account_1")?;
+		api.create_account("account_1")?;
 		api.set_active_account("account_1")?;
 		Ok(())
 	})?;
@@ -478,7 +478,7 @@ fn two_wallets_one_seed_impl(test_dir: &str) -> Result<(), libwallet::Error> {
 
 	// mix it up a bit
 	wallet::controller::owner_single_use(wallet7.clone(), |api| {
-		api.create_account_path("account_1")?;
+		api.create_account("account_1")?;
 		api.set_active_account("account_1")?;
 		Ok(())
 	})?;
@@ -511,7 +511,7 @@ fn two_wallets_one_seed_impl(test_dir: &str) -> Result<(), libwallet::Error> {
 		let outputs = api.retrieve_outputs(true, false, None)?.1;
 		assert_eq!(outputs.len(), 15);
 		assert_eq!(info.amount_currently_spendable, base_amount * 120);
-		api.create_account_path("account_1")?;
+		api.create_account("account_1")?;
 		api.set_active_account("account_1")?;
 		api.check_repair(true, 0, None)?;
 		let info = wallet_info!(wallet8.clone())?;
@@ -526,7 +526,7 @@ fn two_wallets_one_seed_impl(test_dir: &str) -> Result<(), libwallet::Error> {
 	// to now into 2 accounts
 
 	wallet::controller::owner_single_use(wallet9.clone(), |api| {
-		api.create_account_path("account_1")?;
+		api.create_account("account_1")?;
 		api.set_active_account("account_1")?;
 		Ok(())
 	})?;
@@ -561,7 +561,7 @@ fn two_wallets_one_seed_impl(test_dir: &str) -> Result<(), libwallet::Error> {
 
 	// 7) Ensure check_repair creates missing accounts
 	wallet::controller::owner_single_use(wallet10.clone(), |api| {
-		api.create_account_path("account_1")?;
+		api.create_account("account_1")?;
 		api.set_active_account("account_1")?;
 		api.check_repair(true, 0, None)?;
 		let info = wallet_info!(wallet10.clone())?;

@@ -63,7 +63,7 @@ where
 }
 
 /// Adds an new parent account path with a given label
-pub fn new_acct_path<T: ?Sized, C, K>(wallet: &mut T, label: &str) -> Result<Identifier, Error>
+pub fn new_acct<T: ?Sized, C, K>(wallet: &mut T, label: &str) -> Result<Identifier, Error>
 where
 	T: WalletBackend<C, K>,
 	C: NodeClient,
@@ -101,6 +101,33 @@ where
 	batch.save_acct_path(save_path)?;
 	batch.commit()?;
 	Ok(return_id)
+}
+
+/// Adds an new parent account path with a given label
+pub fn new_acct_path<T: ?Sized, C, K>(
+	wallet: &mut T,
+	label: &str,
+	path: &Identifier,
+) -> Result<(), Error>
+where
+	T: WalletBackend<C, K>,
+	C: NodeClient,
+	K: Keychain,
+{
+	let label = label.to_owned();
+	if let Some(_) = wallet.acct_path_iter().find(|l| l.label == label) {
+		return Err(ErrorKind::AccountLabelAlreadyExists(label.clone()).into());
+	}
+
+	let save_path = AcctPathMapping {
+		label: label.to_owned(),
+		path: path.clone(),
+	};
+
+	let mut batch = wallet.batch()?;
+	batch.save_acct_path(save_path)?;
+	batch.commit()?;
+	Ok(())
 }
 
 /// Adds/sets a particular account path with a given label

@@ -16,7 +16,8 @@
 use std::cell::RefCell;
 use std::{fs, path};
 
-// for writing storedtransaction files
+// for writing stored transaction files
+use rand::{thread_rng, Rng};
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
@@ -32,6 +33,7 @@ use crate::keychain::{
 };
 use crate::store::{to_key, to_key_u64};
 
+use crate::core::address::Address;
 use crate::core::core::Transaction;
 use crate::core::{self, global};
 use crate::libwallet::{check_repair, check_repair_batch, restore, restore_batch};
@@ -185,9 +187,10 @@ where
 				.derive_keychain(global::is_floonet())
 				.context(ErrorKind::CallbackImpl("Error deriving keychain"))?,
 		);
-		// Initial a 'd3=0' key as the default recipient key. Configurable via `set_recipient_key` function.
-		self.set_recipient_key(self.config.recipient_keypath.unwrap_or(0))
-			.unwrap();
+		// Initial the recipient key if configured, otherwise use random last key path for it.
+		if let Some(recipient_keypath) = self.config.recipient_keypath {
+			self.set_recipient_key(recipient_keypath).unwrap();
+		}
 		Ok(())
 	}
 
@@ -204,20 +207,24 @@ where
 			return Err(ErrorKind::Backend("keychain is none".to_string()).into());
 		}
 		// Initialize the recipient key for non-interactive transaction.
-		let path = ExtKeychainPath::new(4, <u32>::max_value(), <u32>::max_value(), 0, keypath);
-		self.recipient_key_id = Some(Identifier::from_path(&path));
+		self.recipient_key_id = Some(self.parent_key_id.extend(keypath));
 		Ok(())
 	}
 
 	fn recipient_key(&self) -> Result<RecipientKey, Error> {
-		if self.keychain.is_none() || self.recipient_key_id.is_none() {
-			return Err(
-				ErrorKind::Backend("keychain or recipient_key_id is none".to_string()).into(),
-			);
+		if self.keychain.is_none() {
+			return Err(ErrorKind::Backend("keychain is none".to_string()).into());
 		}
 
 		let keychain = self.keychain_immutable();
-		let recipient_key_id = self.recipient_key_id.clone().unwrap();
+		let recipient_key_id = match &self.recipient_key_id {
+			Some(key_id) => key_id.clone(),
+			None => {
+				let mut last_path_index: u32 = thread_rng().gen();
+				last_path_index >>= 1;
+				self.parent_key_id.extend(last_path_index)
+			}
+		};
 		let recipient_pri_key = keychain.derive_key(&recipient_key_id).unwrap();
 		let recipient_pub_key =
 			PublicKey::from_secret_key(keychain.secp(), &recipient_pri_key).unwrap();
@@ -242,6 +249,53 @@ where
 			recipient_pub_key,
 			recipient_pri_key,
 		})
+	}
+
+	fn check_address(
+		&self,
+		addr: &Address,
+		d0_until: u32,
+		d1_until: u32,
+	) -> Result<AcctPathMapping, Error> {
+		if self.keychain.is_none() {
+			return Err(ErrorKind::Backend("keychain is none".to_string()).into());
+		}
+
+		let keychain = self.keychain_immutable();
+		let target_pub_key = addr.get_inner_pubkey();
+		let last_path = addr.get_key_id_last_path();
+
+		// searching the existing accounts firstly.
+		for acct_path in self.acct_path_iter() {
+			let key_id = addr.get_key_id(&acct_path.path);
+			let recipient_pub_key = keychain.derive_pub_key(&key_id)?;
+			if recipient_pub_key == target_pub_key {
+				return Ok(acct_path.clone());
+			}
+		}
+
+		// if not found, searching the first 10,000 possible accounts
+		info!(
+			"check_address: start searching the first {} possible accounts (until m/{}/{}) ...",
+			d0_until as u64 * d1_until as u64,
+			d0_until,
+			d1_until,
+		);
+		if let Ok(key_id) = keychain.search_pub_key(d0_until, d1_until, last_path, &target_pub_key)
+		{
+			info!("check_address: matching address found. key_id: {}", key_id);
+			Ok(AcctPathMapping {
+				label: "none".to_string(),
+				path: key_id,
+			})
+		} else {
+			info!("check_address: stop searching, no matching address found.");
+			Err(ErrorKind::Backend(format!(
+				"address checking stop at path m/{}/{}",
+				d0_until, d1_until
+			))
+			.into())
+		}
 	}
 
 	/// Close wallet and remove any stored credentials (TBD)
@@ -694,6 +748,15 @@ where
 			.unwrap()
 			.put_ser(&height_key, &height)?;
 		Ok(())
+	}
+
+	fn get_child_index(&mut self, parent_id: &Identifier) -> Result<u32, Error> {
+		let deriv_key = to_key(DERIV_PREFIX, &mut parent_id.to_bytes().to_vec());
+		let max_child_index = match self.db.borrow().as_ref().unwrap().get_ser(&deriv_key)? {
+			Some(t) => t,
+			None => 0,
+		};
+		Ok(max_child_index)
 	}
 
 	fn save_child_index(&mut self, parent_id: &Identifier, child_n: u32) -> Result<(), Error> {
