@@ -72,10 +72,11 @@ where
 		outputs.len(),
 	);
 
-	let recipient_key = if let Some(r) = recipient_key_to_check {
-		r.clone()
+	let (recipient_prikey, recipient_key_id) = if let Some(r) = recipient_key_to_check {
+		(Some(r.recipient_pri_key.clone()), r.recipient_key_id)
 	} else {
-		wallet.recipient_key()?
+		let recipient_key = wallet.recipient_key()?;
+		(None, recipient_key.recipient_key_id)
 	};
 	let rewind_hash_key_id = wallet.parent_key_id();
 	let keychain = wallet.keychain();
@@ -114,7 +115,8 @@ where
 				match proof::rewind_outputlocker(
 					keychain,
 					ot.value,
-					&recipient_key.recipient_pri_key,
+					&recipient_prikey,
+					&recipient_key_id,
 					commit,
 					locker,
 				) {
@@ -122,7 +124,7 @@ where
 						w = i.w;
 						ephemeral_key = Some(e);
 						p2pkh = Some(locker.p2pkh);
-						key_id = recipient_key.recipient_key_id.clone();
+						key_id = recipient_key_id.parent_path().extend(i.key_id_last_path);
 					}
 					Err(_) => continue,
 				}
@@ -222,9 +224,9 @@ where
 	let mut batch = wallet.batch()?;
 
 	let parent_key_id = output.key_id.parent_path();
-	if !found_parents.contains_key(&parent_key_id) {
-		found_parents.insert(parent_key_id.clone(), 0);
-		if let Some(ref mut s) = tx_stats {
+	if let Some(ref mut s) = tx_stats {
+		// Initiate the statistic item if it's first time to see this parent key id.
+		if !s.contains_key(&parent_key_id) {
 			s.insert(
 				parent_key_id.clone(),
 				RestoredTxStats {
@@ -233,6 +235,24 @@ where
 					num_outputs: 0,
 				},
 			);
+		}
+	}
+
+	// Update the found maximum last path index for interactive transaction outputs,
+	// and don't take the non-interactive transaction output's last path index, which is just
+	// randomized value.
+	if !found_parents.contains_key(&parent_key_id) {
+		found_parents.insert(
+			parent_key_id.clone(),
+			if output.p2pkh.is_none() {
+				output.n_child
+			} else {
+				0
+			},
+		);
+	} else {
+		if output.p2pkh.is_none() && output.n_child >= *found_parents.get(&parent_key_id).unwrap() {
+			found_parents.insert(parent_key_id.clone(), output.n_child);
 		}
 	}
 
@@ -284,11 +304,6 @@ where
 		slate_id: None,
 		is_change: None,
 	});
-
-	let max_child_index = found_parents.get(&parent_key_id).unwrap().clone();
-	if output.n_child >= max_child_index {
-		found_parents.insert(parent_key_id.clone(), output.n_child);
-	}
 
 	batch.commit()?;
 	Ok(())
@@ -460,21 +475,23 @@ where
 	let label_base = "account";
 	let mut acct_index = 1;
 	for (path, max_child_index) in found_parents.iter() {
-		// skip the recipient key path
-		if *path == ExtKeychain::derive_key_id(3, <u32>::max_value(), <u32>::max_value(), 0, 0) {
-			continue;
-		}
-
-		// if path doesn't exists
+		// create wallet account if path doesn't exists in current accounts.
 		if !existing_accounts.contains(path) {
 			let label = format!("{}_{}", label_base, acct_index);
 			keys::set_acct_path(wallet, &label, path)?;
 			acct_index += 1;
 		}
-		let mut batch = wallet.batch()?;
-		debug!("Next child for account {} is {}", path, max_child_index + 1);
-		batch.save_child_index(path, max_child_index + 1)?;
-		batch.commit()?;
+
+		// update max child index
+		{
+			let mut batch = wallet.batch()?;
+			let last_stored_child_index = batch.get_child_index(path)?;
+			if *max_child_index > last_stored_child_index {
+				debug!("Next child for account {} is {}", path, max_child_index + 1);
+				batch.save_child_index(path, max_child_index + 1)?;
+				batch.commit()?;
+			}
+		}
 	}
 	Ok(())
 }
@@ -531,7 +548,9 @@ where
 		// Check whether this address belongs to this wallet
 		let address = Address::from_str(&addr)?;
 		let mut is_mine = false;
-		if let Ok(recipient_key) = wallet.recipient_key_by_id(&address.get_key_id(&parent_path)) {
+		if let Ok(recipient_key) =
+			wallet.recipient_key_by_id(&parent_path.extend(address.get_key_id_last_path()))
+		{
 			if recipient_key.recipient_pub_key == address.get_inner_pubkey() {
 				is_mine = true;
 				recipient_key_to_check = Some(recipient_key);
@@ -539,7 +558,7 @@ where
 		}
 		if !is_mine {
 			return Err(ErrorKind::GenericError(
-				"address not owned by this wallet".to_string(),
+				"address not owned by current active wallet account".to_string(),
 			))?;
 		}
 	}

@@ -231,6 +231,9 @@ where
 	/// Delete data about an output from the backend
 	fn delete(&mut self, id: &Identifier, mmr_index: &Option<u64>) -> Result<(), Error>;
 
+	/// Get last stored child index of a given parent
+	fn get_child_index(&mut self, parent_id: &Identifier) -> Result<u32, Error>;
+
 	/// Save last stored child index of a given parent
 	fn save_child_index(&mut self, parent_key_id: &Identifier, child_n: u32) -> Result<(), Error>;
 

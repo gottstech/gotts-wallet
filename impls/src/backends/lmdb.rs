@@ -750,6 +750,15 @@ where
 		Ok(())
 	}
 
+	fn get_child_index(&mut self, parent_id: &Identifier) -> Result<u32, Error> {
+		let deriv_key = to_key(DERIV_PREFIX, &mut parent_id.to_bytes().to_vec());
+		let max_child_index = match self.db.borrow().as_ref().unwrap().get_ser(&deriv_key)? {
+			Some(t) => t,
+			None => 0,
+		};
+		Ok(max_child_index)
+	}
+
 	fn save_child_index(&mut self, parent_id: &Identifier, child_n: u32) -> Result<(), Error> {
 		let deriv_key = to_key(DERIV_PREFIX, &mut parent_id.to_bytes().to_vec());
 		self.db

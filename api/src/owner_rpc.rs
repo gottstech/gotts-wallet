@@ -547,7 +547,7 @@ pub trait OwnerRpc {
 						  "locker": {
 							"p2pkh": "cef5ad3c9482d1e831ceacadbd53469198f33f10b3822cfef77f33a3dc9b9dd8",
 							"pub_nonce": "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f",
-							"spath": "b02fd2272eeaaff83e7928d6"
+							"spath": "b02fd2272eeaaff82326be57"
 						  }
 						}
 					  },
