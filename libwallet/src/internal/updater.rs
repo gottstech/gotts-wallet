@@ -19,7 +19,6 @@
 use std::collections::HashMap;
 use uuid::Uuid;
 
-use super::keys::recipient_parent_key_id;
 use crate::error::Error;
 use crate::gotts_core::consensus::reward;
 use crate::gotts_core::core::{Output, TxKernel, TxKernelApiEntry};
@@ -73,7 +72,7 @@ where
 	if let Some(k) = parent_key_id {
 		outputs = outputs
 			.iter()
-			.filter(|o| o.root_key_id == *k || o.root_key_id == recipient_parent_key_id())
+			.filter(|o| o.root_key_id == *k)
 			.map(|o| o.clone())
 			.collect();
 	}
@@ -202,10 +201,7 @@ where
 	let keychain = wallet.keychain().clone();
 	let unspents: Vec<OutputData> = wallet
 		.iter()
-		.filter(|x| {
-			(x.root_key_id == *parent_key_id || x.root_key_id == recipient_parent_key_id())
-				&& x.status != OutputStatus::Spent
-		})
+		.filter(|x| (x.root_key_id == *parent_key_id) && x.status != OutputStatus::Spent)
 		.collect();
 
 	let tx_entries = retrieve_txs(wallet, None, None, Some(&parent_key_id), true, None)?;
@@ -597,9 +593,9 @@ where
 	K: Keychain,
 {
 	let current_height = wallet.last_confirmed_height()?;
-	let outputs = wallet.iter().filter(|out| {
-		out.root_key_id == *parent_key_id || out.root_key_id == recipient_parent_key_id()
-	});
+	let outputs = wallet
+		.iter()
+		.filter(|out| out.root_key_id == *parent_key_id);
 
 	let mut unspent_total = 0;
 	let mut immature_total = 0;

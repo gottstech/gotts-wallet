@@ -21,7 +21,7 @@ use crate::gotts_core::address::Address;
 use crate::gotts_core::core::hash::Hash;
 use crate::gotts_core::core::{Output, Transaction, TxKernelApiEntry};
 use crate::gotts_core::libtx::{aggsig, secp_ser};
-use crate::gotts_keychain::{Identifier, Keychain, RecipientKey};
+use crate::gotts_keychain::{Identifier, Keychain};
 use crate::gotts_util::secp::key::{PublicKey, SecretKey};
 use crate::gotts_util::secp::{self, pedersen, Secp256k1};
 use crate::slate::ParticipantMessages;
@@ -159,13 +159,6 @@ where
 	/// Next child ID when we want to create a new output, based on current parent
 	fn next_child<'a>(&mut self) -> Result<Identifier, Error>;
 
-	/// Recipient child ID for the receiving address of non-interactive transaction.
-	fn get_recipient_child<'a>(&mut self) -> Result<Identifier, Error>;
-
-	/// Next recipient child ID when we want to create a new receiving address for non-interactive
-	/// transaction.
-	fn next_recipient_child<'a>(&mut self) -> Result<Identifier, Error>;
-
 	/// last verified height of outputs directly descending from the given parent key
 	fn last_confirmed_height<'a>(&mut self) -> Result<u64, Error>;
 
@@ -232,7 +225,7 @@ where
 	fn delete(&mut self, id: &Identifier, mmr_index: &Option<u64>) -> Result<(), Error>;
 
 	/// Get last stored child index of a given parent
-	fn get_child_index(&mut self, parent_id: &Identifier) -> Result<u32, Error>;
+	fn get_child_index(&self, parent_id: &Identifier) -> Result<u32, Error>;
 
 	/// Save last stored child index of a given parent
 	fn save_child_index(&mut self, parent_key_id: &Identifier, child_n: u32) -> Result<(), Error>;
@@ -941,6 +934,15 @@ pub struct AcctPathMapping {
 	pub label: String,
 	/// Corresponding parent BIP32 derivation path
 	pub path: Identifier,
+}
+
+/// Key as a recipient
+#[derive(Clone, Debug)]
+pub struct RecipientKey {
+	/// As recipient of non-interactive transaction, the key derivation path of the public address.
+	pub recipient_key_id: Identifier,
+	/// The public key of the recipient public address
+	pub recipient_pub_key: PublicKey,
 }
 
 impl ser::Writeable for AcctPathMapping {

@@ -174,6 +174,14 @@ pub enum ErrorKind {
 	#[fail(display = "Account Label '{}' already exists", _0)]
 	AccountLabelAlreadyExists(String),
 
+	/// Attempt to add an account that exists
+	#[fail(display = "Account Path '{}' already exists", _0)]
+	AccountPathAlreadyExists(String),
+
+	/// Attempt to add an account that exists
+	#[fail(display = "Account Label or Path already exists")]
+	AccountAlreadyExists,
+
 	/// Reference unknown account label
 	#[fail(display = "Unknown Account Label '{}'", _0)]
 	UnknownAccountLabel(String),

@@ -28,9 +28,7 @@ use uuid::Uuid;
 use crate::blake2::blake2b::Blake2b;
 
 use super::wallet_store::{self, option_to_not_found};
-use crate::keychain::{
-	ChildNumber, ExtKeychain, ExtKeychainPath, Identifier, Keychain, RecipientKey,
-};
+use crate::keychain::{ChildNumber, ExtKeychain, ExtKeychainPath, Identifier, Keychain};
 use crate::store::{to_key, to_key_u64};
 
 use crate::core::address::Address;
@@ -38,12 +36,11 @@ use crate::core::core::Transaction;
 use crate::core::{self, global};
 use crate::libwallet::{check_repair, check_repair_batch, restore, restore_batch};
 use crate::libwallet::{
-	AcctPathMapping, Context, Error, ErrorKind, NodeClient, OutputData, PaymentData, TxLogEntry,
-	WalletBackend, WalletOutputBatch,
+	AcctPathMapping, Context, Error, ErrorKind, NodeClient, OutputData, PaymentData, RecipientKey,
+	TxLogEntry, WalletBackend, WalletOutputBatch,
 };
 use crate::util;
 use crate::util::secp::constants::SECRET_KEY_SIZE;
-use crate::util::secp::PublicKey;
 use crate::util::ZeroingString;
 use crate::WalletSeed;
 use config::WalletConfig;
@@ -127,19 +124,17 @@ impl<C, K> LMDBBackend<C, K> {
 
 		let store = wallet_store::Store::new(db_path.to_str().unwrap(), None, Some(DB_DIR), None)?;
 
-		// Make sure default wallet derivation path always exists
-		// as well as path (so it can be retrieved by batches to know where to store
-		// completed transactions, for reference
-		let default_account = AcctPathMapping {
-			label: "default".to_owned(),
-			path: LMDBBackend::<C, K>::default_path(),
-		};
-		let acct_key = to_key(
-			ACCOUNT_PATH_MAPPING_PREFIX,
-			&mut default_account.label.as_bytes().to_vec(),
-		);
-
+		// Make sure default wallet derivation path always exists.
 		{
+			let default_account = AcctPathMapping {
+				label: "default".to_owned(),
+				path: LMDBBackend::<C, K>::default_path(),
+			};
+			let acct_key = to_key(
+				ACCOUNT_PATH_MAPPING_PREFIX,
+				&mut default_account.label.as_bytes().to_vec(),
+			);
+
 			let batch = store.batch()?;
 			batch.put_ser(&acct_key, &default_account)?;
 			batch.commit()?;
@@ -157,11 +152,18 @@ impl<C, K> LMDBBackend<C, K> {
 		Ok(res)
 	}
 
+	/// Use "m/0/0" non-hardened derivation as the default wallet account.
 	fn default_path() -> Identifier {
 		// return the default parent wallet path, corresponding to the default account
 		// in the BIP32 spec. Parent is account 0 at level 2, child output identifiers
 		// are all at level 3
-		ExtKeychain::derive_key_id(2, 0, 0, 0, 0)
+		ExtKeychain::derive_key_id(
+			2,
+			u32::from(ChildNumber::from_normal_idx(0)),
+			u32::from(ChildNumber::from_normal_idx(0)),
+			0,
+			0,
+		)
 	}
 
 	/// Just test to see if database files exist in the current directory. If
@@ -225,13 +227,10 @@ where
 				self.parent_key_id.extend(last_path_index)
 			}
 		};
-		let recipient_pri_key = keychain.derive_key(&recipient_key_id).unwrap();
-		let recipient_pub_key =
-			PublicKey::from_secret_key(keychain.secp(), &recipient_pri_key).unwrap();
+		let recipient_pub_key = keychain.derive_pub_key(&recipient_key_id).unwrap();
 		Ok(RecipientKey {
 			recipient_key_id,
 			recipient_pub_key,
-			recipient_pri_key,
 		})
 	}
 
@@ -241,13 +240,10 @@ where
 		}
 
 		let keychain = self.keychain_immutable();
-		let recipient_pri_key = keychain.derive_key(key_id).unwrap();
-		let recipient_pub_key =
-			PublicKey::from_secret_key(keychain.secp(), &recipient_pri_key).unwrap();
+		let recipient_pub_key = keychain.derive_pub_key(key_id).unwrap();
 		Ok(RecipientKey {
 			recipient_key_id: key_id.clone(),
 			recipient_pub_key,
-			recipient_pri_key,
 		})
 	}
 
@@ -480,69 +476,14 @@ where
 
 	fn next_child<'a>(&mut self) -> Result<Identifier, Error> {
 		let parent_key_id = self.parent_key_id.clone();
-		let mut deriv_idx = {
-			let batch = self.db.batch()?;
-			let deriv_key = to_key(DERIV_PREFIX, &mut self.parent_key_id.to_bytes().to_vec());
-			match batch.get_ser(&deriv_key)? {
-				Some(idx) => idx,
-				None => 0,
-			}
-		};
-		let mut return_path = self.parent_key_id.to_path();
-		return_path.depth = return_path.depth + 1;
-		return_path.path[return_path.depth as usize - 1] = ChildNumber::from(deriv_idx);
-		deriv_idx = deriv_idx + 1;
 		let mut batch = self.batch()?;
-		batch.save_child_index(&parent_key_id, deriv_idx)?;
+		let deriv_idx = batch.get_child_index(&parent_key_id).unwrap_or(0);
+		batch.save_child_index(
+			&parent_key_id,
+			u32::from(ChildNumber::from(deriv_idx).next()),
+		)?;
 		batch.commit()?;
-		Ok(Identifier::from_path(&return_path))
-	}
-
-	fn get_recipient_child<'a>(&mut self) -> Result<Identifier, Error> {
-		let parent_key_id =
-			ExtKeychainPath::new(2, <u32>::max_value(), <u32>::max_value(), 0, 0).to_identifier();
-		let deriv_idx = {
-			let deriv_key = to_key(
-				RECIPIENT_DERIV_PREFIX,
-				&mut parent_key_id.to_bytes().to_vec(),
-			);
-			match self.db.get_ser(&deriv_key)? {
-				Some(idx) => idx,
-				None => 0,
-			}
-		};
-		let mut return_path = parent_key_id.to_path();
-		return_path.depth = 4;
-		return_path.path[2] = ChildNumber::from(<u32>::max_value());
-		return_path.path[3] = ChildNumber::from(deriv_idx);
-		Ok(Identifier::from_path(&return_path))
-	}
-
-	fn next_recipient_child<'a>(&mut self) -> Result<Identifier, Error> {
-		let parent_key_id =
-			ExtKeychainPath::new(2, <u32>::max_value(), <u32>::max_value(), 0, 0).to_identifier();
-		let mut deriv_idx = {
-			let batch = self.db.batch()?;
-			let deriv_key = to_key(
-				RECIPIENT_DERIV_PREFIX,
-				&mut parent_key_id.to_bytes().to_vec(),
-			);
-			match batch.get_ser(&deriv_key)? {
-				Some(idx) => idx,
-				None => 0,
-			}
-		};
-		deriv_idx = deriv_idx + 1;
-
-		let mut return_path = self.parent_key_id.to_path();
-		assert_eq!(return_path.depth, 2);
-		return_path.depth = 4;
-		return_path.path[2] = ChildNumber::from(<u32>::max_value());
-		return_path.path[3] = ChildNumber::from(deriv_idx);
-		let mut batch = self.batch()?;
-		batch.save_recipient_child_index(deriv_idx)?;
-		batch.commit()?;
-		Ok(Identifier::from_path(&return_path))
+		Ok(parent_key_id.extend(deriv_idx))
 	}
 
 	fn last_confirmed_height<'a>(&mut self) -> Result<u64, Error> {
@@ -750,7 +691,7 @@ where
 		Ok(())
 	}
 
-	fn get_child_index(&mut self, parent_id: &Identifier) -> Result<u32, Error> {
+	fn get_child_index(&self, parent_id: &Identifier) -> Result<u32, Error> {
 		let deriv_key = to_key(DERIV_PREFIX, &mut parent_id.to_bytes().to_vec());
 		let max_child_index = match self.db.borrow().as_ref().unwrap().get_ser(&deriv_key)? {
 			Some(t) => t,

@@ -19,7 +19,7 @@ use crate::gotts_core::core::hash::Hash;
 use crate::gotts_core::core::{Output, OutputFeatures};
 use crate::gotts_core::global;
 use crate::gotts_core::libtx::proof;
-use crate::gotts_keychain::{ExtKeychain, Identifier, Keychain, RecipientKey};
+use crate::gotts_keychain::{ExtKeychain, Identifier, Keychain};
 use crate::gotts_util::secp::{pedersen, SecretKey};
 use crate::gotts_util::to_hex;
 use crate::internal::{keys, updater};
@@ -73,7 +73,15 @@ where
 	);
 
 	let (recipient_prikey, recipient_key_id) = if let Some(r) = recipient_key_to_check {
-		(Some(r.recipient_pri_key.clone()), r.recipient_key_id)
+		(
+			Some(
+				wallet
+					.keychain_immutable()
+					.derive_key(&r.recipient_key_id)
+					.unwrap(),
+			),
+			r.recipient_key_id,
+		)
 	} else {
 		let recipient_key = wallet.recipient_key()?;
 		(None, recipient_key.recipient_key_id)
