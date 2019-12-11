@@ -514,15 +514,16 @@ where
 	}
 
 	{
-		let siglocked_coins: Vec<OutputData> = coins
+		let mut siglocked_coins: Vec<OutputData> = coins
 			.clone()
 			.drain(..)
 			.filter(|c| c.p2pkh.is_some())
 			.collect();
 		if siglocked_coins.len() > 0 {
+			siglocked_coins.sort_by_key(|x| x.p2pkh);
 			let grouped = siglocked_coins
 				.iter()
-				.group_by(|&coin| coin.p2pkh.unwrap())
+				.group_by(|&coin| coin.p2pkh)
 				.into_iter()
 				.map(|(_k, group)| group.cloned().collect())
 				.collect::<Vec<Vec<OutputData>>>();
