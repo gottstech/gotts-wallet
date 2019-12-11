@@ -26,12 +26,12 @@ use crate::core::address::Address;
 use crate::core::core::Transaction;
 use crate::core::global::{is_floonet, ChainTypes};
 use crate::impls::{HTTPWalletCommAdapter, KeybaseWalletCommAdapter, WalletSeed};
-use crate::keychain::{Identifier, Keychain, RecipientKey};
+use crate::keychain::{Identifier, Keychain};
 use crate::libwallet::api_impl::owner;
 use crate::libwallet::{
 	AcctPathMapping, Error, ErrorKind, InitTxArgs, IssueInvoiceTxArgs, NodeClient,
-	NodeHeightResult, OutputCommitMapping, PaymentData, Slate, TxLogEntry, WalletBackend,
-	WalletInfo,
+	NodeHeightResult, OutputCommitMapping, PaymentData, RecipientKey, Slate, TxLogEntry,
+	WalletBackend, WalletInfo,
 };
 
 /// Main interface into all wallet API functions.

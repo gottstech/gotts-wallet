@@ -15,14 +15,8 @@
 
 //! Wallet key management functions
 use crate::error::{Error, ErrorKind};
-use crate::gotts_keychain::{ChildNumber, ExtKeychain, ExtKeychainPath, Identifier, Keychain};
+use crate::gotts_keychain::{ChildNumber, ExtKeychain, Identifier, Keychain};
 use crate::types::{AcctPathMapping, NodeClient, WalletBackend};
-
-/// The parent key id of the receiving key id for non-interactive transaction.
-/// Useful to identify the non-interactive tx outputs in wallet.
-pub fn recipient_parent_key_id() -> Identifier {
-	ExtKeychainPath::new(3, <u32>::max_value(), <u32>::max_value(), 0, 0).to_identifier()
-}
 
 /// Get next available key in the wallet for a given parent
 pub fn next_available_key<T: ?Sized, C, K>(wallet: &mut T) -> Result<Identifier, Error>
@@ -79,28 +73,40 @@ where
 	// derivation chains in BIP32 spec)
 
 	let highest_entry = wallet.acct_path_iter().max_by(|a, b| {
-		<u32>::from(a.path.to_path().path[0]).cmp(&<u32>::from(b.path.to_path().path[0]))
+		a.path.to_path().path[0]
+			.index()
+			.cmp(&b.path.to_path().path[0].index())
 	});
 
-	let return_id = {
+	let new_path = {
 		if let Some(e) = highest_entry {
 			let mut p = e.path.to_path();
-			p.path[0] = ChildNumber::from(<u32>::from(p.path[0]) + 1);
+			p.path[0] = p.path[0].next();
+
 			p.to_identifier()
 		} else {
-			ExtKeychain::derive_key_id(2, 0, 0, 0, 0)
+			// Use "m/0/0" non-hardened derivation as the default wallet account.
+			ExtKeychain::derive_key_id(
+				2,
+				u32::from(ChildNumber::from_normal_idx(0)),
+				u32::from(ChildNumber::from_normal_idx(0)),
+				0,
+				0,
+			)
 		}
 	};
 
-	let save_path = AcctPathMapping {
-		label: label.to_owned(),
-		path: return_id.clone(),
-	};
+	if let Some(_) = wallet.acct_path_iter().find(|l| l.path == new_path) {
+		return Err(ErrorKind::AccountPathAlreadyExists(new_path.to_string()).into());
+	}
 
 	let mut batch = wallet.batch()?;
-	batch.save_acct_path(save_path)?;
+	batch.save_acct_path(AcctPathMapping {
+		label: label.to_owned(),
+		path: new_path.clone(),
+	})?;
 	batch.commit()?;
-	Ok(return_id)
+	Ok(new_path)
 }
 
 /// Adds an new parent account path with a given label
@@ -115,17 +121,18 @@ where
 	K: Keychain,
 {
 	let label = label.to_owned();
-	if let Some(_) = wallet.acct_path_iter().find(|l| l.label == label) {
-		return Err(ErrorKind::AccountLabelAlreadyExists(label.clone()).into());
+	if let Some(_) = wallet
+		.acct_path_iter()
+		.find(|l| l.label == label || l.path == *path)
+	{
+		return Err(ErrorKind::AccountAlreadyExists.into());
 	}
 
-	let save_path = AcctPathMapping {
-		label: label.to_owned(),
-		path: path.clone(),
-	};
-
 	let mut batch = wallet.batch()?;
-	batch.save_acct_path(save_path)?;
+	batch.save_acct_path(AcctPathMapping {
+		label,
+		path: path.clone(),
+	})?;
 	batch.commit()?;
 	Ok(())
 }
@@ -141,14 +148,11 @@ where
 	C: NodeClient,
 	K: Keychain,
 {
-	let label = label.to_owned();
-	let save_path = AcctPathMapping {
+	let mut batch = wallet.batch()?;
+	batch.save_acct_path(AcctPathMapping {
 		label: label.to_owned(),
 		path: path.clone(),
-	};
-
-	let mut batch = wallet.batch()?;
-	batch.save_acct_path(save_path)?;
+	})?;
 	batch.commit()?;
 	Ok(())
 }

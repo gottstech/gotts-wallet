@@ -15,7 +15,6 @@
 
 //! Selection of inputs for building transactions
 
-use super::keys::recipient_parent_key_id;
 use crate::error::{Error, ErrorKind};
 use crate::gotts_core::address::Address;
 use crate::gotts_core::core::{amount_to_hr_string, TransactionBody};
@@ -626,7 +625,7 @@ where
 	let mut eligible = wallet
 		.iter()
 		.filter(|out| {
-			(out.root_key_id == *parent_key_id || out.root_key_id == recipient_parent_key_id())
+			out.root_key_id == *parent_key_id
 				&& out.eligible_to_spend(current_height, minimum_confirmations)
 		})
 		.collect::<Vec<OutputData>>();

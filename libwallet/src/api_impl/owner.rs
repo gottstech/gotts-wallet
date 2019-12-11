@@ -23,10 +23,12 @@ use crate::gotts_core::core::hash::Hashed;
 use crate::gotts_core::{self, core::Transaction};
 use crate::gotts_util;
 
-use crate::gotts_keychain::{Identifier, Keychain, RecipientKey};
+use crate::gotts_keychain::{Identifier, Keychain};
 use crate::internal::{keys, selection, tx, updater};
 use crate::slate::Slate;
-use crate::types::{AcctPathMapping, NodeClient, TxLogEntry, TxWrapper, WalletBackend, WalletInfo};
+use crate::types::{
+	AcctPathMapping, NodeClient, RecipientKey, TxLogEntry, TxWrapper, WalletBackend, WalletInfo,
+};
 use crate::{Error, ErrorKind};
 use crate::{
 	InitTxArgs, IssueInvoiceTxArgs, NodeHeightResult, OutputCommitMapping, PaymentData,

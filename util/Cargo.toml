@@ -37,12 +37,12 @@ dirs = "1.0.3"
 #gotts_store = { git = "https://github.com/gottstech/gotts", tag = "v0.0.5-beta.1" }
 
 # For bleeding edge
-gotts_core = { git = "https://github.com/gottstech/gotts", rev = "1d61c14" }
-gotts_keychain = { git = "https://github.com/gottstech/gotts", rev = "1d61c14" }
-gotts_chain = { git = "https://github.com/gottstech/gotts", rev = "1d61c14" }
-gotts_util = { git = "https://github.com/gottstech/gotts", rev = "1d61c14" }
-gotts_api = { git = "https://github.com/gottstech/gotts", rev = "1d61c14" }
-gotts_store = { git = "https://github.com/gottstech/gotts", rev = "1d61c14" }
+gotts_core = { git = "https://github.com/gottstech/gotts", rev = "4c1354a" }
+gotts_keychain = { git = "https://github.com/gottstech/gotts", rev = "4c1354a" }
+gotts_chain = { git = "https://github.com/gottstech/gotts", rev = "4c1354a" }
+gotts_util = { git = "https://github.com/gottstech/gotts", rev = "4c1354a" }
+gotts_api = { git = "https://github.com/gottstech/gotts", rev = "4c1354a" }
+gotts_store = { git = "https://github.com/gottstech/gotts", rev = "4c1354a" }
 
 # For local testing
 #gotts_core = { path = "../../gotts/core"}

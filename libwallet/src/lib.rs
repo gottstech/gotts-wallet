@@ -64,6 +64,6 @@ pub use api_impl::types::{
 pub use internal::restore::{check_repair, check_repair_batch, restore, restore_batch};
 pub use types::{
 	AcctPathMapping, BlockIdentifier, Context, NodeClient, NodeVersionInfo, OutputData,
-	OutputStatus, PaymentData, TxLogEntry, TxLogEntryType, TxWrapper, WalletBackend, WalletInfo,
-	WalletInst, WalletOutputBatch,
+	OutputStatus, PaymentData, RecipientKey, TxLogEntry, TxLogEntryType, TxWrapper, WalletBackend,
+	WalletInfo, WalletInst, WalletOutputBatch,
 };
