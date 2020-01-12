@@ -180,7 +180,11 @@ where
 }
 
 /// Sign a price message
-pub fn sign_price<T: ?Sized, C, K>(w: &mut T, msg: &str, key_id: &str) -> Result<String, Error>
+pub fn sign_price<T: ?Sized, C, K>(
+	w: &mut T,
+	msg: &str,
+	key_id: &str,
+) -> Result<(String, String), Error>
 where
 	T: WalletBackend<C, K>,
 	C: NodeClient,
@@ -215,7 +219,7 @@ where
 		),
 		true
 	);
-	Ok(sig.to_string())
+	Ok((sig.to_string(), pubkey.to_string()))
 }
 
 /// Initiate tx as sender
