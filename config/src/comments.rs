@@ -131,6 +131,13 @@ fn comments() -> HashMap<String, String> {
 "
 		.to_string(),
 	);
+	retval.insert(
+		"oracle_mining_keypath".to_string(),
+		"
+#The Key ID last path for Gotts Price Feeder Oracle mining. Choose any value within [0, 2^31 - 1].
+"
+		.to_string(),
+	);
 
 	retval.insert(
 		"[logging]".to_string(),
