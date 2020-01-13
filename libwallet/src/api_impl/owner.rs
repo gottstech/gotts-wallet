@@ -179,6 +179,49 @@ where
 	Ok((validated, wallet_info))
 }
 
+/// Sign a price message
+pub fn sign_price<T: ?Sized, C, K>(
+	w: &mut T,
+	msg: &str,
+	key_id: &str,
+) -> Result<(String, String), Error>
+where
+	T: WalletBackend<C, K>,
+	C: NodeClient,
+	K: Keychain,
+{
+	let sign_key_id = Identifier::from_hex(key_id)?;
+	let sign_msg = gotts_util::secp::Message::from_str(msg)?;
+
+	let keychain = w.keychain_immutable();
+	let prikey = keychain.derive_key(&sign_key_id)?;
+	let pubkey = gotts_util::secp::PublicKey::from_secret_key(keychain.secp(), &prikey)?;
+	let sig = gotts_util::secp::aggsig::sign_single(
+		keychain.secp(),
+		&sign_msg,
+		&prikey,
+		None,
+		None,
+		None,
+		Some(&pubkey),
+		None,
+	)?;
+	assert_eq!(
+		gotts_util::secp::aggsig::verify_single(
+			keychain.secp(),
+			&sig,
+			&sign_msg,
+			None,
+			&pubkey,
+			Some(&pubkey),
+			None,
+			false,
+		),
+		true
+	);
+	Ok((sig.to_string(), pubkey.to_string()))
+}
+
 /// Initiate tx as sender
 pub fn init_send_tx<T: ?Sized, C, K>(
 	w: &mut T,

@@ -507,6 +507,41 @@ where
 		res
 	}
 
+	/// Sign a price message and return the signature.
+	///
+	/// # Arguments
+	/// * `msg` - The secp::Message (hex string) which to be signed
+	///
+	/// * `key_id` - The key id (hex string) which is used for this signing.
+	///
+	/// # Returns
+	/// * `(String, String)` - The signature and public_key in hex string format.
+	///
+	/// # Example
+	/// Set up as in [`new`](struct.Owner.html#method.new) method above.
+	/// ```
+	/// # gotts_wallet_api::doctest_helper_setup_doc_env!(wallet, wallet_config);
+	///
+	/// let mut api_owner = Owner::new(wallet.clone());
+	/// let msg = "b4de08c8eccd8214adafd8db438fcbd17afafb9d128066df2bc50b228ba1945a".to_string();
+	/// let key_id = "03000000000000000000000000".to_string();
+	///
+	/// // Return summary info for active account
+	/// let result = api_owner.sign_price(msg, key_id);
+	///
+	/// if let Ok((sig, pubkey)) = result {
+	///		//...
+	/// }
+	/// ```
+
+	pub fn sign_price(&self, msg: String, key_id: String) -> Result<(String, String), Error> {
+		let mut w = self.wallet.lock();
+		w.open_with_credentials()?;
+		let res = owner::sign_price(&mut *w, &msg, &key_id);
+		w.close()?;
+		res
+	}
+
 	/// Initiates a new transaction as the sender, creating a new
 	/// [`Slate`](../gotts_wallet_libwallet/slate/struct.Slate.html) object containing
 	/// the sender's inputs, change outputs, and public signature data. This slate can

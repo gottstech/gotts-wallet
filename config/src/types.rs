@@ -59,6 +59,8 @@ pub struct WalletConfig {
 	pub keybase_notify_ttl: Option<u16>,
 	/// Recipient key path, configurable via `set_recipient_key` function
 	pub recipient_keypath: Option<u32>,
+	/// Price feeder oracle mining key path
+	pub oracle_mining_keypath: Option<u32>,
 }
 
 impl Default for WalletConfig {
@@ -79,6 +81,7 @@ impl Default for WalletConfig {
 			dark_background_color_scheme: Some(true),
 			keybase_notify_ttl: Some(1440),
 			recipient_keypath: None,
+			oracle_mining_keypath: Some(0),
 		}
 	}
 }

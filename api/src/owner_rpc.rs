@@ -355,12 +355,42 @@ pub trait OwnerRpc {
 	# ,4, false, false, false);
 	```
 	 */
-
 	fn retrieve_summary_info(
 		&self,
 		refresh_from_node: bool,
 		minimum_confirmations: u64,
 	) -> Result<(bool, WalletInfo), ErrorKind>;
+
+	/**
+	Networked version of [Owner::sign_price](struct.Owner.html#method.sign_price).
+
+	```
+	# (
+	# r#"
+	{
+		"jsonrpc": "2.0",
+		"method": "sign_price",
+		"params": ["b4de08c8eccd8214adafd8db438fcbd17afafb9d128066df2bc50b228ba1945a","03000000000000000000000000"],
+		"id": 1
+	}
+	# "#
+	# ,
+	# r#"
+	{
+		"id": 1,
+		"jsonrpc": "2.0",
+		"result": {
+			"Ok": [
+			  "0590eacb28d22cf47ca0a2c7603987b462ed4ad890ece74008b02352dd29a6aad4ef7467e99b0ce1f5ef39cfcbc8b69558a3ef7cebf098008e21c30f20a82093",
+			  "031096938bd4f2807ca3b4e27d7375d60881d439af2c26efba903f184cd31368f0"
+			]
+		}
+	}
+	# "#
+	# ,4, false, false, false);
+	```
+	 */
+	fn sign_price(&self, msg: String, key_id: String) -> Result<(String, String), ErrorKind>;
 
 	/**
 		Networked version of [Owner::init_send_tx](struct.Owner.html#method.init_send_tx).
@@ -1564,6 +1594,10 @@ where
 	) -> Result<(bool, WalletInfo), ErrorKind> {
 		Owner::retrieve_summary_info(self, refresh_from_node, minimum_confirmations)
 			.map_err(|e| e.kind())
+	}
+
+	fn sign_price(&self, msg: String, key_id: String) -> Result<(String, String), ErrorKind> {
+		Owner::sign_price(self, msg, key_id).map_err(|e| e.kind())
 	}
 
 	fn init_send_tx(&self, args: InitTxArgs) -> Result<VersionedSlate, ErrorKind> {
